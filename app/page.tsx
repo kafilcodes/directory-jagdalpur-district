@@ -18,6 +18,16 @@ export default function HomePage() {
       <section>
         <div className="rounded-lg border border-gray-200 p-4 bg-white">Featured listings coming soon...</div>
       </section>
+
+      <section>
+        {/* Top banner ad slot (placeholder config values in config/ads.ts) */}
+        {/* @ts-expect-error Server Component can render client child */}
+        <div className="mt-4">
+          {/* eslint-disable-next-line react/no-unknown-property */}
+          {/* @ts-ignore */}
+          {require("@/components/ads/AdSlot").AdSlot({ placementId: "homepage-top-banner" })}
+        </div>
+      </section>
     </main>
   )
 }

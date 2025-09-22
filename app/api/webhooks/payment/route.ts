@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import crypto from "crypto"
-import { adminDb } from "@/lib/firebase/admin"
+import { getAdminDb } from "@/lib/firebase/admin"
 
 export const runtime = "nodejs"
 
@@ -24,7 +24,8 @@ export async function POST(req: NextRequest) {
 
   const id = String(event?.payload?.payment?.entity?.id || event?.id || "")
   if (id) {
-    const ref = adminDb.collection("analyticsEvents").doc(`razorpay:${id}`)
+    const db = getAdminDb()
+    const ref = db.collection("analyticsEvents").doc(`razorpay:${id}`)
     const snap = await ref.get()
     if (!snap.exists) {
       await ref.set({

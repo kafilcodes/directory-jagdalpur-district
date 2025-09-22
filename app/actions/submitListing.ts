@@ -1,6 +1,6 @@
 "use server"
 
-import { adminDb } from "@/lib/firebase/admin"
+import { getAdminDb } from "@/lib/firebase/admin"
 import { ListingSchema } from "@/lib/validators/listing"
 import { nanoid } from "nanoid"
 
@@ -13,7 +13,8 @@ export async function submitListing(formData: FormData) {
   const data = parsed.data
   const id = nanoid()
   const now = Date.now()
-  await adminDb.collection("listings").doc(id).set({
+  const db = getAdminDb()
+  await db.collection("listings").doc(id).set({
     ...data,
     id,
     rating: 0,

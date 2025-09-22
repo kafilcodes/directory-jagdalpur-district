@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import LRUCache from "lru-cache"
+import { LRUCache } from "lru-cache"
 
 const cache = new LRUCache<string, any>({
   max: 500,

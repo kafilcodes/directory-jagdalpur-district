@@ -13,7 +13,7 @@ export function useSearchParamsState() {
       const next = new URLSearchParams(sp.toString())
       if (value) next.set(key, value)
       else next.delete(key)
-      router.replace(`${pathname}?${next.toString()}`, { scroll: false })
+      router.replace(`${pathname}?${next.toString()}` as any, { scroll: false })
     },
     [sp, router, pathname]
   )

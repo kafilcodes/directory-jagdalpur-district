@@ -1,9 +1,10 @@
 "use server"
 
-import { adminDb } from "@/lib/firebase/admin"
+import { getAdminDb } from "@/lib/firebase/admin"
 
 export async function getListingAnalytics(id: string) {
-  const q = await adminDb
+  const db = getAdminDb()
+  const q = await db
     .collection("analyticsEvents")
     .where("listingId", "==", id)
     .orderBy("timestamp", "desc")

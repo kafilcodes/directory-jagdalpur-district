@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { adminDb } from "@/lib/firebase/admin"
+import { getAdminDb } from "@/lib/firebase/admin"
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,7 +13,8 @@ export async function POST(req: NextRequest) {
       timestamp: Date.now(),
       meta: body?.meta || {},
     }
-    await adminDb.collection("analyticsEvents").add(payload)
+    const db = getAdminDb()
+    await db.collection("analyticsEvents").add(payload)
     return NextResponse.json({ ok: true }, { status: 202 })
   } catch (e) {
     return NextResponse.json({ ok: false }, { status: 400 })
