@@ -1,0 +1,32 @@
+# dependencies
+node_modules
+
+# next
+.next
+out
+
+# vercel/turbo
+.vercel
+.turbo
+
+# firebase
+.firebase
+firebase-debug.log
+
+# system
+.DS_Store
+
+# env
+.env
+.env.*
+!.env.example
+.env.local
+.env.development
+.env.production
+
+# local context (do not commit design context)
+.context
+
+# build artifacts
+coverage
+dist

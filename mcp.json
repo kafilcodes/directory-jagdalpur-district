@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "shadcn": {
+      "command": "node",
+      "args": ["tools/mcp/shadcn-server.js"]
+    }
+  }
+}
