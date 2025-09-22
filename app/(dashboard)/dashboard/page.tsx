@@ -1,6 +1,7 @@
 import { getAdminDb } from "@/lib/firebase/admin"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import RazorpayCheckoutButton from "@/components/payments/RazorpayCheckoutButton"
 
 type EventItem = { type: string; timestamp: number; listingId?: string | null; path?: string | null }
 
@@ -47,8 +48,8 @@ export default async function DashboardPage() {
 
       <Separator />
 
-      <section>
-        <Card>
+      <section className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+        <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="text-base">Recent Activity (last 50)</CardTitle>
           </CardHeader>
@@ -75,6 +76,15 @@ export default async function DashboardPage() {
                 </tbody>
               </table>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Test Payment</CardTitle>
+          </CardHeader>
+          <CardContent>
+<RazorpayCheckoutButton amount={50000} label="Pay ₹500" />
           </CardContent>
         </Card>
       </section>

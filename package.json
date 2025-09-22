@@ -10,7 +10,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "mcp:shadcn": "node tools/mcp/shadcn-server.js"
+    "mcp:shadcn": "node tools/mcp/shadcn-server.js",
+    "seed:listings": "node tools/seed/seed-listings.mjs"
   },
   "keywords": [],
   "author": "",
