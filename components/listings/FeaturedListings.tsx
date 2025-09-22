@@ -1,5 +1,6 @@
 import { getAdminDb } from "@/lib/firebase/admin"
-import { ListingCard } from "@/components/listings/ListingCard"
+import ListingCardClient from "@/components/listings/ListingCardClient"
+import ClientAdSlot from "@/components/ads/ClientAdSlot"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export async function FeaturedListings() {
@@ -26,14 +27,21 @@ export async function FeaturedListings() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {items.map((it: any, idx: number) => (
-        <ListingCard
-          key={it.id}
-          id={it.id}
-          name={it.name || it.listingName || "Unnamed"}
-          category={it.category || it.listingType || "General"}
-          address={it.address || ""}
-          rating={typeof it.rating === "number" ? it.rating : undefined}
-        />
+        <>
+          <ListingCardClient
+            key={it.id}
+            id={it.id}
+            name={it.name || it.listingName || "Unnamed"}
+            category={it.category || it.listingType || "General"}
+            address={it.address || ""}
+            rating={typeof it.rating === "number" ? it.rating : undefined}
+          />
+          {idx === 2 && (
+            <div className="col-span-1 sm:col-span-2 lg:col-span-3">
+              <ClientAdSlot placementId="search-inline-1" />
+            </div>
+          )}
+        </>
       ))}
     </div>
   )

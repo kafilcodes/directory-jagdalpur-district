@@ -1,26 +1,28 @@
 import { getAdminDb } from "@/lib/firebase/admin"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
+
+type EventItem = { type: string; timestamp: number; listingId?: string | null; path?: string | null }
 
 async function getStats() {
   const db = getAdminDb()
-  // For now: total events in last N items
   const snap = await db.collection("analyticsEvents").orderBy("timestamp", "desc").limit(50).get()
   const total = snap.size
-  // naive type counts
   const counts: Record<string, number> = {}
+  const events: EventItem[] = []
   snap.docs.forEach((d) => {
-    const t = (d.data() as any)?.type || "unknown"
+    const data = d.data() as any
+    const t = data?.type || "unknown"
     counts[t] = (counts[t] || 0) + 1
+    events.push({ type: t, timestamp: Number(data?.timestamp || 0), listingId: data?.listingId || null, path: data?.path || null })
   })
-  return { total, counts }
+  return { total, counts, events }
 }
 
 export const dynamic = "force-dynamic"
 
 export default async function DashboardPage() {
-  const { total, counts } = await getStats()
+  const { total, counts, events } = await getStats()
 
   return (
     <main className="mx-auto max-w-5xl p-4 space-y-4">
@@ -51,7 +53,28 @@ export default async function DashboardPage() {
             <CardTitle className="text-base">Recent Activity (last 50)</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-sm text-gray-600">This will show a table of recent events (TBD).</div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-gray-500">
+                    <th className="py-2 pr-4">Time</th>
+                    <th className="py-2 pr-4">Type</th>
+                    <th className="py-2 pr-4">Listing</th>
+                    <th className="py-2 pr-4">Path</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {events.map((e, i) => (
+                    <tr key={i} className="border-t border-gray-100">
+                      <td className="py-2 pr-4">{new Date(e.timestamp).toISOString()}</td>
+                      <td className="py-2 pr-4 capitalize">{e.type}</td>
+                      <td className="py-2 pr-4">{e.listingId || "-"}</td>
+                      <td className="py-2 pr-4">{e.path || "-"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </CardContent>
         </Card>
       </section>

@@ -9,7 +9,7 @@ export type ListingCardProps = {
   rating?: number
 }
 
-export async function ListingCard({ id, name, category, address, rating }: ListingCardProps) {
+export function ListingCard({ id, name, category, address, rating }: ListingCardProps) {
   return (
     <Card className="bg-white border-gray-200">
       <CardHeader className="pb-2">
