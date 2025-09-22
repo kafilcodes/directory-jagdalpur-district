@@ -8,7 +8,7 @@ const CreateOrderSchema = z.object({
   amount: z.number().int().positive(), // amount in paise
   currency: z.string().default("INR"),
   receipt: z.string().optional(),
-  notes: z.record(z.string()).optional(),
+  notes: z.record(z.string(), z.string()).optional(),
 })
 
 export async function POST(req: NextRequest) {

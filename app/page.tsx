@@ -1,3 +1,11 @@
+import { Suspense } from "react"
+import SearchBox from "@/components/search/SearchBox"
+import { FeaturedListings } from "@/components/listings/FeaturedListings"
+import ClientAdSlot from "@/components/ads/ClientAdSlot"
+import ListingDetailSheet from "@/components/listings/ListingDetailSheet"
+
+export const dynamic = "force-dynamic"
+
 export default function HomePage() {
   return (
     <main className="mx-auto max-w-5xl p-4 space-y-4">
@@ -7,27 +15,23 @@ export default function HomePage() {
       </header>
 
       <section>
-        <div className="w-full">
-          <input
-            className="w-full rounded-md border border-gray-200 p-3"
-            placeholder="Search by business name or category..."
-          />
-        </div>
+        <Suspense>
+          <SearchBox />
+        </Suspense>
+      </section>
+
+      <section className="space-y-4">
+        <div className="rounded-lg border border-gray-200 p-4 bg-white">Featured</div>
+        <FeaturedListings />
       </section>
 
       <section>
-        <div className="rounded-lg border border-gray-200 p-4 bg-white">Featured listings coming soon...</div>
+        <ClientAdSlot placementId="homepage-top-banner" />
       </section>
 
-      <section>
-        {/* Top banner ad slot (placeholder config values in config/ads.ts) */}
-        {/* @ts-expect-error Server Component can render client child */}
-        <div className="mt-4">
-          {/* eslint-disable-next-line react/no-unknown-property */}
-          {/* @ts-ignore */}
-          {require("@/components/ads/AdSlot").AdSlot({ placementId: "homepage-top-banner" })}
-        </div>
-      </section>
+      <Suspense>
+        <ListingDetailSheet />
+      </Suspense>
     </main>
   )
 }
