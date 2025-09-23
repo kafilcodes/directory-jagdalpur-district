@@ -13,6 +13,13 @@ function hasAdminEnv() {
 
 export const dynamic = "force-dynamic"
 
+export async function generateMetadata({ searchParams }: any) {
+  const q = searchParams?.q || ""
+  const title = q ? `Search: ${q} | Dhamtari Directory` : "Search | Dhamtari Directory"
+  const description = q ? `Results for "${q}" in Dhamtari Directory.` : "Search local businesses and services."
+  return { title, description }
+}
+
 export default async function SearchPage({ searchParams }: any) {
   const q = (searchParams.q || "").toLowerCase()
   const cat = searchParams.cat || ""
@@ -31,21 +38,23 @@ export default async function SearchPage({ searchParams }: any) {
     )
   }
 
-  const db = getAdminDb()
-  // Simple approach: fetch N and filter locally for demo. For production, consider Algolia or composite indexes.
-  const snap = await db.collection("listings").where("approved", "==", true).orderBy("createdAt", "desc").limit(60).get()
-  const items = snap.docs.map((d) => d.data() as any)
-  const filtered = items.filter((it) => {
-    const name = String(it?.name || it?.listingName || "").toLowerCase()
-    const category = String(it?.category || it?.listingType || "")
-    const matchesQ = q ? name.includes(q) : true
-    const matchesCat = cat ? category === cat : true
-    return matchesQ && matchesCat
-  })
+  const { searchListings } = await import("@/lib/search/server")
+  const filtered = (await searchListings({ q, cat, limit: 60 })) as any[]
 
   return (
     <main className="mx-auto max-w-5xl p-4 space-y-4">
       <h1 className="text-2xl font-bold">Search</h1>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SearchResultsPage",
+            name: "Search results",
+            url: (process.env.NEXT_PUBLIC_SITE_URL || "https://example.com") + "/search",
+          }),
+        }}
+      />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {filtered.map((it: any, idx: number) => (
           <>

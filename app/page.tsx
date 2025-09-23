@@ -7,6 +7,11 @@ import AuthButtons from "@/components/auth/AuthButtons"
 
 export const dynamic = "force-dynamic"
 
+export const metadata = {
+  title: "Dhamtari Directory",
+  description: "Find and connect with local businesses and service providers.",
+}
+
 export default function HomePage() {
   return (
     <main className="mx-auto max-w-5xl p-4 space-y-4">
@@ -34,6 +39,24 @@ export default function HomePage() {
       <section>
         <ClientAdSlot placementId="homepage-top-banner" />
       </section>
+
+      {/* Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: "Dhamtari Directory",
+            url: process.env.NEXT_PUBLIC_SITE_URL || "https://example.com",
+            potentialAction: {
+              "@type": "SearchAction",
+              target: `${process.env.NEXT_PUBLIC_SITE_URL || "https://example.com"}/search?q={search_term_string}`,
+              "query-input": "required name=search_term_string",
+            },
+          }),
+        }}
+      />
 
       <Suspense>
         <ListingDetailSheet />

@@ -12,11 +12,12 @@ export type ListingCardProps = {
 }
 
 export function ListingCard({ id, name, category, address, rating, photoUrl }: ListingCardProps) {
+  const src = photoUrl ? require("@/lib/images/thumb").getThumbnailUrl(photoUrl, 400) : undefined
   return (
     <Card className="bg-white border-gray-200 overflow-hidden">
-      {photoUrl && (
+      {src && (
         <div className="relative w-full h-40">
-          <Image src={photoUrl} alt={name} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />
+          <Image src={src} alt={name} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />
         </div>
       )}
       <CardHeader className="pb-2">
