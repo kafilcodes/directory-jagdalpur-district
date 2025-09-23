@@ -12,6 +12,7 @@ function init() {
     }
     admin.initializeApp({
       credential: admin.credential.cert({ projectId, clientEmail, privateKey }),
+      storageBucket: process.env.FIREBASE_STORAGE_BUCKET || process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
     })
   }
 }
@@ -24,6 +25,11 @@ export function getAdminApp() {
 export function getAdminDb() {
   init()
   return admin.firestore()
+}
+
+export function getAdminBucket() {
+  init()
+  return admin.storage().bucket()
 }
 
 export const FieldValue = admin.firestore.FieldValue

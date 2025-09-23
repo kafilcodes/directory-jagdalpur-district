@@ -13,10 +13,17 @@ export default function AuthButtons() {
 
   const onSignIn = async () => {
     const provider = new GoogleAuthProvider()
-    await signInWithPopup(auth, provider)
+    const cred = await signInWithPopup(auth, provider)
+    const idToken = await cred.user.getIdToken()
+    await fetch("/api/auth/session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idToken }),
+    })
   }
 
   const onSignOut = async () => {
+    await fetch("/api/auth/session", { method: "DELETE" })
     await signOut(auth)
   }
 

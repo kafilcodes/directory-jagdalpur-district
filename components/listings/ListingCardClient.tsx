@@ -4,10 +4,15 @@ import { useCallback } from "react"
 
 export default function ListingCardClient(props: ListingCardProps) {
   const onClick = useCallback(() => {
-    // Update URL param to open the detail sheet
-    const url = new URL(window.location.href)
-    url.searchParams.set("id", props.id)
-    window.history.replaceState({}, "", url.toString())
+    // Navigate to the dedicated details page while also supporting sheet on homepage
+    const isHome = window.location.pathname === "/"
+    if (isHome) {
+      const url = new URL(window.location.href)
+      url.searchParams.set("id", props.id)
+      window.history.replaceState({}, "", url.toString())
+    } else {
+      window.location.href = `/listing/${props.id}`
+    }
 
     // Fire-and-forget tracking
     try {

@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import Image from "next/image"
 
 export type ListingCardProps = {
   id: string
@@ -7,11 +8,17 @@ export type ListingCardProps = {
   category: string
   address: string
   rating?: number
+  photoUrl?: string
 }
 
-export function ListingCard({ id, name, category, address, rating }: ListingCardProps) {
+export function ListingCard({ id, name, category, address, rating, photoUrl }: ListingCardProps) {
   return (
-    <Card className="bg-white border-gray-200">
+    <Card className="bg-white border-gray-200 overflow-hidden">
+      {photoUrl && (
+        <div className="relative w-full h-40">
+          <Image src={photoUrl} alt={name} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />
+        </div>
+      )}
       <CardHeader className="pb-2">
         <CardTitle className="text-lg flex items-center justify-between">
           <span>{name}</span>

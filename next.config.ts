@@ -9,7 +9,12 @@ const nextConfig: NextConfig = {
   typedRoutes: true,
   eslint: { ignoreDuringBuilds: false },
   typescript: { ignoreBuildErrors: false },
-  images: { remotePatterns: [] },
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "storage.googleapis.com" },
+      { protocol: "https", hostname: "firebasestorage.googleapis.com" },
+    ],
+  },
 }
 
 export default nextConfig

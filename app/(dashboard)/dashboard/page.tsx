@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import RazorpayCheckoutButton from "@/components/payments/RazorpayCheckoutButton"
 import AuthButtons from "@/components/auth/AuthButtons"
-
+import { getCurrentUser } from "@/lib/auth/server"
 type EventItem = { type: string; timestamp: number; listingId?: string | null; path?: string | null }
 
 async function getStats() {
@@ -24,6 +24,19 @@ async function getStats() {
 export const dynamic = "force-dynamic"
 
 export default async function DashboardPage() {
+  const user = await getCurrentUser()
+  if (!user) {
+    return (
+      <main className="mx-auto max-w-3xl p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Provider Dashboard</h1>
+          <AuthButtons />
+        </div>
+        <p className="text-gray-600">Please sign in to access your dashboard.</p>
+      </main>
+    )
+  }
+
   const { total, counts, events } = await getStats()
 
   return (
