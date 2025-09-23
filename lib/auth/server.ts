@@ -13,3 +13,7 @@ export async function getCurrentUser() {
     return null
   }
 }
+
+export function isAdmin(decoded: any) {
+  return !!decoded?.admin
+}

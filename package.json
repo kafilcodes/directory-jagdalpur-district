@@ -11,7 +11,8 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "mcp:shadcn": "node tools/mcp/shadcn-server.js",
-    "seed:listings": "node tools/seed/seed-listings.mjs"
+    "seed:listings": "node tools/seed/seed-listings.mjs",
+    "set:admin": "node tools/admin/set-admin-claim.mjs"
   },
   "keywords": [],
   "author": "",

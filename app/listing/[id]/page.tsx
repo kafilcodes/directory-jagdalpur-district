@@ -49,23 +49,46 @@ export default async function ListingPage({ params }: any) {
   if (!snap.exists) return notFound()
   const d: any = snap.data()
 
+  const base = process.env.NEXT_PUBLIC_SITE_URL || "https://example.com"
+  const url = `${base}/listing/${id}`
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     name: d?.name || d?.listingName,
     address: d?.address || undefined,
-    url: (process.env.NEXT_PUBLIC_SITE_URL || "https://example.com") + `/listing/${id}`,
+    url,
     telephone: d?.phone || undefined,
+  }
+  const breadcrumbs = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: base },
+      { "@type": "ListItem", position: 2, name: d?.category || d?.listingType || "Listings", item: `${base}/search?cat=${encodeURIComponent(d?.category || d?.listingType || "")}` },
+      { "@type": "ListItem", position: 3, name: d?.name || d?.listingName, item: url },
+    ],
   }
 
   return (
     <main className="mx-auto max-w-3xl p-4 space-y-4">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbs) }} />
 
       <header className="space-y-1">
         <h1 className="text-2xl font-bold">{d?.name || d?.listingName}</h1>
         <p className="text-gray-600">{d?.category || d?.listingType}</p>
       </header>
+
+      {/* Image gallery */}
+      {Array.isArray(d?.photos) && d.photos.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {d.photos.map((p: string, i: number) => (
+            <div key={i} className="relative w-full h-40">
+              {require("react").createElement(require("next/image").default, { src: (require("@/lib/images/thumb").getThumbnailUrl(p, 800)), alt: d?.name || d?.listingName, fill: true, sizes: "(max-width: 768px) 50vw, 33vw", className: "object-cover rounded-md" })}
+            </div>
+          ))}
+        </div>
+      )}
 
       {d?.address && <p className="text-gray-700">{d.address}</p>}
       {d?.phone && <p className="text-gray-700">Phone: {d.phone}</p>}

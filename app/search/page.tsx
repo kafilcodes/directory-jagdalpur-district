@@ -22,10 +22,11 @@ export async function generateMetadata({ searchParams }: any) {
 
 export default async function SearchPage({ searchParams }: any) {
   const q = (searchParams.q || "").toLowerCase()
-  const cat = searchParams.cat || ""
+  const cats = String(searchParams.cats || "").split(",").filter(Boolean)
+  const sort = String(searchParams.sort || "relevance")
 
   // No admin env -> show skeletons
-  if (!hasAdminEnv()) {
+  if (!hasAdminEnv() && !(process.env.ALGOLIA_APP_ID && process.env.ALGOLIA_API_KEY && process.env.ALGOLIA_INDEX)) {
     return (
       <main className="mx-auto max-w-5xl p-4 space-y-4">
         <h1 className="text-2xl font-bold">Search</h1>
@@ -39,11 +40,13 @@ export default async function SearchPage({ searchParams }: any) {
   }
 
   const { searchListings } = await import("@/lib/search/server")
-  const filtered = (await searchListings({ q, cat, limit: 60 })) as any[]
+  const filtered = (await searchListings({ q, cats, limit: 60, sort })) as any[]
 
   return (
     <main className="mx-auto max-w-5xl p-4 space-y-4">
       <h1 className="text-2xl font-bold">Search</h1>
+      {/* Filters */}
+      {require("react").createElement(require("@/components/search/FiltersClient").default)}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
