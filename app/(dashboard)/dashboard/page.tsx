@@ -2,6 +2,7 @@ import { getAdminDb } from "@/lib/firebase/admin"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import RazorpayCheckoutButton from "@/components/payments/RazorpayCheckoutButton"
+import AuthButtons from "@/components/auth/AuthButtons"
 
 type EventItem = { type: string; timestamp: number; listingId?: string | null; path?: string | null }
 
@@ -27,7 +28,10 @@ export default async function DashboardPage() {
 
   return (
     <main className="mx-auto max-w-5xl p-4 space-y-4">
-      <h1 className="text-2xl font-bold">Provider Dashboard</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Provider Dashboard</h1>
+        <AuthButtons />
+      </div>
 
       <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card>

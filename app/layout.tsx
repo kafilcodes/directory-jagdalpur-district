@@ -12,7 +12,12 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <div className="mx-auto max-w-5xl p-4 flex items-center justify-between">
+          <a href="/" className="text-lg font-bold" aria-label="Home">Dhamtari Directory</a>
+        </div>
+        {children}
+      </body>
     </html>
   )
 }

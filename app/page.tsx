@@ -3,6 +3,7 @@ import SearchBox from "@/components/search/SearchBox"
 import { FeaturedListings } from "@/components/listings/FeaturedListings"
 import ClientAdSlot from "@/components/ads/ClientAdSlot"
 import ListingDetailSheet from "@/components/listings/ListingDetailSheet"
+import AuthButtons from "@/components/auth/AuthButtons"
 
 export const dynamic = "force-dynamic"
 
@@ -10,8 +11,13 @@ export default function HomePage() {
   return (
     <main className="mx-auto max-w-5xl p-4 space-y-4">
       <header className="space-y-2">
-        <h1 className="text-3xl font-bold">Dhamtari Directory</h1>
-        <p className="text-gray-600">Search and discover local businesses and services.</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Dhamtari Directory</h1>
+            <p className="text-gray-600">Search and discover local businesses and services.</p>
+          </div>
+          <AuthButtons />
+        </div>
       </header>
 
       <section>
