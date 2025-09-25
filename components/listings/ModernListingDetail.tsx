@@ -1,0 +1,393 @@
+"use client"
+
+import {
+  MapPin,
+  Phone,
+  Globe,
+  Clock,
+  Star,
+  Share2,
+  Bookmark,
+  Navigation,
+  Mail,
+  Facebook,
+  Instagram,
+  Twitter,
+  Wifi,
+  Car,
+  Coffee,
+  CreditCard,
+  Users,
+  Shield,
+  CheckCircle
+} from "lucide-react"
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Card, CardContent } from "@/components/ui/card"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+import { cn } from "@/lib/utils"
+
+// Dummy reviews data
+const dummyReviews = [
+  {
+    id: 1,
+    name: "John Doe",
+    avatar: "https://i.pravatar.cc/150?img=1",
+    rating: 5,
+    date: "2 days ago",
+    comment: "Excellent service and great ambiance. Highly recommended!",
+    helpful: 12
+  },
+  {
+    id: 2,
+    name: "Jane Smith",
+    avatar: "https://i.pravatar.cc/150?img=2",
+    rating: 4,
+    date: "1 week ago",
+    comment: "Good food and friendly staff. Will visit again.",
+    helpful: 8
+  },
+  {
+    id: 3,
+    name: "Mike Johnson",
+    avatar: "https://i.pravatar.cc/150?img=3",
+    rating: 5,
+    date: "2 weeks ago",
+    comment: "Best place in town! Love the atmosphere and service quality.",
+    helpful: 24
+  }
+]
+
+// Dummy gallery images
+const galleryImages = [
+  "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600",
+  "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=600",
+  "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600",
+  "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=600"
+]
+
+const amenityIcons = {
+  "Wifi": <Wifi className="h-4 w-4" />,
+  "Parking": <Car className="h-4 w-4" />,
+  "Restaurant": <Coffee className="h-4 w-4" />,
+  "Card Payment": <CreditCard className="h-4 w-4" />,
+  "Family Friendly": <Users className="h-4 w-4" />,
+  "Verified": <Shield className="h-4 w-4" />,
+}
+
+interface ModernListingDetailProps {
+  listing: any
+  open: boolean
+  onClose: () => void
+}
+
+export default function ModernListingDetail({ listing, open, onClose }: ModernListingDetailProps) {
+  if (!listing) return null
+
+  return (
+    <Sheet open={open} onOpenChange={onClose}>
+      <SheetContent className="w-full sm:max-w-2xl p-0 overflow-hidden">
+        {/* Accessible title for Dialog (visually hidden) */}
+        <SheetTitle className="sr-only">{listing?.name || "Listing details"}</SheetTitle>
+        <ScrollArea className="h-full">
+          <div className="relative">
+            {/* Hero Image */}
+            <div className="relative h-64 sm:h-80">
+              <img
+                src={listing.image || "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600"}
+                alt={listing.name}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+
+              {/* Action Buttons */}
+              <div className="absolute top-4 right-4 flex gap-2">
+                <Button size="icon" variant="secondary" className="bg-white/90 backdrop-blur">
+                  <Share2 className="h-4 w-4" />
+                </Button>
+                <Button size="icon" variant="secondary" className="bg-white/90 backdrop-blur">
+                  <Bookmark className="h-4 w-4" />
+                </Button>
+              </div>
+
+              {/* Title Overlay */}
+              <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h2 className="text-2xl sm:text-3xl font-bold mb-2">{listing.name}</h2>
+                    <div className="flex items-center gap-4 text-sm">
+                      <Badge variant="secondary" className="bg-white/20 backdrop-blur text-white border-white/30">
+                        {listing.category}
+                      </Badge>
+                      {listing.featured && (
+                        <Badge className="bg-red-500">Featured</Badge>
+                      )}
+                      {listing.rating && (
+                        <div className="flex items-center">
+                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                          <span className="ml-1 font-medium">{listing.rating}</span>
+                          <span className="ml-1 opacity-90">({listing.reviews || 0})</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-6">
+              {/* Quick Actions */}
+              <div className="grid grid-cols-2 gap-3">
+                <Button className="gap-2" variant="outline">
+                  <Phone className="h-4 w-4" />
+                  Call Now
+                </Button>
+                <Button className="gap-2" variant="outline">
+                  <Navigation className="h-4 w-4" />
+                  Get Directions
+                </Button>
+              </div>
+
+              {/* Tabs */}
+              <Tabs defaultValue="overview" className="w-full">
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="overview">Overview</TabsTrigger>
+                  <TabsTrigger value="gallery">Gallery</TabsTrigger>
+                  <TabsTrigger value="reviews">Reviews</TabsTrigger>
+                  <TabsTrigger value="about">About</TabsTrigger>
+                </TabsList>
+
+                {/* Overview Tab */}
+                <TabsContent value="overview" className="mt-6 space-y-6">
+                  {/* Contact Info */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-lg">Contact Information</h3>
+                    <div className="space-y-3">
+                      {listing.address && (
+                        <div className="flex items-start gap-3">
+                          <MapPin className="h-5 w-5 text-gray-400 mt-0.5" />
+                          <div>
+                            <p className="font-medium">Address</p>
+                            <p className="text-sm text-gray-600">{listing.address}</p>
+                            <Button variant="link" className="p-0 h-auto text-red-500">
+                              View on map
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+
+                      {listing.phone && (
+                        <div className="flex items-start gap-3">
+                          <Phone className="h-5 w-5 text-gray-400 mt-0.5" />
+                          <div>
+                            <p className="font-medium">Phone</p>
+                            <p className="text-sm text-gray-600">{listing.phone}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {listing.hours && (
+                        <div className="flex items-start gap-3">
+                          <Clock className="h-5 w-5 text-gray-400 mt-0.5" />
+                          <div>
+                            <p className="font-medium">Business Hours</p>
+                            <p className="text-sm text-gray-600">{listing.hours}</p>
+                            <Badge variant="outline" className="mt-1 text-green-600 border-green-600">
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Open Now
+                            </Badge>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex items-start gap-3">
+                        <Globe className="h-5 w-5 text-gray-400 mt-0.5" />
+                        <div>
+                          <p className="font-medium">Website</p>
+                          <Button variant="link" className="p-0 h-auto text-red-500">
+                            Visit website
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Amenities */}
+                  {listing.tags && (
+                    <div className="space-y-4">
+                      <h3 className="font-semibold text-lg">Amenities & Features</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {listing.tags.map((tag: string) => (
+                          <Badge key={tag} variant="secondary" className="gap-1 py-1.5">
+                            {amenityIcons[tag as keyof typeof amenityIcons] || <CheckCircle className="h-4 w-4" />}
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Description */}
+                  {listing.description && (
+                    <div className="space-y-4">
+                      <h3 className="font-semibold text-lg">About</h3>
+                      <p className="text-gray-600 leading-relaxed">{listing.description}</p>
+                    </div>
+                  )}
+                </TabsContent>
+
+                {/* Gallery Tab */}
+                <TabsContent value="gallery" className="mt-6">
+                  <Carousel className="w-full">
+                    <CarouselContent>
+                      {galleryImages.map((image, index) => (
+                        <CarouselItem key={index} className="md:basis-1/2">
+                          <div className="relative aspect-video overflow-hidden rounded-lg">
+                            <img
+                              src={image}
+                              alt={`Gallery ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                    <CarouselPrevious className="left-2" />
+                    <CarouselNext className="right-2" />
+                  </Carousel>
+                </TabsContent>
+
+                {/* Reviews Tab */}
+                <TabsContent value="reviews" className="mt-6 space-y-4">
+                  {/* Review Summary */}
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-3xl font-bold">{listing.rating || 4.5}</span>
+                            <div className="flex">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Star
+                                  key={star}
+                                  className={cn(
+                                    "h-5 w-5",
+                                    star <= Math.floor(listing.rating || 4.5)
+                                      ? "fill-yellow-400 text-yellow-400"
+                                      : "text-gray-300"
+                                  )}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                          <p className="text-sm text-gray-500 mt-1">Based on {listing.reviews || 234} reviews</p>
+                        </div>
+                        <Button>Write a Review</Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Reviews List */}
+                  <div className="space-y-4">
+                    {dummyReviews.map((review) => (
+                      <Card key={review.id}>
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-3">
+                            <Avatar>
+                              <AvatarImage src={review.avatar} />
+                              <AvatarFallback>{review.name[0]}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between mb-1">
+                                <div>
+                                  <p className="font-medium">{review.name}</p>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <div className="flex">
+                                      {[1, 2, 3, 4, 5].map((star) => (
+                                        <Star
+                                          key={star}
+                                          className={cn(
+                                            "h-3 w-3",
+                                            star <= review.rating
+                                              ? "fill-yellow-400 text-yellow-400"
+                                              : "text-gray-300"
+                                          )}
+                                        />
+                                      ))}
+                                    </div>
+                                    <span className="text-xs text-gray-500">{review.date}</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <p className="text-sm text-gray-600 mt-2">{review.comment}</p>
+                              <div className="flex items-center gap-4 mt-3">
+                                <Button variant="ghost" size="sm" className="h-auto p-0 text-xs">
+                                  Helpful ({review.helpful})
+                                </Button>
+                                <Button variant="ghost" size="sm" className="h-auto p-0 text-xs">
+                                  Report
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </TabsContent>
+
+                {/* About Tab */}
+                <TabsContent value="about" className="mt-6 space-y-6">
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-lg">Business Details</h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between py-2 border-b">
+                        <span className="text-gray-600">Established</span>
+                        <span className="font-medium">2010</span>
+                      </div>
+                      <div className="flex justify-between py-2 border-b">
+                        <span className="text-gray-600">Owner</span>
+                        <span className="font-medium">Mr. Rajesh Kumar</span>
+                      </div>
+                      <div className="flex justify-between py-2 border-b">
+                        <span className="text-gray-600">Employees</span>
+                        <span className="font-medium">50+</span>
+                      </div>
+                      <div className="flex justify-between py-2 border-b">
+                        <span className="text-gray-600">Service Area</span>
+                        <span className="font-medium">Dhamtari & Nearby</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-lg">Social Media</h3>
+                    <div className="flex gap-3">
+                      <Button size="icon" variant="outline">
+                        <Facebook className="h-4 w-4" />
+                      </Button>
+                      <Button size="icon" variant="outline">
+                        <Instagram className="h-4 w-4" />
+                      </Button>
+                      <Button size="icon" variant="outline">
+                        <Twitter className="h-4 w-4" />
+                      </Button>
+                      <Button size="icon" variant="outline">
+                        <Mail className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
+          </div>
+        </ScrollArea>
+      </SheetContent>
+    </Sheet>
+  )
+}

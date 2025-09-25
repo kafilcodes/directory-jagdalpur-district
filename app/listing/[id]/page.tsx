@@ -10,7 +10,8 @@ function hasAdminEnv() {
 }
 
 export async function generateMetadata({ params }: any) {
-  const id = params.id
+  const resolvedParams = await params
+  const id = resolvedParams.id
   let name = "Listing"
   let description = "Local business listing"
 
@@ -33,7 +34,8 @@ export async function generateMetadata({ params }: any) {
 }
 
 export default async function ListingPage({ params }: any) {
-  const id = params.id
+  const resolvedParams = await params
+  const id = resolvedParams.id
 
   if (!hasAdminEnv()) {
     return (
@@ -70,12 +72,12 @@ export default async function ListingPage({ params }: any) {
   }
 
   return (
-    <main className="mx-auto max-w-3xl p-4 space-y-4">
+    <main className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbs) }} />
 
       <header className="space-y-1">
-        <h1 className="text-2xl font-bold">{d?.name || d?.listingName}</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">{d?.name || d?.listingName}</h1>
         <p className="text-gray-600">{d?.category || d?.listingType}</p>
       </header>
 
@@ -83,23 +85,25 @@ export default async function ListingPage({ params }: any) {
       {Array.isArray(d?.photos) && d.photos.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {d.photos.map((p: string, i: number) => (
-            <div key={i} className="relative w-full h-40">
+            <div key={i} className="relative w-full h-48 sm:h-56">
               {require("react").createElement(require("next/image").default, { src: (require("@/lib/images/thumb").getThumbnailUrl(p, 800)), alt: d?.name || d?.listingName, fill: true, sizes: "(max-width: 768px) 50vw, 33vw", className: "object-cover rounded-md" })}
             </div>
           ))}
         </div>
       )}
 
-      {d?.address && <p className="text-gray-700">{d.address}</p>}
-      {d?.phone && <p className="text-gray-700">Phone: {d.phone}</p>}
-      {d?.website && (
-        <p className="text-gray-700">
-          Website:{" "}
-          <a className="text-accent-600 underline" href={d.website} target="_blank" rel="noreferrer">
-            {d.website}
-          </a>
-        </p>
-      )}
+      <section className="space-y-2 text-gray-700">
+        {d?.address && <p>{d.address}</p>}
+        {d?.phone && <p>Phone: {d.phone}</p>}
+        {d?.website && (
+          <p>
+            Website:{" "}
+            <a className="text-accent-600 underline" href={d.website} target="_blank" rel="noreferrer">
+              {d.website}
+            </a>
+          </p>
+        )}
+      </section>
     </main>
   )
 }

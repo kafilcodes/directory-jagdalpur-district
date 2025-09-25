@@ -33,9 +33,9 @@ export default async function ModerationPage() {
   const { pending, approved } = await getListings()
 
   return (
-    <main className="mx-auto max-w-5xl p-4 space-y-6">
+    <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Admin Moderation</h1>
+        <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">Admin Moderation</h1>
         <AuthButtons />
       </div>
 
@@ -47,7 +47,7 @@ export default async function ModerationPage() {
           <CardContent>
             <div className="space-y-2">
               {pending.map((l: any) => (
-                <form key={l.id} action={require("@/app/(admin)/admin/moderation/toggle").toggleApproval} className="flex items-center justify-between border p-2 rounded-md">
+                <form key={l.id} action={require("@/app/(admin)/admin/moderation/toggle").toggleApproval} className="flex items-center justify-between border p-3 rounded-md bg-white">
                   <div>
                     <div className="font-medium">{l.name || l.listingName || l.id}</div>
                     <div className="text-sm text-gray-500">{l.category || l.listingType}</div>
@@ -71,7 +71,7 @@ export default async function ModerationPage() {
           <CardContent>
             <div className="space-y-2">
               {approved.map((l: any) => (
-                <form key={l.id} action={require("@/app/(admin)/admin/moderation/toggle").toggleApproval} className="flex items-center justify-between border p-2 rounded-md">
+                <form key={l.id} action={require("@/app/(admin)/admin/moderation/toggle").toggleApproval} className="flex items-center justify-between border p-3 rounded-md bg-white">
                   <div>
                     <div className="font-medium">{l.name || l.listingName || l.id}</div>
                     <div className="text-sm text-gray-500">{l.category || l.listingType}</div>

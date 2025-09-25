@@ -3,7 +3,8 @@ import { getAdminDb } from "@/lib/firebase/admin"
 
 export async function GET(req: NextRequest, context: any) {
   try {
-    const { id } = context.params as { id: string }
+    const params = await context.params
+    const { id } = params as { id: string }
     const db = getAdminDb()
     const snap = await db.collection("listings").doc(id).get()
     if (!snap.exists) return NextResponse.json({ error: "not_found" }, { status: 404 })

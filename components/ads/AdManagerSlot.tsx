@@ -4,6 +4,8 @@ import React from "react"
 declare global {
   interface Window {
     googletag?: any
+    gptInitialized?: boolean
+    gptSlots?: Map<string, any>
   }
 }
 
@@ -12,6 +14,20 @@ function loadGPT() {
     if (typeof window === "undefined") return resolve(null)
     if (window.googletag?.apiReady) return resolve(window.googletag)
     window.googletag = window.googletag || { cmd: [] }
+    window.gptSlots = window.gptSlots || new Map()
+    
+    // Check if script is already loading or loaded
+    const existingScript = document.querySelector('script[src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"]')
+    if (existingScript) {
+      // Wait for it to load if not ready yet
+      if (window.googletag?.apiReady) {
+        return resolve(window.googletag)
+      }
+      // Add listener for when it's ready
+      existingScript.addEventListener('load', () => resolve(window.googletag))
+      return
+    }
+    
     const gads = document.createElement("script")
     gads.async = true
     gads.src = "https://securepubads.g.doubleclick.net/tag/js/gpt.js"
@@ -35,11 +51,34 @@ export function AdManagerSlot({ adUnitPath, sizes, divId, minHeight = 250, class
 
     loadGPT().then((googletag: any) => {
       if (!googletag || destroyed) return
+      
       googletag.cmd.push(function () {
-        googletag.pubads().enableSingleRequest()
-        googletag.enableServices()
-        slotRef = googletag.defineSlot(adUnitPath, sizes, divId).addService(googletag.pubads())
-        googletag.display(divId)
+        // Initialize GPT only once
+        if (!window.gptInitialized) {
+          googletag.pubads().enableSingleRequest()
+          googletag.enableServices()
+          window.gptInitialized = true
+        }
+        
+        // Check if this slot already exists
+        const existingSlot = window.gptSlots?.get(divId)
+        if (existingSlot) {
+          // Destroy the existing slot first
+          googletag.destroySlots([existingSlot])
+          window.gptSlots?.delete(divId)
+        }
+        
+        // Create the new slot
+        try {
+          const newSlot = googletag.defineSlot(adUnitPath, sizes, divId)
+          if (newSlot) {
+            slotRef = newSlot.addService(googletag.pubads())
+            window.gptSlots?.set(divId, slotRef)
+            googletag.display(divId)
+          }
+        } catch (error) {
+          console.warn(`Failed to create ad slot ${divId}:`, error)
+        }
       })
     })
 
@@ -47,8 +86,11 @@ export function AdManagerSlot({ adUnitPath, sizes, divId, minHeight = 250, class
       destroyed = true
       try {
         const g = window.googletag
-        if (g?.pubads && slotRef) {
-          g.destroySlots([slotRef])
+        if (g?.destroySlots && slotRef) {
+          g.cmd.push(() => {
+            g.destroySlots([slotRef])
+            window.gptSlots?.delete(divId)
+          })
         }
       } catch {}
     }

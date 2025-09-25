@@ -1,15 +1,21 @@
 "use client"
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth"
-import { useEffect, useState } from "react"
-import { firebaseApp } from "@/lib/firebase/client"
+import { useEffect, useMemo, useState } from "react"
+import { getFirebaseApp } from "@/lib/firebase/client"
 
 export default function AuthButtons() {
   const [userEmail, setUserEmail] = useState<string | null>(null)
-  const auth = getAuth(firebaseApp)
+  const app = useMemo(() => getFirebaseApp(), [])
+  const auth = useMemo(() => (app ? getAuth(app) : null), [app])
 
+  // Always call hooks; guard inside them
   useEffect(() => {
+    if (!auth) return
     return auth.onAuthStateChanged((u) => setUserEmail(u?.email || null))
   }, [auth])
+
+  // Hide the auth UI entirely if client env is not configured
+  if (!auth) return null
 
   const onSignIn = async () => {
     const provider = new GoogleAuthProvider()

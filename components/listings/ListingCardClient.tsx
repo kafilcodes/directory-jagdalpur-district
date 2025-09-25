@@ -25,8 +25,12 @@ export default function ListingCardClient(props: ListingCardProps) {
     } catch {}
   }, [props.id])
 
-  return (
-    <button onClick={onClick} className="text-left w-full">
+return (
+    <button
+      onClick={onClick}
+      className="text-left w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 rounded-lg cursor-pointer"
+      aria-label={`Open listing ${props.name}`}
+    >
       <ListingCard {...props} />
     </button>
   )

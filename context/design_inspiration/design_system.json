@@ -1,0 +1,78 @@
+{
+  "name": "Dhamtari Directory Design System",
+  "version": "1.0",
+  "philosophy": [
+    "Clarity First",
+    "Modern & Minimalist",
+    "Trustworthy & Professional",
+    "Content-Focused"
+  ],
+  "palette": {
+    "primary": {
+      "name": "Accent Red",
+      "hex": "#EF4444",
+      "tailwind": "red-500"
+    },
+    "text": {
+      "main": {
+        "hex": "#1F2937",
+        "tailwind": "gray-800"
+      },
+      "muted": {
+        "hex": "#6B7280",
+        "tailwind": "gray-500"
+      }
+    },
+    "background": {
+      "main": {
+        "hex": "#F9FAFB",
+        "tailwind": "gray-50"
+      },
+      "card": {
+        "hex": "#FFFFFF",
+        "tailwind": "white"
+      }
+    },
+    "ui": {
+      "border": {
+        "hex": "#E5E7EB",
+        "tailwind": "gray-200"
+      }
+    },
+    "feedback": {
+      "success": {
+        "hex": "#10B981",
+        "tailwind": "emerald-500"
+      }
+    }
+  },
+  "typography": {
+    "fontFamily": "Inter, sans-serif",
+    "scale": {
+      "h1": "text-4xl md:text-5xl",
+      "h2": "text-2xl md:text-3xl",
+      "h3": "text-xl",
+      "body": "text-base",
+      "label": "text-sm"
+    }
+  },
+  "layout": {
+    "spacingUnit": "8px",
+    "containerMaxWidth": "1280px"
+  },
+  "components": {
+    "button": {
+      "borderRadius": "0.5rem",
+      "padding": "0.75rem 1.5rem"
+    },
+    "card": {
+      "borderRadius": "0.75rem",
+      "padding": "1.5rem",
+      "boxShadow": "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)"
+    },
+    "input": {
+      "borderRadius": "0.5rem",
+      "padding": "0.75rem 1rem"
+    }
+  }
+}

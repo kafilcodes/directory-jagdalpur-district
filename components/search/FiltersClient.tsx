@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useMemo, useState } from "react"
+import { useMemo } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { categories, sortOptions } from "@/features/listings/config"
 import { Label } from "@/components/ui/label"
@@ -29,21 +29,32 @@ export default function FiltersClient() {
 
   return (
     <div className="flex flex-col sm:flex-row sm:items-end gap-4">
-      <div>
-        <Label className="mb-1 block">Categories</Label>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {categories.map((c) => (
-            <label key={c} className="inline-flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={cats.has(c)} onChange={() => toggleCat(c)} />
-              <span>{c}</span>
-            </label>
-          ))}
+      <div className="space-y-2">
+        <Label className="block text-sm text-gray-600">Categories</Label>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+          {categories.map((c) => {
+            const checked = cats.has(c)
+            return (
+              <button
+                key={c}
+                type="button"
+                aria-pressed={checked}
+                onClick={() => toggleCat(c)}
+                className={[
+                  "inline-flex items-center justify-center rounded-full px-3 py-1.5 text-sm transition-colors",
+                  checked ? "bg-red-500 text-white" : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50",
+                ].join(" ")}
+              >
+                {c}
+              </button>
+            )
+          })}
         </div>
       </div>
       <div className="sm:ml-auto w-full sm:w-64">
-        <Label className="mb-1 block">Sort</Label>
+        <Label className="mb-1 block text-sm text-gray-600">Sort</Label>
         <Select value={sort} onValueChange={(v) => updateParam("sort", v)}>
-          <SelectTrigger>
+          <SelectTrigger className="bg-white">
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
           <SelectContent>

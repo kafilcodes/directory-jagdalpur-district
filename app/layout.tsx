@@ -1,6 +1,9 @@
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "../styles/globals.css"
+import { Toaster } from "sonner"
+import Header from "@/components/layout/Header"
+import Footer from "@/components/layout/Footer"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -11,12 +14,22 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        <div className="mx-auto max-w-5xl p-4 flex items-center justify-between">
-          <a href="/" className="text-lg font-bold" aria-label="Home">Dhamtari Directory</a>
-        </div>
-        {children}
+    <html lang="en" className="scroll-smooth">
+      <body className={`${inter.className} min-h-screen bg-gray-50`}>
+        <Header />
+        <main className="flex-1">
+          {children}
+        </main>
+        <Footer />
+        <Toaster 
+          richColors 
+          position="top-right" 
+          className="z-[100]" 
+          toastOptions={{
+            className: "font-medium",
+            duration: 4000,
+          }}
+        />
       </body>
     </html>
   )

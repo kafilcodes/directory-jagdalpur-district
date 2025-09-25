@@ -22,11 +22,13 @@ export default function ListingDetailSheet() {
       .finally(() => setLoading(false))
   }, [id])
 
-  return (
+return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>{data?.name || data?.listingName || (loading ? "Loading..." : "Details")}</SheetTitle>
+          <SheetTitle className="text-xl font-semibold tracking-tight">
+            {data?.name || data?.listingName || (loading ? "Loading..." : "Details")}
+          </SheetTitle>
         </SheetHeader>
         {loading ? (
           <div className="space-y-3 mt-4">
@@ -35,14 +37,32 @@ export default function ListingDetailSheet() {
             <Skeleton className="h-24 w-full" />
           </div>
         ) : data ? (
-          <div className="mt-4 space-y-2 text-sm text-gray-700">
-            {data.address && <p>{data.address}</p>}
-            {data.phone && <p>Phone: {data.phone}</p>}
-            {data.email && <p>Email: {data.email}</p>}
+          <div className="mt-4 space-y-4 text-sm text-gray-700">
+            {data.address && (
+              <div>
+                <div className="text-gray-500 text-xs uppercase tracking-wide mb-1">Address</div>
+                <p>{data.address}</p>
+              </div>
+            )}
+            {data.phone && (
+              <div>
+                <div className="text-gray-500 text-xs uppercase tracking-wide mb-1">Phone</div>
+                <p>{data.phone}</p>
+              </div>
+            )}
+            {data.email && (
+              <div>
+                <div className="text-gray-500 text-xs uppercase tracking-wide mb-1">Email</div>
+                <p>{data.email}</p>
+              </div>
+            )}
             {data.website && (
-              <p>
-                Website: <a className="text-accent-600 underline" href={data.website} target="_blank" rel="noreferrer">{data.website}</a>
-              </p>
+              <div>
+                <div className="text-gray-500 text-xs uppercase tracking-wide mb-1">Website</div>
+                <a className="text-accent-600 underline" href={data.website} target="_blank" rel="noreferrer">
+                  {data.website}
+                </a>
+              </div>
             )}
           </div>
         ) : (
