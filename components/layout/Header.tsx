@@ -24,6 +24,8 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
 import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import {
   Menu,
@@ -40,9 +42,12 @@ import {
   TrendingUp,
   Compass
 } from "lucide-react"
-import AuthButtons from "@/components/auth/AuthButtons"
-import { getAuth } from "firebase/auth"
+import Image from "next/image"
+import { Facebook as FacebookSvg, X as XSvg, Instagram as InstagramSvg } from "@/components/icons/SocialSvgr"
+import { useRouter } from "next/navigation"
 import { getFirebaseApp } from "@/lib/firebase/client"
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "firebase/auth"
+import { getFirestore, collection, query, where, limit, getDocs } from "firebase/firestore"
 
 const categories: Category[] = [
   {
@@ -59,33 +64,101 @@ const categories: Category[] = [
     items: [
       { name: "Shopping", icon: <TrendingUp className="h-4 w-4" />, href: "/search?category=shopping" },
       { name: "Services", icon: <Phone className="h-4 w-4" />, href: "/search?category=services" },
-      { name: "Real Estate", icon: <Home className="h-4 w-4" />, href: "/search?category=realestate" },
+      { name: "Real Estate", icon: <Home className="h-4 w-4" />, href: "/search?category=real-estate" },
     ]
   }
 ]
 
-export default function Header() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [signedIn, setSignedIn] = useState(false)
-  const pathname = usePathname()
+
+export default function Header({ canShowProfileIcon = false }: { canShowProfileIcon?: boolean }) {
+  const router = useRouter()
+  const [isSignedIn, setIsSignedIn] = useState(false)
+  const [signInOpen, setSignInOpen] = useState(false)
+  const [signInError, setSignInError] = useState<string | null>(null)
+  const [signingIn, setSigningIn] = useState(false)
+  const [sessionEstablished, setSessionEstablished] = useState(false)
+
 
   useEffect(() => {
-    try {
-      const app = getFirebaseApp()
-      if (!app) return
-      const auth = getAuth(app)
-      return auth.onAuthStateChanged((u) => setSignedIn(!!u))
-    } catch {
-      // no-op
-    }
+    const app = getFirebaseApp()
+    const auth = app ? getAuth(app) : null
+    if (!auth) return
+    return onAuthStateChanged(auth, (u) => {
+      setIsSignedIn(!!u)
+      if (!u) setSessionEstablished(false)
+    })
   }, [])
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setSigningIn(true)
+      setSignInError(null)
+      const app = getFirebaseApp()
+      const auth = app ? getAuth(app) : null
+      if (!auth) throw new Error("Auth not initialized")
+      const provider = new GoogleAuthProvider()
+      const cred = await signInWithPopup(auth, provider)
+      const idToken = await cred.user.getIdToken()
+      const resp = await fetch("/api/auth/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken }),
+      })
+      if (!resp.ok) throw new Error("Failed to establish session")
+      setSessionEstablished(true)
+
+      // Determine redirect: if user already has a listing -> dashboard/my-listings; else -> submit
+      const dbApp = getFirebaseApp()
+      const db = dbApp ? getFirestore(dbApp) : null
+      let redirect = "/submit"
+      if (db) {
+        try {
+          const uid = (await getAuth(dbApp!).currentUser?.getIdTokenResult())?.claims?.user_id || getAuth(dbApp!).currentUser?.uid
+          const q = query(collection(db, "listings"), where("ownerId", "==", uid), limit(1))
+          const snap = await getDocs(q)
+          redirect = !snap.empty ? "/dashboard/my-listings" : "/submit"
+        } catch {
+          redirect = "/submit"
+        }
+      }
+      setSignInOpen(false)
+      router.push(redirect as any)
+    } catch (e) {
+      setSignInError("Sign in failed — try again later")
+      try {
+        const app = getFirebaseApp()
+        const auth = app ? getAuth(app) : null
+        if (auth) await auth.signOut()
+      } catch { }
+      setIsSignedIn(false)
+      setSessionEstablished(false)
+    } finally {
+      setSigningIn(false)
+    }
+  }
+
+  const onAddListing = () => {
+    if (isSignedIn) {
+      router.push("/submit" as any)
+    } else {
+      setSignInOpen(true)
+    }
+  }
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const pathname = usePathname()
 
   const isActive = (href: string) => pathname === href
 
+  // Hide public header on business area routes
+  if (pathname?.startsWith("/dashboard") || pathname === "/my-listings" || pathname === "/listing" || pathname === "/submit") {
+    return null
+  }
+
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+    <header className="sticky top-0 z-50 w-full bg-white">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
+        <div className="relative flex h-16 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-8">
             <Link href="/" className="flex items-center space-x-2 group">
@@ -134,23 +207,34 @@ export default function Header() {
               </NavigationMenuList>
             </NavigationMenu>
           </div>
+          {/* Center social icons on md+ */}
+          <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-3">
+            <a href="#" aria-label="Facebook" className="opacity-80 hover:opacity-100">
+              <FacebookSvg />
+            </a>
+            <a href="#" aria-label="X" className="opacity-80 hover:opacity-100">
+              <XSvg />
+            </a>
+            <a href="#" aria-label="Instagram" className="opacity-80 hover:opacity-100">
+              <InstagramSvg />
+            </a>
+          </div>
+
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-4">
-            <Link href="/submit">
-              <Button variant="outline" className="gap-2 border-red-500 text-red-600 hover:bg-red-50">
-                <PlusCircle className="h-4 w-4 text-red-500" />
-                Add Listing
-              </Button>
-            </Link>
-            {signedIn && (
+            {(isSignedIn && sessionEstablished) ? (
               <Link href="/dashboard">
-                <Button variant="outline" size="icon" className="relative border rounded-md">
+                <Button variant="outline" size="icon" className="relative border rounded-md" aria-label="Open profile">
                   <User className="h-5 w-5" />
                 </Button>
               </Link>
+            ) : (
+              <Button onClick={onAddListing} variant="outline" className="gap-2 border-red-500 text-red-600 hover:bg-red-50">
+                <PlusCircle className="h-4 w-4 text-red-500" />
+                Add Listing
+              </Button>
             )}
-            <AuthButtons />
           </div>
 
           {/* Mobile Menu Trigger */}
@@ -161,7 +245,7 @@ export default function Header() {
                 <span className="sr-only">Toggle menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+            <SheetContent side="right" className="w-[300px] sm:w-[400px] overflow-y-auto bg-white">
               <SheetHeader>
                 <SheetTitle>Navigation</SheetTitle>
               </SheetHeader>
@@ -171,7 +255,7 @@ export default function Header() {
                     href="/"
                     onClick={() => setMobileMenuOpen(false)}
                     className={cn(
-                      "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover:bg-gray-100",
+                      "flex items-center gap-3 rounded-md px-4 py-3 text-base font-medium hover:bg-gray-100",
                       isActive("/") && "bg-gray-100"
                     )}
                   >
@@ -183,7 +267,7 @@ export default function Header() {
                   href="/search"
                   onClick={() => setMobileMenuOpen(false)}
                   className={cn(
-                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover:bg-gray-100",
+                    "flex items-center gap-3 rounded-md px-4 py-3 text-base font-medium hover:bg-gray-100",
                     isActive("/search") && "bg-gray-100"
                   )}
                 >
@@ -194,10 +278,45 @@ export default function Header() {
                   href={"/browse" as any}
                   onClick={() => setMobileMenuOpen(false)}
                   className={cn(
-                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover:bg-gray-100",
+                    "flex items-center gap-3 rounded-md px-4 py-3 text-base font-medium hover:bg-gray-100",
                     isActive("/browse") && "bg-gray-100"
                   )}
                 >
+                  <Dialog open={signInOpen} onOpenChange={setSignInOpen}>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle className="text-center">Sign in required</DialogTitle>
+                        <DialogDescription className="text-center">Please sign in to list your business and services.</DialogDescription>
+                      </DialogHeader>
+                      <div className="flex flex-col items-center gap-4 py-2">
+                        <Image
+                          src={signInError ? "/error.svg" : "/login.svg"}
+                          alt="Sign in illustration"
+                          width={220}
+                          height={140}
+                          className="h-auto w-auto"
+                        />
+                        <button
+                          onClick={handleGoogleSignIn}
+                          disabled={signingIn}
+                          aria-label="Sign in with Google"
+                          className="inline-flex items-center justify-center h-12 w-12 rounded-full border shadow-sm bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500"
+                        >
+                          <svg className="h-6 w-6" viewBox="0 0 48 48" aria-hidden="true">
+                            <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303C33.64 31.91 29.223 35 24 35c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.957 3.043l5.657-5.657C34.675 4.051 29.569 2 24 2 12.955 2 4 10.955 4 22s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.651-.389-3.917z" />
+                            <path fill="#43A047" d="M6.306 14.691l6.571 4.815C14.297 16.061 18.777 13 24 13c3.059 0 5.842 1.154 7.957 3.043l5.657-5.657C34.675 4.051 29.569 2 24 2 16.318 2 9.656 6.337 6.306 14.691z" />
+                            <path fill="#00BCD4" d="M24 42c5.166 0 9.86-1.977 13.388-5.205l-6.167-5.206C29.22 33.91 25.03 35 24 35c-5.21 0-9.62-3.08-11.29-7.384l-6.57 5.058C8.454 38.722 15.63 42 24 42z" />
+                            <path fill="#F44336" d="M43.611 20.083H42V20H24v8h11.303C34.64 31.91 29.223 35 24 35c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.957 3.043l5.657-5.657C34.675 4.051 29.569 2 24 2 12.955 2 4 10.955 4 22s8.955 20 20 20c9.261 0 17.039-5.94 19.611-14.083z" />
+                          </svg>
+                        </button>
+                        {signInError && (
+                          <p className="text-sm text-red-600" role="alert">{signInError}</p>
+                        )}
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+
+
                   <Compass className="h-4 w-4" />
                   Browse
                 </Link>
@@ -218,21 +337,53 @@ export default function Header() {
                 </div>
 
                 <div className="border-t pt-4 space-y-3">
-                  <Link href="/submit" onClick={() => setMobileMenuOpen(false)}>
-                    <Button variant="outline" className="w-full gap-2 border-red-500 text-red-600 hover:bg-red-50">
-                      <PlusCircle className="h-4 w-4 text-red-500" />
-                      Add Listing
-                    </Button>
-                  </Link>
-                  <div className="w-full">
-                    <AuthButtons />
-                  </div>
+                  <Button onClick={() => { setMobileMenuOpen(false); onAddListing(); }} variant="outline" className="w-full gap-2 border-red-500 text-red-600 hover:bg-red-50">
+                    <PlusCircle className="h-4 w-4 text-red-500" />
+                    Add Listing
+                  </Button>
+                  {/* Auth UI removed for public header */}
                 </div>
               </nav>
             </SheetContent>
           </Sheet>
         </div>
+        {/* Sign-in Modal (global) */}
+        <Dialog open={signInOpen} onOpenChange={setSignInOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-center">Sign in required</DialogTitle>
+              <DialogDescription className="text-center">Please sign in to list your business and services.</DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col items-center gap-4 py-2">
+              <Image
+                src={signInError ? "/error.svg" : "/login.svg"}
+                alt="Sign in illustration"
+                width={220}
+                height={140}
+                className="h-auto w-auto"
+              />
+              <button
+                onClick={handleGoogleSignIn}
+                disabled={signingIn}
+                className="inline-flex items-center justify-center gap-2 h-11 px-4 rounded-md border shadow-sm bg-white hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+                aria-label="Sign in with Google"
+              >
+                <svg className="h-5 w-5" viewBox="0 0 48 48" aria-hidden="true">
+                  <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303C33.64 31.91 29.223 35 24 35c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.957 3.043l5.657-5.657C34.675 4.051 29.569 2 24 2 12.955 2 4 10.955 4 22s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.651-.389-3.917z" />
+                  <path fill="#43A047" d="M6.306 14.691l6.571 4.815C14.297 16.061 18.777 13 24 13c3.059 0 5.842 1.154 7.957 3.043l5.657-5.657C34.675 4.051 29.569 2 24 2 16.318 2 9.656 6.337 6.306 14.691z" />
+                  <path fill="#00BCD4" d="M24 42c5.166 0 9.86-1.977 13.388-5.205l-6.167-5.206C29.22 33.91 25.03 35 24 35c-5.21 0-9.62-3.08-11.29-7.384l-6.57 5.058C8.454 38.722 15.63 42 24 42z" />
+                  <path fill="#F44336" d="M43.611 20.083H42V20H24v8h11.303C34.64 31.91 29.223 35 24 35c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.957 3.043l5.657-5.657C34.675 4.051 29.569 2 24 2 12.955 2 4 10.955 4 22s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.651-.389-3.917z" />
+                </svg>
+                <span className="font-medium">{signingIn ? "Signing in..." : "Sign in with Google"}</span>
+              </button>
+              {signInError && (
+                <p className="text-sm text-red-600" role="alert">{signInError}</p>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+
       </div>
-    </header>
+    </header >
   )
 }

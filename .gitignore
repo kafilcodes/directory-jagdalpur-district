@@ -30,3 +30,10 @@ firebase-debug.log
 # build artifacts
 coverage
 dist
+
+
+# local service account (do not commit)
+dhamtaridirectory-firebase-adminsdk-fbsvc-f4c6eabb2e.json
+
+# design/agent context (entire folder)
+context/

@@ -2,6 +2,8 @@
 
 import { useRef } from "react"
 import Link from "next/link"
+import Image from "next/image"
+
 import { ChevronLeft, ChevronRight, Star, MapPin, Clock, TrendingUp } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -118,10 +120,12 @@ export default function SponsoredCarousel({ onSelectListing }: SponsoredCarousel
                 >
                   {/* Image Section */}
                   <div className="relative h-48 overflow-hidden">
-                    <img
+                    <Image
                       src={listing.image}
                       alt={listing.name}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className="object-cover group-hover:scale-110 transition-transform duration-500"
                     />
 
                     {/* Badges */}

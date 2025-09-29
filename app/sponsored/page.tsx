@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button"
 import ModernListingDetail from "@/components/listings/ModernListingDetail"
 import { Star, MapPin, ChevronRight } from "lucide-react"
 
+import Image from "next/image"
+
 const sponsoredListings = [
   {
     id: 1,
@@ -92,7 +94,7 @@ export default function SponsoredPage() {
           {sponsoredListings.map((listing) => (
             <Card key={listing.id} className="group hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer" onClick={() => onSelect(listing)}>
               <div className="relative h-48 overflow-hidden">
-                <img src={listing.image} alt={listing.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                <Image src={listing.image} alt={listing.name} fill sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover group-hover:scale-110 transition-transform duration-500" priority={false} />
                 <div className="absolute top-3 left-3 flex gap-2">
                   <Badge className="bg-red-500 text-white">Sponsored</Badge>
                   {listing.badge && (

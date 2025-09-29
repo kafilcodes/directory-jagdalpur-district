@@ -22,9 +22,9 @@ export default function ListingDetailSheet() {
       .finally(() => setLoading(false))
   }, [id])
 
-return (
+  return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+      <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto bg-white">
         <SheetHeader>
           <SheetTitle className="text-xl font-semibold tracking-tight">
             {data?.name || data?.listingName || (loading ? "Loading..." : "Details")}

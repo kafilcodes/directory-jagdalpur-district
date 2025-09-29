@@ -58,6 +58,7 @@
   },
   "devDependencies": {
     "@modelcontextprotocol/sdk": "^1.18.1",
+    "@svgr/webpack": "^8.1.0",
     "@tailwindcss/postcss": "^4.1.13",
     "@types/lru-cache": "^7.10.9",
     "@types/node": "^24.5.2",

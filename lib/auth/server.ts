@@ -17,3 +17,8 @@ export async function getCurrentUser() {
 export function isAdmin(decoded: any) {
   return !!decoded?.admin
 }
+
+export function isBusinessOwner(decoded: any) {
+  return !!(decoded?.businessOwner || decoded?.owner || (Array.isArray(decoded?.roles) && decoded.roles.includes("owner")))
+}
+

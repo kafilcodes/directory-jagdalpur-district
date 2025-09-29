@@ -7,6 +7,7 @@ import {
   Clock,
   Star,
   Share2,
+  X,
   Bookmark,
   Navigation,
   Mail,
@@ -21,6 +22,8 @@ import {
   Shield,
   CheckCircle
 } from "lucide-react"
+import Image from "next/image"
+
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -90,22 +93,27 @@ export default function ModernListingDetail({ listing, open, onClose }: ModernLi
 
   return (
     <Sheet open={open} onOpenChange={onClose}>
-      <SheetContent className="w-full sm:max-w-2xl p-0 overflow-hidden">
+      <SheetContent className="w-full sm:max-w-2xl p-0 overflow-hidden no-default-close bg-white">
         {/* Accessible title for Dialog (visually hidden) */}
         <SheetTitle className="sr-only">{listing?.name || "Listing details"}</SheetTitle>
         <ScrollArea className="h-full">
           <div className="relative">
             {/* Hero Image */}
             <div className="relative h-64 sm:h-80">
-              <img
+              <Image
                 src={listing.image || "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600"}
                 alt={listing.name}
-                className="w-full h-full object-cover"
+                fill
+                sizes="100vw"
+                className="object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
 
               {/* Action Buttons */}
               <div className="absolute top-4 right-4 flex gap-2">
+                <Button size="icon" variant="secondary" className="bg-white/90 backdrop-blur" onClick={onClose} aria-label="Close details">
+                  <X className="h-4 w-4" />
+                </Button>
                 <Button size="icon" variant="secondary" className="bg-white/90 backdrop-blur">
                   <Share2 className="h-4 w-4" />
                 </Button>
@@ -248,10 +256,12 @@ export default function ModernListingDetail({ listing, open, onClose }: ModernLi
                       {galleryImages.map((image, index) => (
                         <CarouselItem key={index} className="md:basis-1/2">
                           <div className="relative aspect-video overflow-hidden rounded-lg">
-                            <img
+                            <Image
                               src={image}
                               alt={`Gallery ${index + 1}`}
-                              className="w-full h-full object-cover"
+                              fill
+                              sizes="(max-width: 768px) 100vw, 50vw"
+                              className="object-cover"
                             />
                           </div>
                         </CarouselItem>

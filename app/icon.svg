@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Dhamtari Directory icon">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ef4444"/>
+      <stop offset="100%" stop-color="#dc2626"/>
+    </linearGradient>
+  </defs>
+  <circle cx="32" cy="32" r="30" fill="#fff"/>
+  <path d="M32 8c-8.8 0-16 7.2-16 16 0 11.2 16 32 16 32s16-20.8 16-32c0-8.8-7.2-16-16-16zm0 24a8 8 0 1 1 0-16 8 8 0 0 1 0 16z" fill="url(#g)"/>
+</svg>
+

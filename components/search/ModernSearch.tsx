@@ -2,24 +2,13 @@
 
 import { useState, useEffect, useRef } from "react"
 import { Search, X, MapPin, Star, Clock, Filter, ChevronRight } from "lucide-react"
+import Image from "next/image"
+
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
+import { Card, CardContent } from "@/components/ui/card"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 
 // Dummy data for search results
@@ -272,10 +261,12 @@ export default function ModernSearch({ onSelectListing }: SearchResultProps) {
           >
             {/* Image */}
             <div className="relative h-48 overflow-hidden">
-              <img
+              <Image
                 src={listing.image}
                 alt={listing.name}
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                className="object-cover group-hover:scale-110 transition-transform duration-300"
               />
               {listing.featured && (
                 <Badge className="absolute top-3 left-3 bg-red-500">Featured</Badge>
