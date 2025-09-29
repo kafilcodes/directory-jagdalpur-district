@@ -1,17 +1,19 @@
 "use client"
 
 import { useState } from "react"
-import { ArrowRight, MapPin, TrendingUp, Star, Users, Shield, Award } from "lucide-react"
+import { ArrowRight, MapPin, TrendingUp, Star, Users, Shield, Award, Building2, UtensilsCrossed, Stethoscope, GraduationCap, Dumbbell } from "lucide-react"
 import DynamicSearchBar from "@/components/search/DynamicSearchBar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import SponsoredCarousel from "@/components/home/SponsoredCarousel"
+import FeaturedCarousel from "@/components/home/FeaturedCarousel"
 import ModernListingDetail from "@/components/listings/ModernListingDetail"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { normalizeCategoryToSlug } from "@/lib/categories"
+import { HERO_MIN_H, SECTION_VSPACE } from "@/lib/ui-home"
 
 // Stats data
 const stats = [
@@ -47,10 +49,13 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Hero Section */}
-      <section className="relative  isolate overflow-hidden  pt-16 pb-24">
-        {/* Hero background image */}
+      <section className={`relative isolate overflow-hidden pt-16 pb-24 ${HERO_MIN_H}`}>
+        {/* Hero background image: layered to show full image without cropping while covering */}
         <div className="absolute inset-0 -z-10">
-          <Image src="/bg.png" alt="" fill priority sizes="100vw" className="object-cover opacity-60" />
+          {/* Cover layer (blurred) ensures full-bleed coverage */}
+          <Image src="/bg.png" alt="" fill priority sizes="100vw" className="object-cover object-center opacity-30 blur-sm" />
+          {/* Foreground layer shows the complete original image */}
+          <Image src="/bg.png" alt="" fill priority sizes="100vw" className="object-contain object-center" />
         </div>
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative">
           <div className="text-center max-w-4xl mx-auto">
@@ -61,16 +66,16 @@ export default function HomePage() {
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-gray-900 mb-10">
               Discover Local{" "}
-              <span className="text-red-500 relative inline-block pb-1 md:pb-2 text-inherit">
+              <span className="text-red-500 relative inline-block pb-1 md:pb-2 text-inherit z-[998]">
                 Businesses
-                <svg className="pointer-events-none absolute bottom-0 left-0 w-full h-[0.35em] text-red-500" viewBox="0 0 200 10" preserveAspectRatio="none" aria-hidden="true">
+                <svg className="pointer-events-none absolute bottom-0 left-0 w-full h-[0.35em] text-red-500 z-[9999]" viewBox="0 0 200 10" preserveAspectRatio="none" aria-hidden="true">
                   <path d="M0 7 Q50 0 100 7 T200 7" stroke="currentColor" fill="none" strokeWidth="2" />
                 </svg>
               </span>
               <br />
             </h1>
 
-            <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+            <p className="text-sm sm:text-base lg:text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
               Connect with trusted local businesses, services, and professionals in Dhamtari.
               Your one-stop destination for everything local.
             </p>
@@ -100,18 +105,31 @@ export default function HomePage() {
             </div>
 
             {/* Quick Search Tags */}
-            <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
-              <span className="inline-flex items-center text-sm text-gray-500">Popular:</span>
-              {["Hotels", "Restaurants", "Hospitals", "Schools", "Gyms"].map((tag) => (
-                <Link key={tag} href={{ pathname: "/search", query: { q: tag } }}>
-                  <Badge
-                    variant="outline"
-                    className="cursor-pointer hover:bg-gray-100 transition-colors"
-                  >
-                    {tag}
-                  </Badge>
-                </Link>
-              ))}
+            <div className="mt-6">
+              <div className="flex items-center justify-center">
+                <span className="inline-flex items-center text-sm text-gray-500 mr-2">Popular:</span>
+              </div>
+              <div className="mt-2 overflow-x-auto no-scrollbar [-webkit-overflow-scrolling:touch]">
+                <div className="flex items-center gap-2 px-1 sm:justify-center min-w-max">
+                  {[
+                    { label: "Hotels", Icon: Building2 },
+                    { label: "Restaurants", Icon: UtensilsCrossed },
+                    { label: "Hospitals", Icon: Stethoscope },
+                    { label: "Schools", Icon: GraduationCap },
+                    { label: "Gyms", Icon: Dumbbell },
+                  ].map(({ label, Icon }) => (
+                    <Link key={label} aria-label={`Search ${label}`} href={{ pathname: "/search", query: { q: label } }}>
+                      <Badge
+                        variant="outline"
+                        className="cursor-pointer transition-colors whitespace-nowrap inline-flex items-center gap-1.5 px-3 py-1 text-xs sm:text-sm border-gray-300 hover:border-red-500 hover:bg-red-50 hover:text-red-600"
+                      >
+                        <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                        {label}
+                      </Badge>
+                    </Link>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -119,9 +137,14 @@ export default function HomePage() {
         {/* Decorative Elements */}
         <div className="absolute top-20 left-10 w-20 h-20 bg-red-200 rounded-full blur-3xl opacity-30"></div>
         <div className="absolute bottom-20 right-10 w-32 h-32 bg-blue-200 rounded-full blur-3xl opacity-30"></div>
+
+        {/* Featured carousel at hero bottom */}
+        <div className="mt-8">
+          <FeaturedCarousel onSelectListing={handleSelectListing} />
+        </div>
       </section>
 
-      {/* Stats Section */}
+      {/* Stats Section (Option A: below Sponsored) */}
       <section className="py-12 bg-white ">
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
@@ -142,23 +165,26 @@ export default function HomePage() {
       <section className="py-16">
         <div className=" mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Browse by Category</h2>
-            <p className="text-gray-600">Find exactly what you're looking for</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Browse by Category</h2>
+            <p className="text-gray-600 text-sm sm:text-base lg:text-lg">Find exactly what you're looking for</p>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {categories.map((category) => (
               <Card
                 key={category.name}
-                className="group cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+                role="link"
+                aria-label={`Browse ${category.name}`}
+                tabIndex={0}
+                className="group cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-red-500/40 border-0"
                 onClick={() => { const slug = normalizeCategoryToSlug(category.name) || category.name.toLowerCase().replace(/\s+/g, "-"); router.push(`/search?category=${encodeURIComponent(slug)}`) }}
               >
                 <CardContent className="p-6 text-center">
-                  <div className={`inline-flex items-center justify-center w-16 h-16 ${category.color} rounded-2xl mb-4 group-hover:scale-110 transition-transform`}>
-                    <span className="text-2xl">{category.icon}</span>
+                  <div className={`mx-auto inline-flex items-center justify-center w-20 h-20 ${category.color} rounded-2xl mb-4 group-hover:scale-110 transition-transform`}>
+                    <span className="text-3xl">{category.icon}</span>
                   </div>
                   <h3 className="font-semibold text-gray-900 mb-1">{category.name}</h3>
-                  <p className="text-sm text-gray-500">{category.count} listings</p>
+                  <p className="text-xs sm:text-sm lg:text-base text-gray-500">{category.count} listings</p>
                 </CardContent>
               </Card>
             ))}
@@ -169,12 +195,31 @@ export default function HomePage() {
       {/* Sponsored Carousel */}
       <SponsoredCarousel onSelectListing={handleSelectListing} />
 
+      {/* Option B (commented): integrate stats into features section for a tighter merge */}
+      {false && (
+        <section className="py-12 bg-white">
+          <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              {stats.map((stat, index) => (
+                <div key={index} className="text-center">
+                  <div className="inline-flex items-center justify-center w-12 h-12 bg-red-100 text-red-500 rounded-full mb-3">
+                    {stat.icon}
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
+                  <div className="text-sm text-gray-600">{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Features Section */}
       <section className="py-20 bg-gradient-to-b from-gray-50 to-white">
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Why Choose Dhamtari Directory?</h2>
-            <p className="text-lg text-gray-600">Your trusted local business companion</p>
+            <p className="text-sm sm:text-base lg:text-lg text-gray-600">Your trusted local business companion</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -184,7 +229,7 @@ export default function HomePage() {
                   <Shield className="h-8 w-8" />
                 </div>
                 <h3 className="text-xl font-semibold mb-4 text-gray-900">Verified Listings</h3>
-                <p className="text-gray-600 leading-relaxed">All businesses are verified to ensure authenticity and reliability</p>
+                <p className="text-gray-600 leading-relaxed text-sm sm:text-base lg:text-lg">All businesses are verified to ensure authenticity and reliability</p>
               </CardContent>
             </Card>
 
@@ -194,7 +239,7 @@ export default function HomePage() {
                   <Users className="h-8 w-8" />
                 </div>
                 <h3 className="text-xl font-semibold mb-4 text-gray-900">Community Reviews</h3>
-                <p className="text-gray-600 leading-relaxed">Real reviews from real customers to help you make informed decisions</p>
+                <p className="text-gray-600 leading-relaxed text-sm sm:text-base lg:text-lg">Real reviews from real customers to help you make informed decisions</p>
               </CardContent>
             </Card>
 
@@ -204,7 +249,7 @@ export default function HomePage() {
                   <Award className="h-8 w-8" />
                 </div>
                 <h3 className="text-xl font-semibold mb-4 text-gray-900">Best Deals</h3>
-                <p className="text-gray-600 leading-relaxed">Exclusive offers and discounts from premium local businesses</p>
+                <p className="text-gray-600 leading-relaxed text-sm sm:text-base lg:text-lg">Exclusive offers and discounts from premium local businesses</p>
               </CardContent>
             </Card>
           </div>
@@ -216,7 +261,7 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-black/10"></div>
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center relative">
           <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">List Your Business Today</h2>
-          <p className="text-red-100 mb-10 max-w-2xl mx-auto text-lg leading-relaxed">
+          <p className="text-red-100 mb-10 max-w-2xl mx-auto text-sm sm:text-base lg:text-lg leading-relaxed">
             Join thousands of successful businesses in Dhamtari. Get discovered by customers looking for services like yours.
           </p>
           <Button

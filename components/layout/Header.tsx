@@ -30,7 +30,6 @@ import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/co
 import {
   Menu,
   Search,
-  MapPin,
   Building2,
   Users,
   PlusCircle,
@@ -40,7 +39,8 @@ import {
   Phone,
   Star,
   TrendingUp,
-  Compass
+  Compass,
+  Info
 } from "lucide-react"
 import Image from "next/image"
 import { Facebook as FacebookSvg, X as XSvg, Instagram as InstagramSvg } from "@/components/icons/SocialSvgr"
@@ -70,7 +70,18 @@ const categories: Category[] = [
 ]
 
 
-export default function Header({ canShowProfileIcon = false }: { canShowProfileIcon?: boolean }) {
+function LogoMark() {
+  const [ok, setOk] = React.useState(true)
+  return ok ? (
+    <div className="relative h-8 w-8">
+      <Image src="/logo.png" alt="Dhamtari Directory" width={32} height={32} className="h-8 w-8 object-contain" priority unoptimized onError={() => setOk(false)} />
+    </div>
+  ) : (
+    <div className="h-8 w-8 rounded-full bg-red-100 text-red-600 grid place-items-center text-xs font-bold" aria-label="Logo fallback">DD</div>
+  )
+}
+
+export default function Header({ canShowProfileIcon: _canShowProfileIcon = false }: { canShowProfileIcon?: boolean }) {
   const router = useRouter()
   const [isSignedIn, setIsSignedIn] = useState(false)
   const [signInOpen, setSignInOpen] = useState(false)
@@ -160,12 +171,9 @@ export default function Header({ canShowProfileIcon = false }: { canShowProfileI
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="relative flex h-16 items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center gap-8">
-            <Link href="/" className="flex items-center space-x-2 group">
-              <div className="relative">
-                <MapPin className="h-8 w-8 text-red-500 group-hover:scale-110 transition-transform" />
-                <div className="absolute -inset-1 bg-red-500/10 rounded-full blur-md group-hover:bg-red-500/20 transition-colors" />
-              </div>
+          <div className="flex items-center gap-8 pr-28">
+            <Link href="/" className="flex items-center space-x-2 group" aria-label="Dhamtari Directory home">
+              <LogoMark />
               <div className="flex flex-col">
                 <span className="text-xl font-bold text-gray-900">Dhamtari</span>
                 <span className="text-xs text-gray-500 -mt-1">Directory</span>
@@ -175,54 +183,56 @@ export default function Header({ canShowProfileIcon = false }: { canShowProfileI
             {/* Desktop Navigation */}
             <NavigationMenu className="hidden lg:flex">
               <NavigationMenuList>
-                {pathname !== "/" && (
-                  <NavigationMenuItem>
-                    <Link href="/" className={cn(
-                      navigationMenuTriggerStyle(),
-                      isActive("/") && "bg-gray-100"
-                    )}>
-                      <Home className="h-4 w-4 mr-2" />
-                      Home
-                    </Link>
-                  </NavigationMenuItem>
-                )}
+
                 <NavigationMenuItem>
-                  <Link href={"/browse" as any} className={cn(
+                  <Link href={"/browse" as any} aria-current={isActive("/browse") ? "page" : undefined} className={cn(
                     navigationMenuTriggerStyle(),
-                    isActive("/browse") && "bg-gray-100"
+                    isActive("/browse") && "bg-red-50 text-red-600",
+                    "hover:text-red-500 transition-colors"
                   )}>
                     <Compass className="h-4 w-4 mr-2" />
                     Browse
                   </Link>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
-                  <Link href={"/search" as any} className={cn(
+                  <Link href={"/search" as any} aria-current={isActive("/search") ? "page" : undefined} className={cn(
                     navigationMenuTriggerStyle(),
-                    isActive("/search") && "bg-gray-100"
+                    isActive("/search") && "bg-red-50 text-red-600",
+                    "hover:text-red-500 transition-colors"
                   )}>
                     <Search className="h-4 w-4 mr-2" />
                     Search
                   </Link>
                 </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <Link href={"/about" as any} aria-current={isActive("/about") ? "page" : undefined} className={cn(
+                    navigationMenuTriggerStyle(),
+                    isActive("/about") && "bg-red-50 text-red-600",
+                    "hover:text-red-500 transition-colors"
+                  )}>
+                    <Info className="h-4 w-4 mr-2" />
+                    About
+                  </Link>
+                </NavigationMenuItem>
               </NavigationMenuList>
             </NavigationMenu>
           </div>
-          {/* Center social icons on md+ */}
-          <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-3">
-            <a href="#" aria-label="Facebook" className="opacity-80 hover:opacity-100">
+          {/* Center social icons on lg+ to avoid overlap */}
+          <div className="hidden lg:flex absolute left-1/2 -translate-x-1/2 items-center gap-3 text-gray-600">
+            <a href="#" aria-label="Facebook" className="opacity-80 hover:opacity-100 hover:text-red-500 transition-colors">
               <FacebookSvg />
             </a>
-            <a href="#" aria-label="X" className="opacity-80 hover:opacity-100">
+            <a href="#" aria-label="X" className="opacity-80 hover:opacity-100 hover:text-red-500 transition-colors">
               <XSvg />
             </a>
-            <a href="#" aria-label="Instagram" className="opacity-80 hover:opacity-100">
+            <a href="#" aria-label="Instagram" className="opacity-80 hover:opacity-100 hover:text-red-500 transition-colors">
               <InstagramSvg />
             </a>
           </div>
 
 
           {/* Desktop Actions */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden lg:flex items-center gap-4">
             {(isSignedIn && sessionEstablished) ? (
               <Link href="/dashboard">
                 <Button variant="outline" size="icon" className="relative border rounded-md" aria-label="Open profile">
@@ -230,9 +240,9 @@ export default function Header({ canShowProfileIcon = false }: { canShowProfileI
                 </Button>
               </Link>
             ) : (
-              <Button onClick={onAddListing} variant="outline" className="gap-2 border-red-500 text-red-600 hover:bg-red-50">
-                <PlusCircle className="h-4 w-4 text-red-500" />
-                Add Listing
+              <Button onClick={onAddListing} variant="outline" className="gap-2 border-red-500 text-red-600 hover:bg-red-500 hover:text-white transition-colors group">
+                <PlusCircle className="h-4 w-4 text-red-500 group-hover:text-white" />
+                <span className="hidden lg:inline">Add Listing</span>
               </Button>
             )}
           </div>
@@ -250,25 +260,14 @@ export default function Header({ canShowProfileIcon = false }: { canShowProfileI
                 <SheetTitle>Navigation</SheetTitle>
               </SheetHeader>
               <nav className="mt-6 flex flex-col space-y-4">
-                {pathname !== "/" && (
-                  <Link
-                    href="/"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={cn(
-                      "flex items-center gap-3 rounded-md px-4 py-3 text-base font-medium hover:bg-gray-100",
-                      isActive("/") && "bg-gray-100"
-                    )}
-                  >
-                    <Home className="h-4 w-4" />
-                    Home
-                  </Link>
-                )}
+
                 <Link
                   href="/search"
+                  aria-current={isActive("/search") ? "page" : undefined}
                   onClick={() => setMobileMenuOpen(false)}
                   className={cn(
                     "flex items-center gap-3 rounded-md px-4 py-3 text-base font-medium hover:bg-gray-100",
-                    isActive("/search") && "bg-gray-100"
+                    isActive("/search") && "bg-red-50 text-red-600"
                   )}
                 >
                   <Search className="h-4 w-4" />
@@ -276,10 +275,11 @@ export default function Header({ canShowProfileIcon = false }: { canShowProfileI
                 </Link>
                 <Link
                   href={"/browse" as any}
+                  aria-current={isActive("/browse") ? "page" : undefined}
                   onClick={() => setMobileMenuOpen(false)}
                   className={cn(
                     "flex items-center gap-3 rounded-md px-4 py-3 text-base font-medium hover:bg-gray-100",
-                    isActive("/browse") && "bg-gray-100"
+                    isActive("/browse") && "bg-red-50 text-red-600"
                   )}
                 >
                   <Dialog open={signInOpen} onOpenChange={setSignInOpen}>
@@ -319,6 +319,19 @@ export default function Header({ canShowProfileIcon = false }: { canShowProfileI
 
                   <Compass className="h-4 w-4" />
                   Browse
+                </Link>
+
+                <Link
+                  href={"/about" as any}
+                  aria-current={isActive("/about") ? "page" : undefined}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={cn(
+                    "flex items-center gap-3 rounded-md px-4 py-3 text-base font-medium hover:bg-gray-100",
+                    isActive("/about") && "bg-red-50 text-red-600"
+                  )}
+                >
+                  <Info className="h-4 w-4" />
+                  About
                 </Link>
 
                 <div className="border-t pt-4">
