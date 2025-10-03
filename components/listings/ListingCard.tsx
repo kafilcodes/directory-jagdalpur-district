@@ -9,9 +9,10 @@ export type ListingCardProps = {
   address: string
   rating?: number
   photoUrl?: string
+  planType?: "featured" | "sponsored"
 }
 
-export function ListingCard({ id, name, category, address, rating }: ListingCardProps) {
+export function ListingCard({ id, name, category, address, rating, planType }: ListingCardProps) {
   return (
     <Card className="group bg-white border border-gray-200 overflow-hidden transition-all duration-200 hover:shadow-md hover:border-gray-300">
       <CardHeader className="p-4 pb-3">
@@ -20,7 +21,19 @@ export function ListingCard({ id, name, category, address, rating }: ListingCard
             <Building2 className="h-5 w-5" aria-hidden="true" />
           </div>
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-base sm:text-lg font-semibold line-clamp-1">{name}</CardTitle>
+            <div className="flex items-center justify-between gap-2">
+              <CardTitle className="text-base sm:text-lg font-semibold line-clamp-1">{name}</CardTitle>
+              {planType === "featured" && (
+                <Badge aria-label="Featured" title="Featured" className="rounded-full bg-yellow-100 text-yellow-800 border-yellow-200">
+                  ★
+                </Badge>
+              )}
+              {planType === "sponsored" && (
+                <Badge aria-label="Sponsored" title="Sponsored" className="rounded-full bg-blue-100 text-blue-800 border-blue-200">
+                  Ⓢ
+                </Badge>
+              )}
+            </div>
             <div className="mt-1 flex items-center gap-2">
               <Badge variant="secondary" className="capitalize shrink-0 bg-gray-100 text-gray-700 hover:bg-gray-200">
                 {category}

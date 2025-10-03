@@ -1,6 +1,7 @@
 "use client"
 import { ListingCard, type ListingCardProps } from "@/components/listings/ListingCard"
 import { useCallback } from "react"
+import ListingEventTracker from "@/components/listings/ListingEventTracker"
 
 export default function ListingCardClient(props: ListingCardProps) {
   const onClick = useCallback(() => {
@@ -28,12 +29,18 @@ export default function ListingCardClient(props: ListingCardProps) {
       window.location.href = `/listing/${props.id}`
     }
 
-    // Existing analytics event
+    // Existing analytics event + new click capture
     try {
       fetch("/api/track", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type: "listing.open", listingId: props.id, path: window.location.pathname }),
+        keepalive: true,
+      })
+      fetch("/api/events/capture", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "click", listingId: props.id, meta: { path: window.location.pathname } }),
         keepalive: true,
       })
     } catch { }
@@ -42,10 +49,11 @@ export default function ListingCardClient(props: ListingCardProps) {
   return (
     <button
       onClick={onClick}
-      className="text-left w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 rounded-lg cursor-pointer"
+      className="text-left w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 rounded-lg cursor-pointer relative"
       aria-label={`Open listing ${props.name}`}
     >
       <ListingCard {...props} />
+      <ListingEventTracker listingId={props.id} />
     </button>
   )
 }

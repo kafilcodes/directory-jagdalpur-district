@@ -5,10 +5,11 @@ import { getRazorpay } from "@/lib/payments/razorpay"
 export const runtime = "nodejs"
 
 const CreateOrderSchema = z.object({
-  amount: z.number().int().positive(), // amount in paise
+  amount: z.number().positive(), // amount in rupees (will be converted to paise)
+  planType: z.enum(['free', 'sponsored', 'featured']),
+  listingTitle: z.string().optional(),
   currency: z.string().default("INR"),
   receipt: z.string().optional(),
-  notes: z.record(z.string(), z.string()).optional(),
 })
 
 export async function POST(req: NextRequest) {
@@ -16,16 +17,54 @@ export async function POST(req: NextRequest) {
     const json = await req.json()
     const parsed = CreateOrderSchema.safeParse(json)
     if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
+      return NextResponse.json({
+        success: false,
+        error: 'Invalid request data',
+        details: parsed.error.flatten()
+      }, { status: 400 })
     }
 
-    const { amount, currency, receipt, notes } = parsed.data
+    const { amount, planType, listingTitle, currency } = parsed.data
     const razorpay = getRazorpay()
 
-    const order = await razorpay.orders.create({ amount, currency, receipt, notes })
+    // Convert amount to paise
+    const amountInPaise = Math.round(amount * 100)
 
-    return NextResponse.json({ ok: true, order }, { status: 200 })
+    // Create order with notes
+    const order = await razorpay.orders.create({
+      amount: amountInPaise,
+      currency,
+      receipt: `receipt_${Date.now()}`,
+      notes: {
+        planType,
+        listingTitle: listingTitle || 'New Listing',
+        createdAt: new Date().toISOString(),
+      }
+    })
+
+    console.log('Razorpay order created:', {
+      orderId: order.id,
+      amount: order.amount,
+      planType,
+    })
+
+    return NextResponse.json({
+      success: true,
+      message: 'Order created successfully',
+      order: {
+        id: order.id,
+        amount: order.amount,
+        currency: order.currency,
+        receipt: order.receipt,
+        status: order.status,
+        created_at: order.created_at,
+      }
+    }, { status: 200 })
   } catch (e: any) {
-    return NextResponse.json({ ok: false, error: e?.message || "error" }, { status: 500 })
+    console.error('Create Order Error:', e)
+    return NextResponse.json({
+      success: false,
+      error: e?.message || "Failed to create order"
+    }, { status: 500 })
   }
 }

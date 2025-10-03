@@ -21,10 +21,10 @@ function LogoSmall() {
 
 export default function Footer() {
   const pathname = usePathname()
-  if (pathname?.startsWith("/dashboard") || pathname === "/my-listings" || pathname === "/listing" || pathname === "/submit") return null
+  if (pathname?.startsWith("/user")) return null
   return (
-    <footer className="border-t bg-white">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-20 md:h-24 text-sm text-gray-600 flex flex-col sm:flex-row items-center justify-between gap-3">
+    <footer className="border-t bg-white mt-auto">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-20 text-sm text-gray-600 flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="flex items-center gap-4">
           <Link href="/" aria-label="Dhamtari Directory" className="inline-flex items-center gap-2">
             <LogoSmall />
@@ -53,7 +53,7 @@ export default function Footer() {
           <Link className="hover:text-gray-900 inline-flex items-center gap-1" href="/about">
             <Info className="h-4 w-4" /> <span className="hidden lg:inline">About</span>
           </Link>
-          <Link className="hover:text-gray-900 inline-flex items-center gap-1" href="/submit">
+          <Link className="hover:text-gray-900 inline-flex items-center gap-1" href="/user/create-listing">
             <PlusCircle className="h-4 w-4" /> <span className="hidden lg:inline">Add Listing</span>
           </Link>
         </nav>

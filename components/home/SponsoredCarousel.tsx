@@ -12,9 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
 import { cn } from "@/lib/utils"
 
-// Dummy sponsored listings
-import { SPONSORED_LISTINGS } from "@/data/sponsored.mock"
-const sponsoredListings = SPONSORED_LISTINGS.slice(0, 6) as typeof SPONSORED_LISTINGS
+// Server-backed sponsored listings (max 20)
 
 interface SponsoredCarouselProps {
   onSelectListing?: (listing: any) => void
@@ -22,9 +20,18 @@ interface SponsoredCarouselProps {
 
 export default function SponsoredCarousel({ onSelectListing }: SponsoredCarouselProps) {
   const [loading, setLoading] = useState(true)
+  const [items, setItems] = useState<any[]>([])
   useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 300)
-    return () => clearTimeout(t)
+    let alive = true
+      ; (async () => {
+        try {
+          const res = await fetch("/api/listings/sponsored", { cache: "no-store" })
+          const json = await res.json()
+          if (alive && json?.ok && Array.isArray(json.items)) setItems(json.items)
+        } catch { }
+        setLoading(false)
+      })()
+    return () => { alive = false }
   }, [])
 
   return (
@@ -36,7 +43,7 @@ export default function SponsoredCarousel({ onSelectListing }: SponsoredCarousel
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Sponsored Listings</h2>
             <p className="text-gray-600 mt-1">Premium businesses and services in Dhamtari.</p>
           </div>
-          <Link href="/sponsored">
+          <Link href="/search?filter=sponsored">
             <Button variant="outline" className="hidden sm:flex items-center gap-2">
               View All
               <ChevronRight className="h-4 w-4" />
@@ -67,7 +74,7 @@ export default function SponsoredCarousel({ onSelectListing }: SponsoredCarousel
             className="w-full"
           >
             <CarouselContent className="-ml-4">
-              {sponsoredListings.map((listing) => (
+              {items.map((listing) => (
                 <CarouselItem key={listing.id} className="pl-4 basis-full sm:basis-1/2 lg:basis-1/3">
                   <Card
                     className="group cursor-pointer hover:shadow-xl transition-all duration-300 overflow-hidden h-full"
@@ -216,7 +223,7 @@ export default function SponsoredCarousel({ onSelectListing }: SponsoredCarousel
 
         {/* Mobile View All Button */}
         <div className="mt-6 sm:hidden">
-          <Link href="/sponsored">
+          <Link href={{ pathname: "/search", query: { filter: "sponsored" } }}>
             <Button variant="outline" className="w-full">
               View All Sponsored Listings
             </Button>

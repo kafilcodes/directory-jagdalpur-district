@@ -56,14 +56,20 @@ export default function DynamicSearchBar({ placeholder = "Search listings...", s
     <div className="w-full">
       <Command className="group rounded-xl border border-gray-200 shadow-none ring-0 focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-200">
         <div className="p-2">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-red-500" />
-            <CommandInput
-              className={`${heightClass} pl-9 outline-none focus:outline-none focus:ring-0 ring-0 border-0 shadow-none`}
-              placeholder={placeholder}
-              value={q}
-              onValueChange={setQ as any}
-            />
+          <div className="relative flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-red-500" />
+              <CommandInput
+                className={`${heightClass} pl-9 outline-none focus:outline-none focus:ring-0 ring-0 border-0 shadow-none`}
+                placeholder={placeholder}
+                value={q}
+                onValueChange={setQ as any}
+              />
+            </div>
+            {require("react").createElement(require("@/components/search/VoiceInput").default, {
+              onResult: (text: string) => setQ(text),
+              size: size === "lg" ? "md" : "sm"
+            })}
           </div>
         </div>
         <CommandList className="max-h-64 overflow-auto scroll-smooth">

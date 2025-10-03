@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Image from "next/image"
-import { SPONSORED_LISTINGS } from "@/data/sponsored.mock"
+// server-backed data
 
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -15,11 +15,19 @@ export default function FeaturedCarousel({ onSelectListing }: { onSelectListing?
   const [api, setApi] = React.useState<CarouselApi | null>(null)
   const [selectedIndex, setSelectedIndex] = React.useState(0)
   const [loading, setLoading] = React.useState(true)
+  const [items, setItems] = React.useState<any[]>([])
 
   React.useEffect(() => {
-    // Simulate small loading to show skeleton briefly; safe to remove later
-    const t = setTimeout(() => setLoading(false), 300)
-    return () => clearTimeout(t)
+    let alive = true
+      ; (async () => {
+        try {
+          const res = await fetch("/api/listings/featured", { cache: "no-store" })
+          const json = await res.json()
+          if (alive && json?.ok && Array.isArray(json.items)) setItems(json.items)
+        } catch { }
+        setLoading(false)
+      })()
+    return () => { alive = false }
   }, [])
 
   React.useEffect(() => {
@@ -42,7 +50,7 @@ export default function FeaturedCarousel({ onSelectListing }: { onSelectListing?
     <section className="w-full pt-6 pb-12">
       <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="mb-5 text-left sm:text-center">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 inline-flex items-center gap-2">Featured This Week <TrendingUp className="h-5 w-5 text-red-500" /></h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 inline-flex items-center gap-2"><TrendingUp className="h-5 w-5 text-red-500" />Featured This Week </h2>
           <p className="text-gray-600 mt-1">Hand-picked premium listings</p>
         </div>
 
@@ -52,8 +60,8 @@ export default function FeaturedCarousel({ onSelectListing }: { onSelectListing?
           opts={{ align: "center", loop: true }}
         >
           <CarouselContent className="items-center">
-            {(loading ? Array.from({ length: 3 }) : SPONSORED_LISTINGS).map((item: any, idx: number) => {
-              const total = SPONSORED_LISTINGS.length
+            {(loading ? Array.from({ length: 3 }) : items).map((item: any, idx: number) => {
+              const total = items.length || 1
               const rawDiff = Math.abs(idx - selectedIndex)
               const circularDiff = Math.min(rawDiff, total - rawDiff)
               const opacityClass = loading ? "" : circularDiff === 0 ? "opacity-100" : circularDiff === 1 ? "opacity-80" : "opacity-50"
@@ -141,9 +149,9 @@ export default function FeaturedCarousel({ onSelectListing }: { onSelectListing?
         </Carousel>
 
         {/* Dots */}
-        {!loading && (
+        {!loading && items.length > 0 && (
           <div className="mt-4 flex items-center justify-center gap-2">
-            {SPONSORED_LISTINGS.map((_, i) => (
+            {items.map((_, i) => (
               <button
                 key={i}
                 aria-label={`Go to slide ${i + 1}`}

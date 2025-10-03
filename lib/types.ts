@@ -1,5 +1,9 @@
 // Version 9.0 Types derived from context/Database Modeling.md
 
+import type { Timestamp } from "firebase-admin/firestore"
+
+type FirestoreTimestamp = Timestamp
+
 export interface ListingAddress {
   line1?: string
   line2?: string
@@ -20,8 +24,8 @@ export interface Listing {
   address?: ListingAddress
   googleData?: Record<string, any>
   monetization?: Record<string, any>
-  createdAt: number | FirebaseFirestore.Timestamp
-  updatedAt?: number | FirebaseFirestore.Timestamp
+  createdAt: number | FirestoreTimestamp
+  updatedAt?: number | FirestoreTimestamp
   // Optional UI fields that may exist in current project
   rating?: number
   photos?: string[]
@@ -33,13 +37,13 @@ export interface SearchEntry {
   cat: string
   imp: number
   clk: number
-  createdAt?: number | FirebaseFirestore.Timestamp
-  updatedAt?: number | FirebaseFirestore.Timestamp
+  createdAt?: number | FirestoreTimestamp
+  updatedAt?: number | FirestoreTimestamp
 }
 
 export interface SearchShardDoc {
   index: Record<string, Record<string, SearchEntry>>
-  lastUpdatedAt?: number | FirebaseFirestore.Timestamp
+  lastUpdatedAt?: number | FirestoreTimestamp
 }
 
 export interface ListingStatsKeyword {
@@ -52,7 +56,7 @@ export interface ListingStatsDoc {
   totalImpressions: number
   totalClicks: number
   topKeywords: ListingStatsKeyword[]
-  lastAggregated: number | FirebaseFirestore.Timestamp
+  lastAggregated: number | FirestoreTimestamp
 }
 
 export interface UserDoc {
@@ -61,7 +65,7 @@ export interface UserDoc {
   email?: string
   photoURL?: string
   planId?: string
-  createdAt: number | FirebaseFirestore.Timestamp
+  createdAt: number | FirestoreTimestamp
 }
 
 export interface PlanDoc {

@@ -1,5 +1,13 @@
 "use server"
 
+import type {
+  DocumentData,
+  DocumentSnapshot,
+  Firestore,
+  Transaction,
+  WriteBatch,
+} from "firebase-admin/firestore"
+
 import { getAdminDb, FieldValue } from "@/lib/firebase/admin"
 import type { Listing, SearchShardDoc, SearchEntry } from "@/lib/types"
 
@@ -23,45 +31,80 @@ export async function searchListings(searchTerm: string, limit = 15, options?: {
   const terms = toWords(searchTerm)
   if (!terms.length) return []
 
-  const db = getAdminDb()
-  // Read shards in parallel
-  const shardIds = Array.from(new Set(terms.map(shardIdFor)))
-  const shardSnaps = await Promise.all(shardIds.map((id) => db.collection("search").doc(id).get()))
+  try {
+    const db = getAdminDb() as Firestore
+    // Read shards in parallel with error handling
+    const shardIds = Array.from(new Set(terms.map(shardIdFor)))
+    const shardSnaps = await Promise.allSettled(
+      shardIds.map((id) => db.collection("search").doc(id).get())
+    )
 
-  // Aggregate results in-memory
-  const combined: Record<string, SearchEntry & { finalScore: number }> = {}
-  for (const term of terms) {
-    const shardId = shardIdFor(term)
-    const snapIdx = shardIds.indexOf(shardId)
-    const doc = shardSnaps[snapIdx]
-    const data = (doc.exists ? (doc.data() as SearchShardDoc) : null)
-    const bucket = data?.index?.[term] || {}
-    for (const [listingId, entry] of Object.entries(bucket)) {
-      const finalScore = calcFinalScore(entry)
-      if (!combined[listingId] || finalScore > combined[listingId].finalScore) {
-        combined[listingId] = { ...entry, finalScore }
+    // Aggregate results in-memory, handling missing/failed shards
+    const combined: Record<string, SearchEntry & { finalScore: number }> = {}
+    for (const term of terms) {
+      const shardId = shardIdFor(term)
+      const snapIdx = shardIds.indexOf(shardId)
+      const snapResult = shardSnaps[snapIdx]
+
+      // Skip if shard fetch failed
+      if (snapResult.status === 'rejected') {
+        console.warn(`Failed to fetch shard ${shardId}:`, snapResult.reason)
+        continue
+      }
+
+      const doc = snapResult.value
+      const data = (doc.exists ? (doc.data() as SearchShardDoc) : null)
+      const bucket = (data?.index?.[term] ?? {}) as Record<string, SearchEntry>
+
+      for (const [listingId, entry] of Object.entries(bucket)) {
+        const finalScore = calcFinalScore(entry)
+        if (!combined[listingId] || finalScore > combined[listingId].finalScore) {
+          combined[listingId] = { ...entry, finalScore }
+        }
       }
     }
-  }
 
-  let results = Object.entries(combined)
-    .map(([id, e]) => ({ id, ...e }))
+    let results = Object.entries(combined).map(([id, entry]) => ({ id, ...entry }))
 
-  const sort = options?.sort || "relevance"
-  if (sort === "popular") {
-    results.sort((a, b) => (Number(b.clk || 0) - Number(a.clk || 0)) || (Number(b.imp || 0) - Number(a.imp || 0)) || (Number(b.score || 0) - Number(a.score || 0)))
-  } else if (sort === "recent") {
-    results.sort((a, b) => (Number(b.updatedAt || b.createdAt || 0) - Number(a.updatedAt || a.createdAt || 0)) || (b.finalScore - a.finalScore))
-  } else {
-    results.sort((a, b) => b.finalScore - a.finalScore)
-  }
+    const sort = options?.sort || "relevance"
+    if (sort === "popular") {
+      results.sort((a, b) => (Number(b.clk || 0) - Number(a.clk || 0)) || (Number(b.imp || 0) - Number(a.imp || 0)) || (Number(b.score || 0) - Number(a.score || 0)))
+    } else if (sort === "recent") {
+      results.sort((a, b) => (Number(b.updatedAt || b.createdAt || 0) - Number(a.updatedAt || a.createdAt || 0)) || (b.finalScore - a.finalScore))
+    } else {
+      results.sort((a, b) => b.finalScore - a.finalScore)
+    }
 
-  results = results.slice(0, limit)
+    results = results.slice(0, limit)
+
+    // Premium-first reordering based on listing.activePlan (read-time TTL)
+    try {
+      const ids = results.map((r) => r.id)
+      const snaps = (await Promise.all(ids.map((id) => db.collection("listings").doc(id).get()))) as DocumentSnapshot<DocumentData>[]
+      const now = Date.now()
+      const byId: Record<string, any> = {}
+      snaps.forEach((snapshot) => {
+        if (snapshot.exists) byId[snapshot.id] = snapshot.data()
+      })
+
+      const featured: any[] = []
+      const sponsored: any[] = []
+      const organic: any[] = []
+      for (const r of results) {
+        const d = byId[r.id]
+        const endAt = Number(d?.activePlan?.endAt || 0)
+        const type = String(d?.activePlan?.type || "")
+        if (endAt > now && type === "featured") { (r as any).planType = "featured"; featured.push(r) }
+        else if (endAt > now && type === "sponsored") { (r as any).planType = "sponsored"; sponsored.push(r) }
+        else organic.push(r)
+      }
+      results = [...featured, ...sponsored, ...organic]
+    } catch { }
 
     // Fire-and-forget: increment impressions for returned items for each relevant term
     ; (async () => {
       try {
-        const batchesByShard: Record<string, FirebaseFirestore.WriteBatch> = {}
+        const batchesByShard: Record<string, WriteBatch> = {}
         for (const term of terms) {
           const shardId = shardIdFor(term)
           const batch = batchesByShard[shardId] || (batchesByShard[shardId] = db.batch())
@@ -74,14 +117,18 @@ export async function searchListings(searchTerm: string, limit = 15, options?: {
       } catch { }
     })()
 
-  return results
+    return results
+  } catch (error) {
+    console.error('Search error:', error)
+    return []
+  }
 }
 
 export async function trackClick(listingId: string, searchTerm: string) {
   const terms = toWords(searchTerm)
   if (!terms.length) return { ok: false, error: "empty_term" }
-  const db = getAdminDb()
-  const batchesByShard: Record<string, FirebaseFirestore.WriteBatch> = {}
+  const db = getAdminDb() as Firestore
+  const batchesByShard: Record<string, WriteBatch> = {}
   for (const term of terms) {
     const shardId = shardIdFor(term)
     const batch = batchesByShard[shardId] || (batchesByShard[shardId] = db.batch())
@@ -105,7 +152,7 @@ export interface SubmitListingInput {
 }
 
 export async function submitListing(input: SubmitListingInput & { id: string }) {
-  const db = getAdminDb()
+  const db = getAdminDb() as Firestore
   const now = Date.now()
   const { id, ...rest } = input
   await db.collection("listings").doc(id).set({
@@ -125,10 +172,10 @@ export async function submitListing(input: SubmitListingInput & { id: string }) 
   // Transaction per shard to merge entries
   await Promise.all(
     Array.from(new Set(terms.map(shardIdFor))).map(async (shardId) => {
-      await db.runTransaction(async (tx) => {
+      await db.runTransaction(async (tx: Transaction) => {
         const ref = db.collection("search").doc(shardId)
-        const snap = await tx.get(ref)
-        const data = (snap.exists ? (snap.data() as SearchShardDoc) : { index: {} })
+        const snap = (await tx.get(ref)) as DocumentSnapshot<SearchShardDoc>
+        const data: SearchShardDoc = snap.exists ? (snap.data() as SearchShardDoc) : { index: {} }
         for (const term of terms.filter((t) => shardIdFor(t) === shardId)) {
           const listingMap = (data.index[term] = data.index[term] || {})
           const existing = listingMap[id]

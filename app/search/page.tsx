@@ -2,6 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import SearchControls from "@/components/search/SearchControls"
 import { searchListings as searchShard } from "@/app/actions/searchActions"
 import Image from "next/image"
+import EmptySearch from "@/components/icons/EmptySearch"
 
 function hasAdminEnv() {
   return (
@@ -27,6 +28,7 @@ export default async function SearchPage({ searchParams }: any) {
   const catsParam = String(params.cats || params.category || "")
   const cats = catsParam.split(",").filter(Boolean)
   const sort = String(params.sort || "relevance")
+  const premiumFilter = String(params.filter || "") // "sponsored" | "featured" | ""
 
   // No admin env -> show skeletons
   if (!hasAdminEnv() && !(process.env.ALGOLIA_APP_ID && process.env.ALGOLIA_API_KEY && process.env.ALGOLIA_INDEX)) {
@@ -48,21 +50,20 @@ export default async function SearchPage({ searchParams }: any) {
     const slug = normalizeCategoryToSlug(String(it.cat || it.category || ""))
     return slug ? cats.includes(slug) : false
   }) : raw
-  const total = filtered.length
+  const premiumFiltered = premiumFilter ? filtered.filter((it: any) => it?.planType === premiumFilter) : filtered
+  const total = premiumFiltered.length
 
   // Split into businesses and services based on category (safe assumptions)
   const serviceSet = new Set(["Plumbers", "Electricians", "Carpenters", "Tutors", "Clinics"]) // assumptions per context
-  const businessItems = filtered.filter((it: any) => !serviceSet.has(it.category || it.listingType))
-  const serviceItems = filtered.filter((it: any) => serviceSet.has(it.category || it.listingType))
+  const businessItems = premiumFiltered.filter((it: any) => !serviceSet.has(it.category || it.listingType))
+  const serviceItems = premiumFiltered.filter((it: any) => serviceSet.has(it.category || it.listingType))
 
   return (
     <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-      <div className="flex items-end justify-between">
+      <div className="flex flex-col gap-4">
         <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">Search</h1>
-        {/* Quick search bar (client) */}
-        {require("react").createElement(require("@/components/search/DynamicSearchBar").default, { placeholder: "Search listings...", size: "md" })}
-
-        <p className="text-sm text-gray-600">{total} result{total === 1 ? "" : "s"}</p>
+        {/* Standalone search bar (no inline suggestions) - full width */}
+        {require("react").createElement(require("@/components/search/SearchPageBar").default)}
       </div>
       {/* Filters */}
       <SearchControls />
@@ -79,12 +80,16 @@ export default async function SearchPage({ searchParams }: any) {
       />
 
       {total === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="relative w-56 h-40">
-            <Image src="/empty_search.svg" alt="No results" fill className="object-contain" />
+        <div className="flex flex-col items-center justify-center py-16 space-y-8">
+          <div className="relative w-48 h-36">
+            <EmptySearch width={192} height={144} />
           </div>
-          <h2 className="mt-6 text-lg font-semibold text-gray-900">No results found</h2>
-          <p className="mt-1 text-sm text-gray-600">Try different keywords or remove filters and search again.</p>
+          <div className="text-center space-y-3 pt-4">
+            <h2 className="text-xl font-semibold text-gray-900">No results found</h2>
+            <p className="text-sm text-gray-600 max-w-md mx-auto px-4">
+              Try different keywords or remove filters and search again.
+            </p>
+          </div>
         </div>
       ) : (
         require("react").createElement(require("@/components/ui/tabs").Tabs, { defaultValue: "businesses", className: "w-full" },
@@ -102,6 +107,7 @@ export default async function SearchPage({ searchParams }: any) {
                   category: it.category || it.listingType || "General",
                   address: it.address || "",
                   rating: typeof it.rating === "number" ? it.rating : undefined,
+                  planType: it.planType,
                 })
               ))
             )
@@ -116,6 +122,7 @@ export default async function SearchPage({ searchParams }: any) {
                   category: it.category || it.listingType || "General",
                   address: it.address || "",
                   rating: typeof it.rating === "number" ? it.rating : undefined,
+                  planType: it.planType,
                 })
               ))
             )

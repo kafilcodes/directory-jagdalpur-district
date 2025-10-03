@@ -4,17 +4,27 @@ import { useMemo } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Filter } from "lucide-react"
+import { Filter, TrendingUp, Star, Clock, Building2, UtensilsCrossed, Stethoscope, GraduationCap, ShoppingBag, Wrench, Home, Car } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 import { CATEGORIES, normalizeCategoryToSlug, labelForSlug } from "@/lib/categories"
 
-const CATEGORY_CHIPS = ["All", ...CATEGORIES.map(c => c.label)]
+const CATEGORY_CHIPS = [
+  { label: "All", icon: null },
+  { label: "Hotels", icon: Building2 },
+  { label: "Restaurants", icon: UtensilsCrossed },
+  { label: "Healthcare", icon: Stethoscope },
+  { label: "Education", icon: GraduationCap },
+  { label: "Shopping", icon: ShoppingBag },
+  { label: "Services", icon: Wrench },
+  { label: "Real Estate", icon: Home },
+  { label: "Transport", icon: Car },
+]
 
 const SORT_OPTIONS = [
-  { label: "Relevance", value: "relevance" },
-  { label: "Most Popular", value: "popular" },
-  { label: "Recent", value: "recent" },
+  { label: "Relevance", value: "relevance", icon: TrendingUp },
+  { label: "Most Popular", value: "popular", icon: Star },
+  { label: "Recent", value: "recent", icon: Clock },
 ]
 
 export default function SearchControls() {
@@ -30,7 +40,8 @@ export default function SearchControls() {
   }, [currentCatsParam])
 
   const apply = (next: URLSearchParams) => {
-    router.push(`${pathname}?${next.toString()}` as any)
+    const url = `${pathname}?${next.toString()}`
+    router.push(url as any, { scroll: false } as any)
   }
 
   const toggleCategory = (label: string) => {
@@ -59,23 +70,57 @@ export default function SearchControls() {
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-4">
-      <div className="flex gap-2 flex-wrap">
-        {CATEGORY_CHIPS.map((category) => (
-          <Button
-            key={category}
-            variant={selectedCategories.size === 0 && category === "All" || selectedCategories.has(normalizeCategoryToSlug(category) || "__nomatch__") ? "default" : "outline"}
-            size="sm"
-            onClick={() => toggleCategory(category)}
-            className={cn(
-              "transition-all",
-              (selectedCategories.size === 0 && category === "All") || selectedCategories.has(category) ? "bg-red-500 hover:bg-red-600" : undefined
-            )}
-          >
-            {category}
-          </Button>
-        ))}
+    <div className="flex items-center gap-3 overflow-x-auto pb-2">
+      {/* Category filters */}
+      <div className="flex gap-2 flex-nowrap">
+        {CATEGORY_CHIPS.map((category) => {
+          const isSelected = selectedCategories.size === 0 && category.label === "All" || selectedCategories.has(normalizeCategoryToSlug(category.label) || "__nomatch__")
+          const Icon = category.icon
+          return (
+            <Button
+              key={category.label}
+              variant={isSelected ? "default" : "outline"}
+              size="sm"
+              onClick={() => toggleCategory(category.label)}
+              className={cn(
+                "transition-all gap-1.5 h-8 text-xs whitespace-nowrap",
+                isSelected ? "bg-red-500 hover:bg-red-600" : undefined
+              )}
+            >
+              {Icon && <Icon className="h-3 w-3" />}
+              {category.label}
+            </Button>
+          )
+        })}
       </div>
+
+      {/* Sort dropdown - reduced size */}
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="outline" size="sm" className="gap-1.5 h-8 text-xs whitespace-nowrap">
+            <Filter className="h-3 w-3" />
+            {SORT_OPTIONS.find(o => o.value === selectedSort)?.label ?? "Relevance"}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-40 p-1.5">
+          {SORT_OPTIONS.map((option) => {
+            const Icon = option.icon
+            return (
+              <button
+                key={option.value}
+                onClick={() => changeSort(option.value)}
+                className={cn(
+                  "w-full text-left px-2.5 py-1.5 text-xs rounded-md hover:bg-gray-100 flex items-center gap-1.5",
+                  selectedSort === option.value && "bg-gray-100 font-medium"
+                )}
+              >
+                <Icon className="h-3 w-3 text-gray-500" />
+                {option.label}
+              </button>
+            )
+          })}
+        </PopoverContent>
+      </Popover>
 
       {/* Clear filters */}
       <button
@@ -84,34 +129,11 @@ export default function SearchControls() {
           next.delete("q"); next.delete("cats"); next.delete("category"); next.delete("sort")
           apply(next)
         }}
-        className="text-sm text-red-600 hover:underline"
+        className="text-xs text-red-600 hover:underline whitespace-nowrap ml-auto"
         aria-label="Clear filters"
       >
         Clear filters
       </button>
-
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button variant="outline" size="sm" className="ml-auto gap-2">
-            <Filter className="h-4 w-4" />
-            Sort: {SORT_OPTIONS.find(o => o.value === selectedSort)?.label ?? "Relevance"}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-48 p-2">
-          {SORT_OPTIONS.map((option) => (
-            <button
-              key={option.value}
-              onClick={() => changeSort(option.value)}
-              className={cn(
-                "w-full text-left px-3 py-2 text-sm rounded-md hover:bg-gray-100",
-                selectedSort === option.value && "bg-gray-100 font-medium"
-              )}
-            >
-              {option.label}
-            </button>
-          ))}
-        </PopoverContent>
-      </Popover>
     </div>
   )
 }

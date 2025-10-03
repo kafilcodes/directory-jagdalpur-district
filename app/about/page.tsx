@@ -1,5 +1,11 @@
 import type { Metadata } from "next"
 import Image from "next/image"
+import Brand from "@/components/icons/Brand"
+import Famous from "@/components/icons/Famous"
+import Marketing from "@/components/icons/Marketing"
+import WordOfMouth from "@/components/icons/WordOfMouth"
+import Growth from "@/components/icons/Growth"
+import Misc from "@/components/icons/Misc"
 
 
 export const dynamic = "force-static"
@@ -73,7 +79,7 @@ export default function AboutPage() {
             <p className="text-gray-600">Owners can manage their presence, update details, and upgrade to Featured placement for top visibility on the homepage and category pages.</p>
           </div>
           <div className="order-1 md:order-2 w-full max-w-md mx-auto">
-            <Image src="/misc.svg" alt="Local discovery" width={640} height={480} className="w-full h-auto" />
+            <Misc alt="Local discovery" width={640} height={480} />
           </div>
         </div>
       </section>
@@ -86,7 +92,11 @@ export default function AboutPage() {
               {i % 2 === 0 ? (
                 <>
                   <div className="w-full max-w-md mx-auto">
-                    <Image src={b.img} alt={b.title} width={640} height={480} className="w-full h-auto" />
+                    {b.key === "brand" && <Brand alt={b.title} width={640} height={480} />}
+                    {b.key === "fame" && <Famous alt={b.title} width={640} height={480} />}
+                    {b.key === "marketing" && <Marketing alt={b.title} width={640} height={480} />}
+                    {b.key === "wordofmouth" && <WordOfMouth alt={b.title} width={640} height={480} />}
+                    {b.key === "growth" && <Growth alt={b.title} width={640} height={480} />}
                   </div>
                   <div className="space-y-3">
                     <h3 className="text-xl font-semibold text-gray-900">{b.title}</h3>
@@ -100,7 +110,11 @@ export default function AboutPage() {
                     <p className="text-gray-600">{b.copy}</p>
                   </div>
                   <div className="w-full max-w-md mx-auto order-1 md:order-2">
-                    <Image src={b.img} alt={b.title} width={640} height={480} className="w-full h-auto" />
+                    {b.key === "brand" && <Brand alt={b.title} width={640} height={480} />}
+                    {b.key === "fame" && <Famous alt={b.title} width={640} height={480} />}
+                    {b.key === "marketing" && <Marketing alt={b.title} width={640} height={480} />}
+                    {b.key === "wordofmouth" && <WordOfMouth alt={b.title} width={640} height={480} />}
+                    {b.key === "growth" && <Growth alt={b.title} width={640} height={480} />}
                   </div>
                 </>
               )}

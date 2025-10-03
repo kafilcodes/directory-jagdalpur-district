@@ -15,7 +15,7 @@ interface Category {
   items: CategoryItem[];
 }
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import {
   NavigationMenu,
@@ -25,7 +25,6 @@ import {
 } from "@/components/ui/navigation-menu"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import {
   Menu,
@@ -44,10 +43,7 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 import { Facebook as FacebookSvg, X as XSvg, Instagram as InstagramSvg } from "@/components/icons/SocialSvgr"
-import { useRouter } from "next/navigation"
-import { getFirebaseApp } from "@/lib/firebase/client"
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "firebase/auth"
-import { getFirestore, collection, query, where, limit, getDocs } from "firebase/firestore"
+import { signInWithGoogle, onAuthChange } from "@/lib/firebase/authService"
 
 const categories: Category[] = [
   {
@@ -87,72 +83,56 @@ export default function Header({ canShowProfileIcon: _canShowProfileIcon = false
   const [signInOpen, setSignInOpen] = useState(false)
   const [signInError, setSignInError] = useState<string | null>(null)
   const [signingIn, setSigningIn] = useState(false)
-  const [sessionEstablished, setSessionEstablished] = useState(false)
 
-
+  // Subscribe to Firebase auth state changes
   useEffect(() => {
-    const app = getFirebaseApp()
-    const auth = app ? getAuth(app) : null
-    if (!auth) return
-    return onAuthStateChanged(auth, (u) => {
-      setIsSignedIn(!!u)
-      if (!u) setSessionEstablished(false)
+    const unsubscribe = onAuthChange((user) => {
+      setIsSignedIn(!!user)
     })
+    return () => {
+      if (unsubscribe) unsubscribe()
+    }
   }, [])
 
   const handleGoogleSignIn = async () => {
     try {
       setSigningIn(true)
       setSignInError(null)
-      const app = getFirebaseApp()
-      const auth = app ? getAuth(app) : null
-      if (!auth) throw new Error("Auth not initialized")
-      const provider = new GoogleAuthProvider()
-      const cred = await signInWithPopup(auth, provider)
-      const idToken = await cred.user.getIdToken()
-      const resp = await fetch("/api/auth/session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken }),
-      })
-      if (!resp.ok) throw new Error("Failed to establish session")
-      setSessionEstablished(true)
 
-      // Determine redirect: if user already has a listing -> dashboard/my-listings; else -> submit
-      const dbApp = getFirebaseApp()
-      const db = dbApp ? getFirestore(dbApp) : null
-      let redirect = "/submit"
-      if (db) {
-        try {
-          const uid = (await getAuth(dbApp!).currentUser?.getIdTokenResult())?.claims?.user_id || getAuth(dbApp!).currentUser?.uid
-          const q = query(collection(db, "listings"), where("ownerId", "==", uid), limit(1))
-          const snap = await getDocs(q)
-          redirect = !snap.empty ? "/dashboard/my-listings" : "/submit"
-        } catch {
-          redirect = "/submit"
+      const result = await signInWithGoogle()
+
+      if (!result.success) {
+        // Don't show error for user-cancelled actions
+        if (result.errorCode !== "auth/popup-closed-by-user" && result.errorCode !== "auth/cancelled-popup-request") {
+          setSignInError(result.error || "Sign in failed")
         }
+        return
       }
+
+      // Successfully signed in - close dialog and redirect
       setSignInOpen(false)
-      router.push(redirect as any)
+      router.push("/user/create-listing")
     } catch (e) {
-      setSignInError("Sign in failed — try again later")
-      try {
-        const app = getFirebaseApp()
-        const auth = app ? getAuth(app) : null
-        if (auth) await auth.signOut()
-      } catch { }
-      setIsSignedIn(false)
-      setSessionEstablished(false)
+      setSignInError("An unexpected error occurred. Please try again.")
+      if (process.env.NODE_ENV === "development") {
+        console.error("[Header] Sign-in error:", e)
+      }
     } finally {
       setSigningIn(false)
     }
   }
 
-  const onAddListing = () => {
+  const onAddListing = (e?: React.MouseEvent) => {
+    e?.preventDefault()
     if (isSignedIn) {
-      router.push("/submit" as any)
+      router.push("/user/create-listing")
     } else {
       setSignInOpen(true)
+      // Ensure dialog focus
+      setTimeout(() => {
+        const dlg = document.querySelector("[role='dialog']") as HTMLElement | null
+        dlg?.focus?.()
+      }, 50)
     }
   }
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -161,7 +141,7 @@ export default function Header({ canShowProfileIcon: _canShowProfileIcon = false
   const isActive = (href: string) => pathname === href
 
   // Hide public header on business area routes
-  if (pathname?.startsWith("/dashboard") || pathname === "/my-listings" || pathname === "/listing" || pathname === "/submit") {
+  if (pathname?.startsWith("/user")) {
     return null
   }
 
@@ -233,17 +213,18 @@ export default function Header({ canShowProfileIcon: _canShowProfileIcon = false
 
           {/* Desktop Actions */}
           <div className="hidden lg:flex items-center gap-4">
-            {(isSignedIn && sessionEstablished) ? (
-              <Link href="/dashboard">
-                <Button variant="outline" size="icon" className="relative border rounded-md" aria-label="Open profile">
-                  <User className="h-5 w-5" />
-                </Button>
-              </Link>
-            ) : (
+            {!isSignedIn && (
               <Button onClick={onAddListing} variant="outline" className="gap-2 border-red-500 text-red-600 hover:bg-red-500 hover:text-white transition-colors group">
                 <PlusCircle className="h-4 w-4 text-red-500 group-hover:text-white" />
                 <span className="hidden lg:inline">Add Listing</span>
               </Button>
+            )}
+            {isSignedIn && (
+              <Link href="/user/dashboard">
+                <Button variant="outline" size="icon" className="relative border rounded-md" aria-label="Open profile">
+                  <User className="h-5 w-5" />
+                </Button>
+              </Link>
             )}
           </div>
 
@@ -289,25 +270,20 @@ export default function Header({ canShowProfileIcon: _canShowProfileIcon = false
                         <DialogDescription className="text-center">Please sign in to list your business and services.</DialogDescription>
                       </DialogHeader>
                       <div className="flex flex-col items-center gap-4 py-2">
-                        <Image
-                          src={signInError ? "/error.svg" : "/login.svg"}
-                          alt="Sign in illustration"
-                          width={220}
-                          height={140}
-                          className="h-auto w-auto"
-                        />
+                        {(signInError ? require("@/components/icons/ErrorIllus").ErrorIllus : require("@/components/icons/Login").Login)({ width: 79, height: 50 })}
                         <button
                           onClick={handleGoogleSignIn}
                           disabled={signingIn}
                           aria-label="Sign in with Google"
-                          className="inline-flex items-center justify-center h-12 w-12 rounded-full border shadow-sm bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500"
+                          className="inline-flex items-center justify-center gap-2 h-11 px-4 rounded-md border shadow-sm bg-white hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
                         >
-                          <svg className="h-6 w-6" viewBox="0 0 48 48" aria-hidden="true">
+                          <svg className="h-5 w-5" viewBox="0 0 48 48" aria-hidden="true">
                             <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303C33.64 31.91 29.223 35 24 35c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.957 3.043l5.657-5.657C34.675 4.051 29.569 2 24 2 12.955 2 4 10.955 4 22s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.651-.389-3.917z" />
-                            <path fill="#43A047" d="M6.306 14.691l6.571 4.815C14.297 16.061 18.777 13 24 13c3.059 0 5.842 1.154 7.957 3.043l5.657-5.657C34.675 4.051 29.569 2 24 2 16.318 2 9.656 6.337 6.306 14.691z" />
-                            <path fill="#00BCD4" d="M24 42c5.166 0 9.86-1.977 13.388-5.205l-6.167-5.206C29.22 33.91 25.03 35 24 35c-5.21 0-9.62-3.08-11.29-7.384l-6.57 5.058C8.454 38.722 15.63 42 24 42z" />
-                            <path fill="#F44336" d="M43.611 20.083H42V20H24v8h11.303C34.64 31.91 29.223 35 24 35c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.957 3.043l5.657-5.657C34.675 4.051 29.569 2 24 2 12.955 2 4 10.955 4 22s8.955 20 20 20c9.261 0 17.039-5.94 19.611-14.083z" />
+                            <path fill="#FF3D00" d="M6.306 14.691l6.571 4.815C14.297 16.061 18.777 13 24 13c3.059 0 5.842 1.154 7.957 3.043l5.657-5.657C34.675 4.051 29.569 2 24 2 16.318 2 9.656 6.337 6.306 14.691z" />
+                            <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.388-5.205l-6.167-5.206C29.22 35.09 26.65 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z" />
+                            <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571.001-.001.002-.001.003-.002l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.651-.389-3.917z" />
                           </svg>
+                          <span className="font-medium">{signingIn ? "Signing in..." : "Sign in with Google"}</span>
                         </button>
                         {signInError && (
                           <p className="text-sm text-red-600" role="alert">{signInError}</p>
@@ -315,8 +291,6 @@ export default function Header({ canShowProfileIcon: _canShowProfileIcon = false
                       </div>
                     </DialogContent>
                   </Dialog>
-
-
                   <Compass className="h-4 w-4" />
                   Browse
                 </Link>
@@ -350,11 +324,20 @@ export default function Header({ canShowProfileIcon: _canShowProfileIcon = false
                 </div>
 
                 <div className="border-t pt-4 space-y-3">
-                  <Button onClick={() => { setMobileMenuOpen(false); onAddListing(); }} variant="outline" className="w-full gap-2 border-red-500 text-red-600 hover:bg-red-50">
-                    <PlusCircle className="h-4 w-4 text-red-500" />
-                    Add Listing
-                  </Button>
-                  {/* Auth UI removed for public header */}
+                  {!isSignedIn && (
+                    <Button onClick={() => { setMobileMenuOpen(false); onAddListing(); }} variant="outline" className="w-full gap-2 border-red-500 text-red-600 hover:bg-red-50">
+                      <PlusCircle className="h-4 w-4 text-red-500" />
+                      Add Listing
+                    </Button>
+                  )}
+                  {isSignedIn && (
+                    <Link href="/user/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                      <Button variant="outline" className="w-full gap-2">
+                        <User className="h-4 w-4" />
+                        Profile
+                      </Button>
+                    </Link>
+                  )}
                 </div>
               </nav>
             </SheetContent>
@@ -362,19 +345,13 @@ export default function Header({ canShowProfileIcon: _canShowProfileIcon = false
         </div>
         {/* Sign-in Modal (global) */}
         <Dialog open={signInOpen} onOpenChange={setSignInOpen}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent id="add-listing-signin" className="sm:max-w-md" role="dialog" aria-modal="true">
             <DialogHeader>
               <DialogTitle className="text-center">Sign in required</DialogTitle>
               <DialogDescription className="text-center">Please sign in to list your business and services.</DialogDescription>
             </DialogHeader>
             <div className="flex flex-col items-center gap-4 py-2">
-              <Image
-                src={signInError ? "/error.svg" : "/login.svg"}
-                alt="Sign in illustration"
-                width={220}
-                height={140}
-                className="h-auto w-auto"
-              />
+              {(signInError ? require("@/components/icons/ErrorIllus").ErrorIllus : require("@/components/icons/Login").Login)({ width: 79, height: 50 })}
               <button
                 onClick={handleGoogleSignIn}
                 disabled={signingIn}
@@ -383,9 +360,9 @@ export default function Header({ canShowProfileIcon: _canShowProfileIcon = false
               >
                 <svg className="h-5 w-5" viewBox="0 0 48 48" aria-hidden="true">
                   <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303C33.64 31.91 29.223 35 24 35c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.957 3.043l5.657-5.657C34.675 4.051 29.569 2 24 2 12.955 2 4 10.955 4 22s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.651-.389-3.917z" />
-                  <path fill="#43A047" d="M6.306 14.691l6.571 4.815C14.297 16.061 18.777 13 24 13c3.059 0 5.842 1.154 7.957 3.043l5.657-5.657C34.675 4.051 29.569 2 24 2 16.318 2 9.656 6.337 6.306 14.691z" />
-                  <path fill="#00BCD4" d="M24 42c5.166 0 9.86-1.977 13.388-5.205l-6.167-5.206C29.22 33.91 25.03 35 24 35c-5.21 0-9.62-3.08-11.29-7.384l-6.57 5.058C8.454 38.722 15.63 42 24 42z" />
-                  <path fill="#F44336" d="M43.611 20.083H42V20H24v8h11.303C34.64 31.91 29.223 35 24 35c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.957 3.043l5.657-5.657C34.675 4.051 29.569 2 24 2 12.955 2 4 10.955 4 22s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.651-.389-3.917z" />
+                  <path fill="#FF3D00" d="M6.306 14.691l6.571 4.815C14.297 16.061 18.777 13 24 13c3.059 0 5.842 1.154 7.957 3.043l5.657-5.657C34.675 4.051 29.569 2 24 2 16.318 2 9.656 6.337 6.306 14.691z" />
+                  <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.388-5.205l-6.167-5.206C29.22 35.09 26.65 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z" />
+                  <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571.001-.001.002-.001.003-.002l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.651-.389-3.917z" />
                 </svg>
                 <span className="font-medium">{signingIn ? "Signing in..." : "Sign in with Google"}</span>
               </button>

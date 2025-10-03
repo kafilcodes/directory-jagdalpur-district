@@ -51,7 +51,7 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className={`relative isolate overflow-hidden pt-16 pb-24 ${HERO_MIN_H}`}>
         {/* Hero background image: layered to show full image without cropping while covering */}
-        <div className="absolute inset-0 -z-10">
+        <div className="absolute inset-0 -z-10 graphic-compact">
           {/* Cover layer (blurred) ensures full-bleed coverage */}
           <Image src="/bg.png" alt="" fill priority sizes="100vw" className="object-cover object-center opacity-30 blur-sm" />
           {/* Foreground layer shows the complete original image */}
@@ -112,13 +112,13 @@ export default function HomePage() {
               <div className="mt-2 overflow-x-auto no-scrollbar [-webkit-overflow-scrolling:touch]">
                 <div className="flex items-center gap-2 px-1 sm:justify-center min-w-max">
                   {[
-                    { label: "Hotels", Icon: Building2 },
-                    { label: "Restaurants", Icon: UtensilsCrossed },
-                    { label: "Hospitals", Icon: Stethoscope },
-                    { label: "Schools", Icon: GraduationCap },
-                    { label: "Gyms", Icon: Dumbbell },
-                  ].map(({ label, Icon }) => (
-                    <Link key={label} aria-label={`Search ${label}`} href={{ pathname: "/search", query: { q: label } }}>
+                    { label: "Hotels", Icon: Building2, slug: "hotels" },
+                    { label: "Restaurants", Icon: UtensilsCrossed, slug: "restaurants" },
+                    { label: "Hospitals", Icon: Stethoscope, slug: "healthcare" },
+                    { label: "Schools", Icon: GraduationCap, slug: "education" },
+                    { label: "Gyms", Icon: Dumbbell, slug: "services" },
+                  ].map(({ label, Icon, slug }) => (
+                    <Link key={label} aria-label={`Search ${label}`} href={`/search?cats=${slug}`}>
                       <Badge
                         variant="outline"
                         className="cursor-pointer transition-colors whitespace-nowrap inline-flex items-center gap-1.5 px-3 py-1 text-xs sm:text-sm border-gray-300 hover:border-red-500 hover:bg-red-50 hover:text-red-600"
@@ -135,29 +135,35 @@ export default function HomePage() {
         </div>
 
         {/* Decorative Elements */}
-        <div className="absolute top-20 left-10 w-20 h-20 bg-red-200 rounded-full blur-3xl opacity-30"></div>
-        <div className="absolute bottom-20 right-10 w-32 h-32 bg-blue-200 rounded-full blur-3xl opacity-30"></div>
+        <div className="absolute top-20 left-10 w-20 h-20 bg-red-200 rounded-full blur-3xl opacity-30 -z-10"></div>
+        <div className="absolute bottom-20 right-10 w-32 h-32 bg-blue-200 rounded-full blur-3xl opacity-30 -z-10"></div>
 
+        {/* Stats Section (Option A: below Sponsored) */}
+        <section className="py-12 bg-tranparent ">
+          <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              {stats.map((stat, index) => (
+                <div key={index} className="text-center">
+                  <div className="inline-flex items-center justify-center w-12 h-12 bg-red-100 text-red-500 rounded-full mb-3 outline outline-1 outline-red-200 shadow-sm">
+                    {stat.icon}
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
+                  <div className="text-sm text-gray-600">{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+
+      </section>
+
+
+
+      <section>
         {/* Featured carousel at hero bottom */}
         <div className="mt-8">
           <FeaturedCarousel onSelectListing={handleSelectListing} />
-        </div>
-      </section>
-
-      {/* Stats Section (Option A: below Sponsored) */}
-      <section className="py-12 bg-white ">
-        <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="inline-flex items-center justify-center w-12 h-12 bg-red-100 text-red-500 rounded-full mb-3">
-                  {stat.icon}
-                </div>
-                <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
-                <div className="text-sm text-gray-600">{stat.label}</div>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
@@ -191,6 +197,11 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+
+
+
+
 
       {/* Sponsored Carousel */}
       <SponsoredCarousel onSelectListing={handleSelectListing} />
@@ -257,27 +268,10 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-red-500 to-red-600 relative overflow-hidden">
-        <div className="absolute inset-0 bg-black/10"></div>
-        <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center relative">
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">List Your Business Today</h2>
-          <p className="text-red-100 mb-10 max-w-2xl mx-auto text-sm sm:text-base lg:text-lg leading-relaxed">
-            Join thousands of successful businesses in Dhamtari. Get discovered by customers looking for services like yours.
-          </p>
-          <Button
-            size="lg"
-            variant="secondary"
-            className="group gap-2 px-8 py-4 text-lg font-semibold bg-white text-red-600 border border-white hover:bg-red-50 hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
-          >
-            Get Started
-            <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
-          </Button>
-        </div>
-
-        {/* Decorative Elements */}
-        <div className="absolute top-10 left-10 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
-        <div className="absolute bottom-10 right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
-      </section>
+      {(() => {
+        const CTASection = require("@/components/home/CTASection").default
+        return require("react").createElement(CTASection)
+      })()}
 
 
       {/* Listing Detail Sheet */}

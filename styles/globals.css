@@ -203,4 +203,30 @@
   .animate-slide-up {
     animation: slide-up 0.3s ease-out;
   }
+
+  /* Responsive graphic wrapper for SVGs and decorative images */
+  .graphic-compact {
+    max-width: 48.6%;
+    height: auto;
+    object-fit: contain;
+    margin: 0 auto;
+    z-index: 0;
+  }
+  
+  .graphic-compact svg {
+    max-width: 100%;
+    height: auto;
+  }
+
+  @media (min-width: 640px) {
+    .graphic-compact {
+      max-width: 64.8%;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .graphic-compact {
+      max-width: 81%;
+    }
+  }
 }

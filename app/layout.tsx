@@ -8,6 +8,7 @@ import Footer from "@/components/layout/Footer"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
   title: {
     default: "Dhamtari Directory",
     template: "%s | Dhamtari Directory",
@@ -30,7 +31,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" data-scroll-behavior="smooth">
-      <body className={`${inter.className} min-h-screen bg-gray-50`}>
+      <body className={`${inter.className} min-h-screen bg-gray-50 flex flex-col`}>
         <HeaderServer />
         <main className="flex-1">
           {children}

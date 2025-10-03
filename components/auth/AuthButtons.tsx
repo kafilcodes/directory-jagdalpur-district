@@ -30,12 +30,16 @@ export default function AuthButtons() {
       body: JSON.stringify({ idToken }),
     })
     if (!resp.ok) return
+
+    // Upsert user profile server-side (authoritative)
+    await fetch("/api/users/upsert", { method: "POST" })
+
     // Decide redirect by checking if listing exists
     const db = getFirestore(app!)
     try {
-      const q = query(collection(db, "listings"), where("ownerId", "==", cred.user.uid), limit(1))
+      const q = query(collection(db, "listings"), where("ownerUid", "==", cred.user.uid), limit(1))
       const snap = await getDocs(q)
-      router.push(!snap.empty ? "/dashboard/my-listings" : "/submit")
+      router.push(!snap.empty ? "/dashboard" : "/submit")
     } catch {
       router.push("/submit")
     }

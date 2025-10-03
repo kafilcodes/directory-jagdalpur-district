@@ -24,10 +24,14 @@ export default function RazorpayCheckoutButton({
   amount,
   currency = "INR",
   label = "Pay Now",
+  listingId,
+  planType,
 }: {
   amount: number // in paise
   currency?: string
   label?: string
+  listingId?: string
+  planType?: "featured" | "sponsored"
 }) {
   const onClick = async () => {
     await loadRazorpay()
@@ -52,9 +56,27 @@ export default function RazorpayCheckoutButton({
       name: "Dhamtari Directory",
       description: "Test Transaction",
       order_id: res.order.id,
-      handler: function () {
-        // noop for now; webhook handles server verification
-        alert("Payment initiated. Check dashboard/webhooks for status.")
+      handler: async function (response: any) {
+        try {
+          const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = response || {}
+          if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) return alert("Missing payment response")
+          const verify = await fetch("/api/payments/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              orderId: razorpay_order_id,
+              paymentId: razorpay_payment_id,
+              signature: razorpay_signature,
+              amount,
+              listingId,
+              planType,
+            }),
+          }).then((r) => r.json())
+          if (!verify?.ok) return alert("Verification failed")
+          alert("Payment verified. Receipt: " + verify.receiptId)
+        } catch (e) {
+          alert("Verification error")
+        }
       },
       prefill: {},
       theme: { color: "#EF4444" },
