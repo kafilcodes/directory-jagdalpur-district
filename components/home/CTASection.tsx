@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowRight, TrendingUp, Users } from "lucide-react"
+import { ArrowRight, TrendingUp, Users, Rocket } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { onAuthChange } from "@/lib/firebase/authService"
 
@@ -42,10 +42,19 @@ export default function CTASection() {
                     <TrendingUp className="h-8 w-8" />
                     List Your Business Today
                 </h2>
-                <p className="text-red-100 mb-10 max-w-2xl mx-auto text-sm sm:text-base lg:text-lg leading-relaxed flex items-center justify-center gap-2 flex-wrap">
-                    <Users className="h-5 w-5" />
-                    Join thousands of successful businesses in Dhamtari. Get discovered by customers looking for services like yours. 🚀
+                <p className="text-red-100 mb-10 max-w-2xl mx-auto text-sm sm:text-base lg:text-lg leading-relaxed">
+                    Join thousands of successful businesses in Dhamtari. Get discovered by customers looking for services like yours.
                 </p>
+                <div className="flex items-center justify-center gap-6 mb-8 text-white/90">
+                    <div className="flex items-center gap-2">
+                        <Users className="h-5 w-5" />
+                        <span className="text-sm font-medium">10,000+ Customers</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Rocket className="h-5 w-5" />
+                        <span className="text-sm font-medium">Grow Your Business</span>
+                    </div>
+                </div>
                 <Button
                     onClick={handleGetStarted}
                     size="lg"

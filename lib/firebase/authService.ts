@@ -67,6 +67,20 @@ export async function signInWithGoogle(): Promise<{
             body: JSON.stringify({ idToken }),
         })
 
+        // Auto-store user details in Firestore users collection
+        // This handles both new and existing users silently
+        try {
+            await fetch("/api/users/upsert", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+            })
+        } catch (upsertError) {
+            // Silent fail - user can still sign in even if upsert fails
+            if (process.env.NODE_ENV === "development") {
+                console.warn("[authService] Failed to upsert user data:", upsertError)
+            }
+        }
+
         return {
             success: true,
             user: result.user,

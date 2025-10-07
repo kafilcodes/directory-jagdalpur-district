@@ -87,7 +87,15 @@ export async function fetchPlaceSuggestions(
  */
 export async function fetchPlaceDetails(
     placeId: string
-): Promise<{ success: boolean; placeDetails?: PlaceDetails; error?: string; locationRestricted?: boolean }> {
+): Promise<{
+    success: boolean;
+    placeDetails?: PlaceDetails;
+    error?: string;
+    locationRestricted?: boolean;
+    errorTitle?: string;
+    errorDetails?: string;
+    debugInfo?: any;
+}> {
     try {
         const response = await fetch('/api/google-places/details', {
             method: 'POST',
@@ -104,6 +112,9 @@ export async function fetchPlaceDetails(
                 success: false,
                 error: data.error || 'Failed to fetch place details',
                 locationRestricted: data.locationRestricted || false,
+                errorTitle: data.errorTitle,
+                errorDetails: data.errorDetails,
+                debugInfo: data.debugInfo,
             };
         }
 
@@ -116,6 +127,8 @@ export async function fetchPlaceDetails(
         return {
             success: false,
             error: error instanceof Error ? error.message : 'Unknown error',
+            errorTitle: 'Network Error',
+            errorDetails: 'Failed to connect to the server',
         };
     }
 }

@@ -1,33 +1,37 @@
 import { getCurrentUser } from "@/lib/auth/server"
 import { getAdminDb } from "@/lib/firebase/admin"
-import { safeQuery } from "@/lib/firebase/errorHandling"
-import { CreateListingFormNew } from "@/components/user/CreateListingFormNew"
-import { Card, CardContent } from "@/components/ui/card"
-import { AlertCircle } from "lucide-react"
-import Link from "next/link"
+import { CreateListingFormNew4Step } from "@/components/user/CreateListingFormNew4Step"
+import { SingleListingAlert } from "@/components/user/SingleListingAlert"
 
 export const dynamic = "force-dynamic"
 
 /**
- * Check if user already has a listing
+ * Check if user already has a listing and return listing details
  */
-async function userHasListing(userUid: string): Promise<boolean> {
-    const db = getAdminDb()
+async function getUserListing(userUid: string) {
+    try {
+        const db = getAdminDb()
+        const snap = await db
+            .collection("listings")
+            .where("ownerUid", "==", userUid)
+            .limit(1)
+            .get()
 
-    const result = await safeQuery(
-        async () => {
-            const snap = await db
-                .collection("listings")
-                .where("ownerUid", "==", userUid)
-                .limit(1)
-                .get()
-            return !snap.empty
-        },
-        "Check existing listing",
-        "listings"
-    )
+        if (snap.empty) {
+            return null
+        }
 
-    return result.success && result.data === true
+        const doc = snap.docs[0]
+        const data = doc.data()
+
+        return {
+            id: doc.id,
+            businessName: data.businessName || data.title || "Your Listing"
+        }
+    } catch (error) {
+        // Gracefully handle missing collection
+        return null
+    }
 }
 
 export default async function UserCreateListingPage() {
@@ -36,60 +40,33 @@ export default async function UserCreateListingPage() {
     if (!user) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
-                <p className="text-gray-600">Please sign in to create a listing.</p>
+                <p className="text-gray-600 dark:text-gray-400">Please sign in to create a listing.</p>
             </div>
         )
     }
 
     // Check if user already has a listing
-    const hasListing = await userHasListing(user.uid)
+    const existingListing = await getUserListing(user.uid)
 
-    if (hasListing) {
+    if (existingListing) {
         return (
-            <div className="space-y-6">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-                        Create Listing
-                    </h1>
-                    <p className="text-gray-600 mt-1">Add your business to the directory</p>
-                </div>
-
-                <Card className="border-yellow-200 bg-yellow-50">
-                    <CardContent className="py-6">
-                        <div className="flex gap-3">
-                            <AlertCircle className="h-5 w-5 text-yellow-600 shrink-0 mt-0.5" />
-                            <div className="text-sm">
-                                <p className="font-medium text-yellow-900">
-                                    You already have a listing
-                                </p>
-                                <p className="text-yellow-700 mt-1">
-                                    You can only have one listing per account. View your existing listing
-                                    or contact support for multiple listings.
-                                </p>
-                                <Link
-                                    href={"/user/my-listing" as any}
-                                    className="text-yellow-900 underline font-medium mt-2 inline-block"
-                                >
-                                    View My Listing →
-                                </Link>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
+            <SingleListingAlert
+                listingId={existingListing.id}
+                businessName={existingListing.businessName}
+            />
         )
     }
 
     return (
         <div className="space-y-6">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+                <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
                     Create Listing
                 </h1>
-                <p className="text-gray-600 mt-1">Add your business to the directory</p>
+                <p className="text-gray-600 dark:text-gray-400 mt-1">Add your business to the directory</p>
             </div>
 
-            <CreateListingFormNew />
+            <CreateListingFormNew4Step />
         </div>
     )
 }

@@ -17,6 +17,9 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "i.pravatar.cc" },
       { protocol: "https", hostname: "placehold.co" },
     ],
+    // Removed localPatterns - they're not needed for public folder images
+    // Next.js automatically allows all images from /public
+    // For API routes with query strings, use unoptimized or loader
   },
   webpack: (config) => {
     config.module?.rules?.push({

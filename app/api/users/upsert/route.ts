@@ -20,7 +20,14 @@ export async function POST(req: NextRequest) {
 
     const db = getAdminDb()
     const ref = db.collection("users").doc(uid)
-    const snap = await ref.get()
+
+    let snap
+    try {
+      snap = await ref.get()
+    } catch (getError) {
+      // Collection might not exist yet - that's okay
+      snap = null
+    }
 
     const now = Date.now()
     const data: any = {
@@ -32,17 +39,18 @@ export async function POST(req: NextRequest) {
     }
 
     // Default role only if not set before
-    if (!snap.exists || !snap.data()?.role) {
+    if (!snap || !snap.exists || !snap.data()?.role) {
       data.role = "business"
     }
-    if (!snap.exists || !snap.data()?.createdAt) {
+    if (!snap || !snap.exists || !snap.data()?.createdAt) {
       data.createdAt = now
     }
 
     await ref.set(data, { merge: true })
 
-    return NextResponse.json({ ok: true, uid, role: data.role || snap.data()?.role || null })
+    return NextResponse.json({ ok: true, uid, role: data.role || (snap?.data()?.role) || null })
   } catch (e: any) {
+    console.error('[users/upsert] Error:', e)
     return NextResponse.json({ ok: false, error: e?.message || "error" }, { status: 500 })
   }
 }

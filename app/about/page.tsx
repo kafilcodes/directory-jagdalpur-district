@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import Image from "next/image"
+import Link from "next/link"
 import Brand from "@/components/icons/Brand"
 import Famous from "@/components/icons/Famous"
 import Marketing from "@/components/icons/Marketing"
@@ -79,7 +80,7 @@ export default function AboutPage() {
             <p className="text-gray-600">Owners can manage their presence, update details, and upgrade to Featured placement for top visibility on the homepage and category pages.</p>
           </div>
           <div className="order-1 md:order-2 w-full max-w-md mx-auto">
-            <Misc alt="Local discovery" width={640} height={480} />
+            <Misc alt="Local discovery" width={448} height={336} />
           </div>
         </div>
       </section>
@@ -92,11 +93,11 @@ export default function AboutPage() {
               {i % 2 === 0 ? (
                 <>
                   <div className="w-full max-w-md mx-auto">
-                    {b.key === "brand" && <Brand alt={b.title} width={640} height={480} />}
-                    {b.key === "fame" && <Famous alt={b.title} width={640} height={480} />}
-                    {b.key === "marketing" && <Marketing alt={b.title} width={640} height={480} />}
-                    {b.key === "wordofmouth" && <WordOfMouth alt={b.title} width={640} height={480} />}
-                    {b.key === "growth" && <Growth alt={b.title} width={640} height={480} />}
+                    {b.key === "brand" && <Brand alt={b.title} width={448} height={336} />}
+                    {b.key === "fame" && <Famous alt={b.title} width={448} height={336} />}
+                    {b.key === "marketing" && <Marketing alt={b.title} width={448} height={336} />}
+                    {b.key === "wordofmouth" && <WordOfMouth alt={b.title} width={448} height={336} />}
+                    {b.key === "growth" && <Growth alt={b.title} width={448} height={336} />}
                   </div>
                   <div className="space-y-3">
                     <h3 className="text-xl font-semibold text-gray-900">{b.title}</h3>
@@ -110,11 +111,11 @@ export default function AboutPage() {
                     <p className="text-gray-600">{b.copy}</p>
                   </div>
                   <div className="w-full max-w-md mx-auto order-1 md:order-2">
-                    {b.key === "brand" && <Brand alt={b.title} width={640} height={480} />}
-                    {b.key === "fame" && <Famous alt={b.title} width={640} height={480} />}
-                    {b.key === "marketing" && <Marketing alt={b.title} width={640} height={480} />}
-                    {b.key === "wordofmouth" && <WordOfMouth alt={b.title} width={640} height={480} />}
-                    {b.key === "growth" && <Growth alt={b.title} width={640} height={480} />}
+                    {b.key === "brand" && <Brand alt={b.title} width={448} height={336} />}
+                    {b.key === "fame" && <Famous alt={b.title} width={448} height={336} />}
+                    {b.key === "marketing" && <Marketing alt={b.title} width={448} height={336} />}
+                    {b.key === "wordofmouth" && <WordOfMouth alt={b.title} width={448} height={336} />}
+                    {b.key === "growth" && <Growth alt={b.title} width={448} height={336} />}
                   </div>
                 </>
               )}
@@ -126,6 +127,11 @@ export default function AboutPage() {
       <section className="mt-12 sm:mt-16">
         <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 text-center">Our promise</h2>
         <p className="mt-3 text-center text-gray-600 max-w-3xl mx-auto">Accurate information, respectful moderation and a clean, accessible experience. We continuously improve our platform to support local commerce and community needs.</p>
+        <p className="mt-4 text-center">
+          <Link href="/policies" className="text-sm text-red-600 hover:text-red-700 hover:underline font-medium">
+            Know about our policies →
+          </Link>
+        </p>
       </section>
 
       {/* Structured data */}

@@ -147,7 +147,7 @@ export default function Header({ canShowProfileIcon: _canShowProfileIcon = false
 
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white">
+    <header className="sticky top-0 z-50 w-full bg-gradient-to-b from-gray-50 to-white">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="relative flex h-16 items-center justify-between">
           {/* Logo */}
@@ -236,7 +236,7 @@ export default function Header({ canShowProfileIcon: _canShowProfileIcon = false
                 <span className="sr-only">Toggle menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[400px] overflow-y-auto bg-white">
+            <SheetContent side="right" className="w-[300px] sm:w-[400px] overflow-y-auto bg-white dark:bg-gray-900">
               <SheetHeader>
                 <SheetTitle>Navigation</SheetTitle>
               </SheetHeader>
@@ -263,34 +263,6 @@ export default function Header({ canShowProfileIcon: _canShowProfileIcon = false
                     isActive("/browse") && "bg-red-50 text-red-600"
                   )}
                 >
-                  <Dialog open={signInOpen} onOpenChange={setSignInOpen}>
-                    <DialogContent className="sm:max-w-md">
-                      <DialogHeader>
-                        <DialogTitle className="text-center">Sign in required</DialogTitle>
-                        <DialogDescription className="text-center">Please sign in to list your business and services.</DialogDescription>
-                      </DialogHeader>
-                      <div className="flex flex-col items-center gap-4 py-2">
-                        {(signInError ? require("@/components/icons/ErrorIllus").ErrorIllus : require("@/components/icons/Login").Login)({ width: 79, height: 50 })}
-                        <button
-                          onClick={handleGoogleSignIn}
-                          disabled={signingIn}
-                          aria-label="Sign in with Google"
-                          className="inline-flex items-center justify-center gap-2 h-11 px-4 rounded-md border shadow-sm bg-white hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
-                        >
-                          <svg className="h-5 w-5" viewBox="0 0 48 48" aria-hidden="true">
-                            <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303C33.64 31.91 29.223 35 24 35c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.957 3.043l5.657-5.657C34.675 4.051 29.569 2 24 2 12.955 2 4 10.955 4 22s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.651-.389-3.917z" />
-                            <path fill="#FF3D00" d="M6.306 14.691l6.571 4.815C14.297 16.061 18.777 13 24 13c3.059 0 5.842 1.154 7.957 3.043l5.657-5.657C34.675 4.051 29.569 2 24 2 16.318 2 9.656 6.337 6.306 14.691z" />
-                            <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.388-5.205l-6.167-5.206C29.22 35.09 26.65 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z" />
-                            <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571.001-.001.002-.001.003-.002l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.651-.389-3.917z" />
-                          </svg>
-                          <span className="font-medium">{signingIn ? "Signing in..." : "Sign in with Google"}</span>
-                        </button>
-                        {signInError && (
-                          <p className="text-sm text-red-600" role="alert">{signInError}</p>
-                        )}
-                      </div>
-                    </DialogContent>
-                  </Dialog>
                   <Compass className="h-4 w-4" />
                   Browse
                 </Link>
@@ -351,7 +323,9 @@ export default function Header({ canShowProfileIcon: _canShowProfileIcon = false
               <DialogDescription className="text-center">Please sign in to list your business and services.</DialogDescription>
             </DialogHeader>
             <div className="flex flex-col items-center gap-4 py-2">
-              {(signInError ? require("@/components/icons/ErrorIllus").ErrorIllus : require("@/components/icons/Login").Login)({ width: 79, height: 50 })}
+              {/* Login SVG reduced by 40% from previous: 28*0.6=16.8≈17, 18*0.6=10.8≈11 
+                  To adjust size further, edit width/height props in this line (Header.tsx line 335) */}
+              {(signInError ? require("@/components/icons/ErrorIllus").ErrorIllus : require("@/components/icons/Login").Login)({ width: 17, height: 11 })}
               <button
                 onClick={handleGoogleSignIn}
                 disabled={signingIn}

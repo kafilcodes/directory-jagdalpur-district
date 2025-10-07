@@ -5,7 +5,8 @@ import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import ModernListingDetail from "@/components/listings/ModernListingDetail"
+import ListingDetailSheet from "@/components/listings/ListingDetailSheet"
+import { useRouter } from "next/navigation"
 import { Star, MapPin, ChevronRight } from "lucide-react"
 
 import Image from "next/image"
@@ -59,12 +60,14 @@ const sponsoredListings = [
 ]
 
 export default function SponsoredPage() {
-  const [selected, setSelected] = useState<any | null>(null)
-  const [open, setOpen] = useState(false)
+  const router = useRouter()
 
   const onSelect = (listing: any) => {
-    setSelected(listing)
-    setOpen(true)
+    if (listing?.id) {
+      const url = new URL(window.location.href)
+      url.searchParams.set("id", String(listing.id))
+      router.push((url.pathname + url.search) as any, { scroll: false })
+    }
   }
 
   return (
@@ -127,7 +130,7 @@ export default function SponsoredPage() {
                   </div>
                 )}
                 <div className="flex justify-end">
-                  <Button variant="ghost" className="gap-1 text-red-600">
+                  <Button variant="outline" className="gap-1 text-red-600">
                     View details <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
@@ -137,8 +140,8 @@ export default function SponsoredPage() {
         </div>
       </div>
 
-      {/* Right-side detail sheet */}
-      <ModernListingDetail listing={selected} open={open} onClose={() => setOpen(false)} />
+      {/* Listing Detail Sheet - Uses URL params */}
+      <ListingDetailSheet />
     </div>
   )
 }

@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { getAdminDb, FieldValue } from "@/lib/firebase/admin"
 import { getCurrentUser } from "@/lib/auth/server"
+import {
+  safeCreateDocument,
+  safeQueryCollection,
+  safeCreateSearchIndex,
+  safeCreateListingStats,
+} from "@/lib/firebase/safeCollections"
 
 export const runtime = "nodejs"
 
@@ -12,8 +18,8 @@ const CreateListingSchema = z.object({
   description: z.string().optional(),
   tags: z.array(z.string()).optional(),
   phone: z.string().optional(),
-  email: z.string().email(),
-  website: z.string().url().optional(),
+  email: z.string().email().optional(), // Optional - will use user's email if not provided
+  website: z.string().url().optional().or(z.literal('')), // Allow empty string
   address: z.string().min(5),
   city: z.string().optional(),
   state: z.string().optional(),
@@ -33,6 +39,7 @@ const CreateListingSchema = z.object({
   googlePlaceData: z.any().optional(),
   isPublic: z.boolean().default(true),
   monetization: z.record(z.string(), z.any()).optional(),
+  businessSearchName: z.string().optional(), // Extra field from search
 })
 
 export async function POST(req: NextRequest) {
@@ -41,16 +48,36 @@ export async function POST(req: NextRequest) {
     if (!user) return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 })
 
     const json = await req.json()
+    console.log('📥 Received listing data:', JSON.stringify(json, null, 2))
     const parsed = CreateListingSchema.safeParse(json)
     if (!parsed.success) {
-      return NextResponse.json({ ok: false, error: parsed.error.flatten() }, { status: 400 })
+      console.error('❌ Validation failed:', JSON.stringify(parsed.error.flatten(), null, 2))
+      return NextResponse.json({
+        ok: false,
+        error: 'Validation failed',
+        details: parsed.error.flatten()
+      }, { status: 400 })
     }
 
     const db = getAdminDb()
 
-    // Enforce single-listing-per-user
-    const existing = await db.collection("listings").where("ownerUid", "==", user.uid).limit(1).get()
-    if (!existing.empty) {
+    // Enforce single-listing-per-user (using safe query)
+    const existingResult = await safeQueryCollection(
+      "listings",
+      [{ field: "ownerUid", op: "==", value: user.uid }],
+      1
+    )
+
+    if (!existingResult.success) {
+      console.error('❌ Failed to check existing listings:', existingResult.error)
+      return NextResponse.json({
+        ok: false,
+        error: "database_error",
+        message: "Failed to check existing listings"
+      }, { status: 500 })
+    }
+
+    if (existingResult.docs.length > 0) {
       return NextResponse.json({ ok: false, error: "already_has_listing" }, { status: 400 })
     }
 
@@ -69,8 +96,8 @@ export async function POST(req: NextRequest) {
       })()
       : null // Free plan has no expiry
 
-    // Create listing
-    await ref.set({
+    // Create listing using safe collection utilities
+    const listingData = {
       id,
       ownerUid: user.uid,
       name: data.businessName,
@@ -79,7 +106,7 @@ export async function POST(req: NextRequest) {
       description: data.description || '',
       tags: data.tags || [],
       phone: data.phone || '',
-      email: data.email || '',
+      email: data.email || user.email || '', // Use user's email if not provided
       website: data.website || '',
       address: data.address,
       city: data.city || '',
@@ -103,31 +130,82 @@ export async function POST(req: NextRequest) {
       updatedAt: now,
       views: 0,
       clicks: 0,
+    }
+
+    console.log('📝 Creating listing document with ID:', id)
+    const createResult = await safeCreateDocument("listings", id, listingData)
+
+    if (!createResult.success) {
+      console.error('❌ Failed to create listing:', createResult.error)
+      return NextResponse.json({
+        ok: false,
+        error: "database_error",
+        message: "Failed to create listing document",
+        details: createResult.error
+      }, { status: 500 })
+    }
+
+    console.log('✅ Listing created successfully:', id)
+
+    // Index into search shards using safe utilities
+    // Generate all searchable terms: business name words + category
+    const businessNameWords = data.businessName.toLowerCase().trim().split(/\s+/).filter(Boolean)
+    const categorySlug = listingData.categorySlug
+    const searchTerms = Array.from(new Set([categorySlug, ...businessNameWords]))
+
+    // Get plan type for search ranking
+    const planType = data.plan || 'free'
+
+    // Index each term separately for better search coverage
+    const indexPromises = searchTerms.map(term =>
+      safeCreateSearchIndex(
+        term,
+        id,
+        {
+          score: 10,
+          name: data.businessName,
+          cat: categorySlug,
+          categorySlug: categorySlug,
+          description: data.description || '',
+          address: data.address || '',
+          city: data.city || '',
+          phone: data.phone || '',
+          email: data.email || user.email || '',
+          website: data.website || '',
+          location: data.location || undefined,
+          planType: planType,
+          rating: 0,
+          imp: 0,
+          clk: 0,
+        }
+      )
+    )
+
+    const searchIndexResults = await Promise.allSettled(indexPromises)
+    const failedIndexes = searchIndexResults.filter(r => r.status === 'rejected')
+
+    if (failedIndexes.length > 0) {
+      console.warn(`⚠️ Some search indexes failed (${failedIndexes.length}/${searchTerms.length}), but listing created`)
+    } else {
+      console.log(`✅ Search indexes created for ${searchTerms.length} terms:`, searchTerms.join(', '))
+    }
+
+    // Create listing stats document for analytics
+    const statsResult = await safeCreateListingStats(id, {
+      totalImpressions: 0,
+      totalClicks: 0,
+      topKeywords: [],
     })
 
-    // Index into search shards minimal (defer rich terms to background if needed)
-    const categorySlug = data.categorySlug || data.category.toLowerCase().replace(/\s+/g, '-')
-    const shardId = `index_${(categorySlug?.[0] || 'o').toLowerCase()}`
-    const refShard = db.collection("search").doc(shardId)
-    await db.runTransaction(async (tx) => {
-      const snap = await tx.get(refShard)
-      const indexData = (snap.exists ? (snap.data() as any) : { index: {} })
-      const term = categorySlug
-      indexData.index[term] = indexData.index[term] || {}
-      indexData.index[term][id] = {
-        score: 10,
-        name: data.businessName,
-        cat: categorySlug,
-        imp: 0,
-        clk: 0,
-        createdAt: now,
-        updatedAt: now,
-      }
-      tx.set(refShard, indexData, { merge: true })
-    })
+    if (!statsResult.success) {
+      console.warn('⚠️ Stats creation failed (non-fatal):', statsResult.error)
+    } else {
+      console.log('✅ Listing stats initialized')
+    }
 
     return NextResponse.json({ ok: true, id })
   } catch (e: any) {
+    console.error('Listing creation error:', e)
     return NextResponse.json({ ok: false, error: e?.message || "error" }, { status: 500 })
   }
 }

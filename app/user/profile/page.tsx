@@ -2,7 +2,8 @@ import { getCurrentUser } from "@/lib/auth/server"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { User, Mail, Calendar, Shield, FileText, Download, CreditCard } from "lucide-react"
+import { User, Mail, Calendar, Shield, Briefcase } from "lucide-react"
+import { PaymentReceipts } from "@/components/user/PaymentReceipts"
 
 export const dynamic = "force-dynamic"
 
@@ -17,6 +18,9 @@ export default async function UserProfilePage() {
             </div>
         )
     }
+
+    // Extract username from email (part before @)
+    const username = user.email?.split('@')[0] || "User"
 
     const createdDate = user?.metadata?.creationTime
         ? new Date(user.metadata.creationTime).toLocaleDateString("en-IN", {
@@ -37,34 +41,33 @@ export default async function UserProfilePage() {
             </div>
 
             {/* Profile Card */}
-            <Card className="border-gray-200 shadow-sm overflow-hidden">
-                <div className="h-24 bg-gradient-to-r from-red-500 to-red-600" />
-                <CardContent className="pt-0">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4 -mt-12 pb-6">
-                        <div className="relative">
+            <Card className="border-gray-200 shadow-sm">
+                <CardContent className="p-6">
+                    <div className="flex flex-col sm:flex-row items-start gap-4">
+                        <div className="relative shrink-0">
                             {user.photoURL ? (
                                 <img
                                     src={user.photoURL}
                                     alt={user.displayName || "User"}
-                                    className="h-24 w-24 rounded-full object-cover ring-4 ring-white shadow-lg"
+                                    className="h-16 w-16 rounded-full object-cover ring-2 ring-red-100"
                                 />
                             ) : (
-                                <div className="h-24 w-24 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center ring-4 ring-white shadow-lg">
-                                    <User className="h-12 w-12 text-white" />
+                                <div className="h-16 w-16 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white font-semibold text-xl shadow-sm">
+                                    {(user.displayName || user.email || "U")[0].toUpperCase()}
                                 </div>
                             )}
                         </div>
                         <div className="flex-1">
-                            <h2 className="text-2xl font-bold text-gray-900">
-                                {user.displayName || "Business Owner"}
+                            <h2 className="text-xl font-bold text-gray-900">
+                                {user.displayName || username}
                             </h2>
+                            <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
+                                <Briefcase className="h-4 w-4" />
+                                <span>Business Account</span>
+                            </div>
                             <div className="flex flex-wrap gap-2 mt-2">
-                                <Badge variant="secondary" className="gap-1">
-                                    <Shield className="h-3 w-3" />
-                                    Business Owner
-                                </Badge>
                                 {user.emailVerified && (
-                                    <Badge className="gap-1 bg-green-500">
+                                    <Badge className="gap-1 bg-emerald-500 hover:bg-emerald-600 text-xs">
                                         <Shield className="h-3 w-3" />
                                         Verified
                                     </Badge>
@@ -73,43 +76,43 @@ export default async function UserProfilePage() {
                         </div>
                     </div>
 
-                    <div className="grid sm:grid-cols-2 gap-6 pt-6 border-t border-gray-100">
+                    <div className="grid sm:grid-cols-2 gap-4 pt-4 border-t border-gray-200">
                         <div className="flex items-start gap-3">
-                            <div className="p-2 bg-red-50 rounded-lg">
-                                <Mail className="h-5 w-5 text-red-600" />
+                            <div className="p-1.5 bg-gray-100 rounded">
+                                <Mail className="h-4 w-4 text-gray-600" />
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-gray-500">Email Address</p>
+                                <p className="text-xs font-medium text-gray-500">Email Address</p>
                                 <p className="text-sm text-gray-900 truncate">{user.email || "Not provided"}</p>
                             </div>
                         </div>
 
                         <div className="flex items-start gap-3">
-                            <div className="p-2 bg-blue-50 rounded-lg">
-                                <Calendar className="h-5 w-5 text-blue-600" />
+                            <div className="p-1.5 bg-gray-100 rounded">
+                                <Calendar className="h-4 w-4 text-gray-600" />
                             </div>
                             <div>
-                                <p className="text-sm font-medium text-gray-500">Member Since</p>
+                                <p className="text-xs font-medium text-gray-500">Member Since</p>
                                 <p className="text-sm text-gray-900">{createdDate}</p>
                             </div>
                         </div>
 
                         <div className="flex items-start gap-3">
-                            <div className="p-2 bg-purple-50 rounded-lg">
-                                <User className="h-5 w-5 text-purple-600" />
+                            <div className="p-1.5 bg-gray-100 rounded">
+                                <User className="h-4 w-4 text-gray-600" />
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-gray-500">User ID</p>
+                                <p className="text-xs font-medium text-gray-500">User ID</p>
                                 <p className="text-xs text-gray-600 font-mono truncate">{user.uid}</p>
                             </div>
                         </div>
 
                         <div className="flex items-start gap-3">
-                            <div className="p-2 bg-green-50 rounded-lg">
-                                <Shield className="h-5 w-5 text-green-600" />
+                            <div className="p-1.5 bg-gray-100 rounded">
+                                <Shield className="h-4 w-4 text-gray-600" />
                             </div>
                             <div>
-                                <p className="text-sm font-medium text-gray-500">Account Status</p>
+                                <p className="text-xs font-medium text-gray-500">Account Status</p>
                                 <p className="text-sm text-gray-900">Active</p>
                             </div>
                         </div>
@@ -118,24 +121,7 @@ export default async function UserProfilePage() {
             </Card>
 
             {/* Receipts Section */}
-            <Card className="border-gray-200 shadow-sm">
-                <CardHeader>
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <FileText className="h-5 w-5 text-gray-600" />
-                            <CardTitle className="text-lg">Payment Receipts</CardTitle>
-                        </div>
-                    </div>
-                    <p className="text-sm text-gray-600 mt-1">Download invoices for your transactions</p>
-                </CardHeader>
-                <CardContent>
-                    <div className="text-center py-12">
-                        <CreditCard className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                        <p className="text-sm text-gray-600">No receipts yet</p>
-                        <p className="text-xs text-gray-500 mt-1">Your payment receipts will appear here</p>
-                    </div>
-                </CardContent>
-            </Card>
+            <PaymentReceipts userEmail={user.email || ""} />
         </div>
     )
 }

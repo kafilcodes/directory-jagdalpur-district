@@ -48,10 +48,19 @@ export default async function MyListingsPage() {
               category={it.category || it.listingType || "General"}
               address={it.address || ""}
               rating={typeof it.rating === "number" ? it.rating : undefined}
+              planType={it.activePlan?.type || it.planType}
+              photoUrl={it.thumbnail || it.photos?.[0] || it.googlePhotos?.[0] || it.images?.[0]}
+              images={it.images || []}
+              googlePhotos={it.googlePhotos || it.photos || []}
+              phone={it.phone}
+              email={it.email}
             />
           ))}
         </div>
       )}
+
+      {/* Listing Detail Sheet - Opens when ?id= param is present */}
+      {require("react").createElement(require("@/components/listings/ListingDetailSheet").default)}
     </main>
   )
 }

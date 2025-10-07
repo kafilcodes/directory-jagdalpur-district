@@ -20,14 +20,9 @@ export default function ListingCardClient(props: ListingCardProps) {
       } catch { }
     }
 
-    // Navigate to the dedicated details page while also supporting sheet on homepage
-    const isHome = window.location.pathname === "/"
-    if (isHome) {
-      url.searchParams.set("id", props.id)
-      window.history.replaceState({}, "", url.toString())
-    } else {
-      window.location.href = `/listing/${props.id}`
-    }
+    // Always open sheet by setting id parameter
+    url.searchParams.set("id", props.id)
+    window.history.replaceState({}, "", url.toString())
 
     // Existing analytics event + new click capture
     try {

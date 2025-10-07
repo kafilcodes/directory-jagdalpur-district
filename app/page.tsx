@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import SponsoredCarousel from "@/components/home/SponsoredCarousel"
 import FeaturedCarousel from "@/components/home/FeaturedCarousel"
-import ModernListingDetail from "@/components/listings/ModernListingDetail"
+import ListingDetailSheet from "@/components/listings/ListingDetailSheet"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -36,14 +36,15 @@ const categories = [
 ]
 
 export default function HomePage() {
-  const [selectedListing, setSelectedListing] = useState<any>(null)
   const router = useRouter()
-  const [detailOpen, setDetailOpen] = useState(false)
-
 
   const handleSelectListing = (listing: any) => {
-    setSelectedListing(listing)
-    setDetailOpen(true)
+    // Open listing detail sheet by setting URL param
+    if (listing?.id) {
+      const url = new URL(window.location.href)
+      url.searchParams.set("id", listing.id)
+      router.push((url.pathname + url.search) as any, { scroll: false })
+    }
   }
 
   return (
@@ -66,10 +67,10 @@ export default function HomePage() {
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-gray-900 mb-10">
               Discover Local{" "}
-              <span className="text-red-500 relative inline-block pb-1 md:pb-2 text-inherit z-[998]">
+              <span className="text-red-500 relative inline-block pb-3 md:pb-4">
                 Businesses
-                <svg className="pointer-events-none absolute bottom-0 left-0 w-full h-[0.35em] text-red-500 z-[9999]" viewBox="0 0 200 10" preserveAspectRatio="none" aria-hidden="true">
-                  <path d="M0 7 Q50 0 100 7 T200 7" stroke="currentColor" fill="none" strokeWidth="2" />
+                <svg className="pointer-events-none absolute -bottom-1 left-0 w-full h-[0.35em] text-red-500 overflow-visible" viewBox="0 0 200 10" preserveAspectRatio="none" aria-hidden="true" style={{ zIndex: -1 }}>
+                  <path d="M0 7 Q50 0 100 7 T200 7" stroke="currentColor" fill="none" strokeWidth="2" vectorEffect="non-scaling-stroke" />
                 </svg>
               </span>
               <br />
@@ -80,10 +81,10 @@ export default function HomePage() {
               Your one-stop destination for everything local.
             </p>
 
-            {/* Hero Search Bar */}
-            <div className="bg-white rounded-2xl shadow-xl  max-w-2xl mx-auto">
+            {/* Hero Search Bar - Reduced default size */}
+            <div className="bg-white rounded-2xl shadow-xl max-w-xl mx-auto">
               <div className="flex flex-col gap-2">
-                <DynamicSearchBar placeholder="What are you looking for?" size="lg" onSelect={handleSelectListing} />
+                <DynamicSearchBar placeholder="What are you looking for?" size="md" onSelect={handleSelectListing} />
                 {/* JSON-LD for WebSite + potential searchAction */}
                 <script
                   type="application/ld+json"
@@ -121,7 +122,7 @@ export default function HomePage() {
                     <Link key={label} aria-label={`Search ${label}`} href={`/search?cats=${slug}`}>
                       <Badge
                         variant="outline"
-                        className="cursor-pointer transition-colors whitespace-nowrap inline-flex items-center gap-1.5 px-3 py-1 text-xs sm:text-sm border-gray-300 hover:border-red-500 hover:bg-red-50 hover:text-red-600"
+                        className="cursor-pointer transition-colors whitespace-nowrap inline-flex items-center gap-1.5 px-3 py-1 text-xs sm:text-sm border-gray-300 hover:border-red-500  hover:text-red-600"
                       >
                         <Icon className="h-3.5 w-3.5" aria-hidden="true" />
                         {label}
@@ -138,13 +139,12 @@ export default function HomePage() {
         <div className="absolute top-20 left-10 w-20 h-20 bg-red-200 rounded-full blur-3xl opacity-30 -z-10"></div>
         <div className="absolute bottom-20 right-10 w-32 h-32 bg-blue-200 rounded-full blur-3xl opacity-30 -z-10"></div>
 
-        {/* Stats Section (Option A: below Sponsored) */}
         <section className="py-12 bg-tranparent ">
           <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
               {stats.map((stat, index) => (
                 <div key={index} className="text-center">
-                  <div className="inline-flex items-center justify-center w-12 h-12 bg-red-100 text-red-500 rounded-full mb-3 outline outline-1 outline-red-200 shadow-sm">
+                  <div className="inline-flex items-center justify-center w-12 h-12 bg-tranparent  text-[#EF4444] hover:text-red-100 rounded-full mb-3 outline outline-1 outline-red-200 shadow-sm">
                     {stat.icon}
                   </div>
                   <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
@@ -274,12 +274,8 @@ export default function HomePage() {
       })()}
 
 
-      {/* Listing Detail Sheet */}
-      <ModernListingDetail
-        listing={selectedListing}
-        open={detailOpen}
-        onClose={() => setDetailOpen(false)}
-      />
+      {/* Listing Detail Sheet - Uses URL params */}
+      <ListingDetailSheet />
     </div>
   )
 }

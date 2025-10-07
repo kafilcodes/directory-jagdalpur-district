@@ -4,7 +4,7 @@ import { useMemo } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Filter, TrendingUp, Star, Clock, Building2, UtensilsCrossed, Stethoscope, GraduationCap, ShoppingBag, Wrench, Home, Car } from "lucide-react"
+import { Filter, TrendingUp, Star, Clock, Building2, UtensilsCrossed, Stethoscope, GraduationCap, ShoppingBag, Wrench, Home, Car, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 import { CATEGORIES, normalizeCategoryToSlug, labelForSlug } from "@/lib/categories"
@@ -122,18 +122,21 @@ export default function SearchControls() {
         </PopoverContent>
       </Popover>
 
-      {/* Clear filters */}
-      <button
+      {/* Clear filters - Icon button */}
+      <Button
         onClick={() => {
           const next = new URLSearchParams(params.toString())
           next.delete("q"); next.delete("cats"); next.delete("category"); next.delete("sort")
           apply(next)
         }}
-        className="text-xs text-red-600 hover:underline whitespace-nowrap ml-auto"
+        variant="ghost"
+        size="sm"
+        className="gap-1.5 h-8 text-xs text-red-600 hover:text-red-700 hover:bg-red-50 whitespace-nowrap ml-auto"
         aria-label="Clear filters"
       >
-        Clear filters
-      </button>
+        <X className="h-3.5 w-3.5" />
+        Clear
+      </Button>
     </div>
   )
 }

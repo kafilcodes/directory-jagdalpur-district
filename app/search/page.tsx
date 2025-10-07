@@ -1,8 +1,10 @@
 import { Skeleton } from "@/components/ui/skeleton"
 import SearchControls from "@/components/search/SearchControls"
-import { searchListings as searchShard } from "@/app/actions/searchActions"
+import { searchListingsHybrid } from "@/app/actions/searchActions"
 import Image from "next/image"
 import EmptySearch from "@/components/icons/EmptySearch"
+import { Badge } from "@/components/ui/badge"
+import { MapPin, Phone, Star } from "lucide-react"
 
 function hasAdminEnv() {
   return (
@@ -44,19 +46,15 @@ export default async function SearchPage({ searchParams }: any) {
     )
   }
 
-  const raw = (await searchShard(q, 60, { sort: sort as any })) as any[]
-  const { normalizeCategoryToSlug } = await import("@/lib/categories")
-  const filtered = cats.length ? raw.filter((it: any) => {
-    const slug = normalizeCategoryToSlug(String(it.cat || it.category || ""))
-    return slug ? cats.includes(slug) : false
-  }) : raw
-  const premiumFiltered = premiumFilter ? filtered.filter((it: any) => it?.planType === premiumFilter) : filtered
-  const total = premiumFiltered.length
+  // Use hybrid search for better results
+  const raw = (await searchListingsHybrid(q, 60, {
+    sort: sort as any,
+    categoryFilter: cats.length > 0 ? cats : undefined
+  })) as any[]
 
-  // Split into businesses and services based on category (safe assumptions)
-  const serviceSet = new Set(["Plumbers", "Electricians", "Carpenters", "Tutors", "Clinics"]) // assumptions per context
-  const businessItems = premiumFiltered.filter((it: any) => !serviceSet.has(it.category || it.listingType))
-  const serviceItems = premiumFiltered.filter((it: any) => serviceSet.has(it.category || it.listingType))
+  // Apply premium filter if specified
+  const results = premiumFilter ? raw.filter((it: any) => it?.planType === premiumFilter) : raw
+  const total = results.length
 
   return (
     <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 space-y-6">
@@ -84,51 +82,54 @@ export default async function SearchPage({ searchParams }: any) {
           <div className="relative w-48 h-36">
             <EmptySearch width={192} height={144} />
           </div>
-          <div className="text-center space-y-3 pt-4">
-            <h2 className="text-xl font-semibold text-gray-900">No results found</h2>
-            <p className="text-sm text-gray-600 max-w-md mx-auto px-4">
-              Try different keywords or remove filters and search again.
-            </p>
-          </div>
+
         </div>
       ) : (
-        require("react").createElement(require("@/components/ui/tabs").Tabs, { defaultValue: "businesses", className: "w-full" },
-          require("react").createElement(require("@/components/ui/tabs").TabsList, { className: "grid w-full grid-cols-2" },
-            require("react").createElement(require("@/components/ui/tabs").TabsTrigger, { value: "businesses" }, "Businesses"),
-            require("react").createElement(require("@/components/ui/tabs").TabsTrigger, { value: "services" }, "Services")
-          ),
-          require("react").createElement(require("@/components/ui/tabs").TabsContent, { value: "businesses", className: "mt-6" },
-            require("react").createElement("div", { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" },
-              ...businessItems.map((it: any) => (
-                require("react").createElement(require("@/components/listings/ListingCardClient").default, {
-                  key: it.id,
-                  id: it.id,
-                  name: it.name || it.listingName || "Unnamed",
-                  category: it.category || it.listingType || "General",
-                  address: it.address || "",
-                  rating: typeof it.rating === "number" ? it.rating : undefined,
-                  planType: it.planType,
-                })
-              ))
-            )
-          ),
-          require("react").createElement(require("@/components/ui/tabs").TabsContent, { value: "services", className: "mt-6" },
-            require("react").createElement("div", { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" },
-              ...serviceItems.map((it: any) => (
-                require("react").createElement(require("@/components/listings/ListingCardClient").default, {
-                  key: it.id,
-                  id: it.id,
-                  name: it.name || it.listingName || "Unnamed",
-                  category: it.category || it.listingType || "General",
-                  address: it.address || "",
-                  rating: typeof it.rating === "number" ? it.rating : undefined,
-                  planType: it.planType,
-                })
-              ))
-            )
-          )
-        )
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {results.map((it: any, index: number) => {
+            // Extract images properly from Firestore data structure
+            const imageUrl = it.thumbnail ||
+              (it.images && Array.isArray(it.images) && it.images.length > 0
+                ? (typeof it.images[0] === 'string' ? it.images[0] : it.images[0]?.url)
+                : null) ||
+              (it.photos && Array.isArray(it.photos) && it.photos.length > 0 ? it.photos[0] : null) ||
+              (it.googlePhotos && Array.isArray(it.googlePhotos) && it.googlePhotos.length > 0 ? it.googlePhotos[0] : null) ||
+              it.photoUrl
+
+            // Extract formatted address
+            const address = it.address?.formattedAddress || it.formattedAddress || it.address || ""
+
+            // Extract plan type
+            const planType = it.planType || it.activePlan?.type || it.monetization?.type
+
+            const cardElement = require("react").createElement(require("@/components/listings/ListingCardClient").default, {
+              key: it.id,
+              id: it.id,
+              name: it.name || it.businessName || it.listingName || "Unnamed",
+              category: it.category || it.categorySlug || it.listingType || "General",
+              address: typeof address === 'string' ? address : JSON.stringify(address),
+              rating: typeof it.rating === "number" ? it.rating : undefined,
+              planType: planType,
+              photoUrl: imageUrl,
+              thumbnail: imageUrl,
+              images: it.images,
+              googlePhotos: it.googlePhotos || it.photos,
+              phone: it.phone,
+              email: it.email,
+            })
+
+            return require("react").createElement("div", {
+              key: it.id,
+              className: "animate-fade-in-up",
+              style: { animationDelay: `${index * 50}ms`, animationFillMode: 'both' }
+            }, cardElement)
+          })}
+        </div>
       )}
+
+      {/* Listing Detail Sheet - Opens when ?id= param is present */}
+      {require("react").createElement(require("@/components/listings/ListingDetailSheet").default)}
     </main>
   )
 }
+

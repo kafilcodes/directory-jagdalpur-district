@@ -4,13 +4,14 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 
-import { ChevronRight, Star, MapPin, Clock, TrendingUp, Crown, Gem, Award, Building2, UtensilsCrossed, Stethoscope, GraduationCap, Dumbbell, Tag, Eye, Phone, Mail } from "lucide-react"
+import { ChevronRight, Star, MapPin, Clock, TrendingUp, Crown, Gem, Award, Eye, Phone, Mail, Globe, ExternalLink } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
 import { cn } from "@/lib/utils"
+import { CategoryBadge } from "@/components/common/CategoryBadge"
 
 // Server-backed sponsored listings (max 20)
 
@@ -123,35 +124,24 @@ export default function SponsoredCarousel({ onSelectListing }: SponsoredCarousel
 
                       {/* Category Overlay */}
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                        <Badge variant="outline" className="text-white border-white/50 bg-white/10 backdrop-blur inline-flex items-center gap-1.5">
-                          {(() => {
-                            const c = (listing.category || "").toLowerCase()
-                            return c.includes("hotel") ? <Building2 className="h-3.5 w-3.5" /> :
-                              c.includes("restaurant") ? <UtensilsCrossed className="h-3.5 w-3.5" /> :
-                                c.includes("gym") ? <Dumbbell className="h-3.5 w-3.5" /> :
-                                  c.includes("health") ? <Stethoscope className="h-3.5 w-3.5" /> :
-                                    c.includes("education") || c.includes("school") ? <GraduationCap className="h-3.5 w-3.5" /> :
-                                      <Tag className="h-3.5 w-3.5" />
-                          })()}
-                          {listing.category}
-                        </Badge>
+                        <CategoryBadge
+                          category={listing.category}
+                          variant="outline"
+                          showText={true}
+                          showIcon={true}
+                          iconSize="h-3.5 w-3.5"
+                          className="text-white border-white/50 bg-white/10 backdrop-blur"
+                        />
                       </div>
                     </div>
 
                     {/* Content Section */}
                     <CardContent className="p-3 space-y-2">
-                      {/* Title and Rating */}
+                      {/* Title only - no ratings */}
                       <div>
                         <h3 className="font-semibold text-lg group-hover:text-red-500 transition-colors line-clamp-1">
                           {listing.name}
                         </h3>
-                        <div className="flex items-center gap-3 mt-1">
-                          <div className="flex items-center">
-                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                            <span className="text-sm font-medium ml-1">{listing.rating}</span>
-                          </div>
-                          <span className="text-sm text-gray-500">({listing.reviews} reviews)</span>
-                        </div>
                       </div>
 
                       {/* Location */}
@@ -160,52 +150,60 @@ export default function SponsoredCarousel({ onSelectListing }: SponsoredCarousel
                         <span className="line-clamp-1">{listing.address}</span>
                       </div>
 
-                      {/* Price or Additional Info (consistent height) */}
-                      <div className="pt-2 border-t min-h-[2.25rem] flex items-center justify-between">
-                        {listing.price ? (
-                          <>
-                            <span className="text-sm text-gray-500">Starting from</span>
-                            <span className="font-semibold text-lg text-red-500">{listing.price}</span>
-                          </>
-                        ) : (
-                          <span className="sr-only">No price provided</span>
+                      {/* Action Icons Row - Below Address */}
+                      <div className="pt-1  flex  gap-0.5">
+                        {/* Call Icon */}
+                        {listing.phone && (
+                          <a
+                            href={`tel:${listing.phone}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="h-10 w-10 rounded-full  hover:text-red-400 flex items-center justify-center transition-all hover:scale-110 "
+                            aria-label={`Call ${listing.name}`}
+                          >
+                            <Phone className="h-4 w-4" />
+                          </a>
+                        )}
+
+                        {/* Email Icon */}
+                        {listing.email && (
+                          <a
+                            href={`mailto:${listing.email}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="h-10 w-10 rounded-full  hover:text-red-400 flex items-center justify-center transition-all hover:scale-110 "
+                            aria-label={`Email ${listing.name}`}
+                          >
+                            <Mail className="h-4 w-4" />
+                          </a>
+                        )}
+
+                        {/* Website Icon */}
+                        {listing.website && (
+                          <a
+                            href={listing.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="h-10 w-10 rounded-full  hover:text-red-400 flex items-center justify-center transition-all hover:scale-110 "
+                            aria-label={`Visit ${listing.name} website`}
+                          >
+                            <Globe className="h-4 w-4" />
+                          </a>
                         )}
                       </div>
 
-                      {/* Quick Actions */}
-                      <div className="flex gap-2 pt-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="flex-1 h-9 inline-flex items-center gap-1.5"
+                      {/* Full-Width View Details Button */}
+                      <div className="pt-3">
+                        <button
                           onClick={(e) => {
                             e.stopPropagation()
                             onSelectListing?.(listing)
                           }}
+                          className="w-full h-9 rounded-lg hover:text-red-600 flex items-center justify-center gap-2 font-medium transition-all hover:scale-[1.02] shadow-xs "
+                          aria-label={`View ${listing.name} details`}
                         >
-                          <Eye className="h-4 w-4" />
-                          View
-                        </Button>
-                        {(() => {
-                          const phone = (listing as any).phone
-                          const email = (listing as any).email
-                          if (!phone && !email) return null
-                          const href = phone ? `tel:${phone}` : `mailto:${email}`
-                          const Icon = phone ? Phone : Mail
-                          return (
-                            <Button
-                              asChild
-                              size="sm"
-                              className="flex-1 h-9 bg-red-500 hover:bg-red-600 inline-flex items-center gap-1.5"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <a href={href} aria-label={phone ? `Call ${listing.name}` : `Email ${listing.name}`}>
-                                <Icon className="h-4 w-4" />
-                                {phone ? "Call" : "Email"}
-                              </a>
-                            </Button>
-                          )
-                        })()}
+                          <ExternalLink className="h-4 w-4" />
+                          <span>View Details</span>
+                        </button>
                       </div>
                     </CardContent>
                   </Card>

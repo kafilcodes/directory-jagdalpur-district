@@ -9,7 +9,8 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel"
 import { CAROUSEL_TRANSITION, CAROUSEL_INTERVAL_MS } from "@/lib/ui-home"
-import { Star, Eye, MapPin, Building2, UtensilsCrossed, Stethoscope, GraduationCap, Dumbbell, Tag, TrendingUp } from "lucide-react"
+import { Eye, MapPin, TrendingUp, Star, ExternalLink } from "lucide-react"
+import { CategoryBadge } from "@/components/common/CategoryBadge"
 
 export default function FeaturedCarousel({ onSelectListing }: { onSelectListing?: (listing: any) => void }) {
   const [api, setApi] = React.useState<CarouselApi | null>(null)
@@ -47,7 +48,7 @@ export default function FeaturedCarousel({ onSelectListing }: { onSelectListing?
   }, [api])
 
   return (
-    <section className="w-full pt-6 pb-12">
+    <section className="w-full pt-6 pb-12 bg-gradient-to-b from-gray-50 to-white">
       <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="mb-5 text-left sm:text-center">
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900 inline-flex items-center gap-2"><TrendingUp className="h-5 w-5 text-red-500" />Featured This Week </h2>
@@ -67,75 +68,94 @@ export default function FeaturedCarousel({ onSelectListing }: { onSelectListing?
               const opacityClass = loading ? "" : circularDiff === 0 ? "opacity-100" : circularDiff === 1 ? "opacity-80" : "opacity-50"
 
               return (
-                <CarouselItem key={item?.id ?? idx} className="basis-[65%] sm:basis-1/3 lg:basis-1/4">
-                  <Card onClick={() => !loading && onSelectListing?.(item)} className={`group overflow-hidden bg-white rounded-2xl border hover:shadow-lg ${CAROUSEL_TRANSITION} transition-opacity duration-300 ${opacityClass} h-full`} >
-                    <div className="relative w-full aspect-[4/3]">
-                      {/* Skeleton */}
+                <CarouselItem key={item?.id ?? idx} className="basis-[85%] sm:basis-1/2 lg:basis-1/3">
+                  <Card
+                    onClick={() => !loading && onSelectListing?.(item)}
+                    className={`group overflow-hidden bg-white rounded-2xl border-0 shadow-md hover:shadow-xl ${CAROUSEL_TRANSITION} transition-opacity duration-300 ${opacityClass} h-full cursor-pointer`}
+                  >
+                    {/* Image Cover with Content Overlay */}
+                    <div className="relative w-full aspect-[3/4] overflow-hidden">
+                      {/* Background Image */}
                       {loading ? (
                         <div className="absolute inset-0 animate-pulse bg-gray-200" />
                       ) : (
-                        <Image
-                          src={item.image}
-                          alt={item.name}
-                          fill
-                          sizes="(max-width: 768px) 70vw, (max-width: 1024px) 40vw, 25vw"
-                          className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
-                        />
-                      )}
-                    </div>
-
-                    <CardContent className="p-3 space-y-3 min-h-[170px] sm:min-h-[180px]">
-                      {loading ? (
                         <>
-                          <div className="h-5 w-2/3 bg-gray-200 rounded animate-pulse" />
-                          <div className="h-4 w-1/3 bg-gray-200 rounded animate-pulse" />
+                          <Image
+                            src={item.image}
+                            alt={item.name}
+                            fill
+                            sizes="(max-width: 768px) 85vw, (max-width: 1024px) 50vw, 33vw"
+                            className="object-cover object-center transition-transform duration-700 group-hover:scale-110"
+                          />
+                          {/* Dark Gradient Overlay at Bottom */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
                         </>
-                      ) : (
-                        <>
-                          <div className="flex items-center justify-between gap-2 min-h-6">
-                            <h3 className="font-semibold text-base sm:text-lg line-clamp-1">{item.name}</h3>
-                            {typeof item.rating === "number" && (
-                              <span className="inline-flex items-center gap-1 text-sm text-gray-700"><Star className="h-4 w-4 text-yellow-500" />{item.rating.toFixed(1)}</span>
-                            )}
-                          </div>
-                          {/* Category badge (same logic as Sponsored) */}
-                          <div className="-mt-1 min-h-6">
-                            <Badge variant="outline" className="inline-flex items-center gap-1.5 border-red-500 text-gray-800">
-                              {(() => {
-                                const c = (item.category || "").toLowerCase()
-                                return c.includes("hotel") ? <Building2 className="h-3.5 w-3.5 text-red-500" /> :
-                                  c.includes("restaurant") ? <UtensilsCrossed className="h-3.5 w-3.5 text-red-500" /> :
-                                    c.includes("gym") ? <Dumbbell className="h-3.5 w-3.5 text-red-500" /> :
-                                      c.includes("health") ? <Stethoscope className="h-3.5 w-3.5 text-red-500" /> :
-                                        (c.includes("education") || c.includes("school")) ? <GraduationCap className="h-3.5 w-3.5 text-red-500" /> :
-                                          <Tag className="h-3.5 w-3.5 text-red-500" />
-                              })()}
-                              {item.category}
-                            </Badge>
-                          </div>
+                      )}
+
+                      {/* Premium Icon Badge - Top Right */}
+                      {!loading && (item.planType === 'featured' || item.plan === 'featured') && (
+                        <div className="absolute top-3 right-3 h-8 w-8 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-500 flex items-center justify-center text-white shadow-lg backdrop-blur-sm ring-2 ring-white/30">
+                          <Star className="h-4 w-4 fill-white" />
+                        </div>
+                      )}
+                      {!loading && (item.planType === 'sponsored' || item.plan === 'sponsored') && (
+                        <div className="absolute top-3 right-3 h-8 w-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-500 flex items-center justify-center text-white shadow-lg backdrop-blur-sm ring-2 ring-white/30">
+                          <TrendingUp className="h-4 w-4" />
+                        </div>
+                      )}
+
+                      {/* Content Overlay at Bottom */}
+                      {!loading && (
+                        <div className="absolute bottom-0 left-0 right-0 p-4 space-y-3">
+                          {/* Category Icon Only - No Text Badge */}
+                          <CategoryBadge
+                            category={item.category}
+                            showText={false}
+                            showIcon={true}
+                          />
+
+                          
+
+                          {/* Title */}
+                          <h3 className="font-bold text-lg text-white line-clamp-2 leading-tight">
+                            {item.name}
+                          </h3>
 
                           {/* Location */}
-                          <div className="flex items-center gap-2 text-sm text-gray-600 min-h-6">
-                            <MapPin className="h-4 w-4 flex-shrink-0 text-red-500" />
-                            <span className="line-clamp-1">{item.address}</span>
+                          <div className="flex items-center gap-2 text-white/90 text-sm">
+                            <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+                            <span className="line-clamp-1 text-xs">{item.address}</span>
                           </div>
 
-                          <div className="text-sm text-gray-600 min-h-6">
-                            {item.price ? (
-                              <>Starting from <span className="font-semibold text-gray-900">{item.price}</span></>
-                            ) : (
-                              <span className="invisible">placeholder</span>
-                            )}
+                          {/* Full-Width Icon+Text CTA Button */}
+                          <div className="pt-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onSelectListing?.(item)
+                              }}
+                              className="w-full h-10 rounded-lg bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center gap-2 text-white font-medium shadow-xl hover:bg-white/30 hover:scale-[1.02] transition-all duration-300 group/btn"
+                              aria-label="View listing details"
+                            >
+                              <ExternalLink className="h-4 w-4 group-hover/btn:scale-110 transition-transform" />
+                              <span>View Details</span>
+                            </button>
                           </div>
-                          <div className="pt-1">
-                            <Button size="sm" variant="outline" className="h-8 w-full text-sm hover:bg-red-500 hover:text-white inline-flex items-center gap-1.5" onClick={(e) => { e.stopPropagation(); onSelectListing?.(item) }}>
-                              <Eye className="h-4 w-4" />
-                              View details
-                            </Button>
-                          </div>
-                        </>
+                        </div>
                       )}
-                    </CardContent>
+
+                      {/* Loading State */}
+                      {loading && (
+                        <div className="absolute bottom-0 left-0 right-0 p-4 space-y-3">
+                          <div className="h-6 w-20 bg-white/20 rounded animate-pulse" />
+                          <div className="h-6 w-3/4 bg-white/20 rounded animate-pulse" />
+                          <div className="h-4 w-1/2 bg-white/20 rounded animate-pulse" />
+                          <div className="pt-2">
+                            <div className="h-10 w-full bg-white/20 rounded-lg animate-pulse" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </Card>
                 </CarouselItem>
               )

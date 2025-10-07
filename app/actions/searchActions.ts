@@ -10,6 +10,7 @@ import type {
 
 import { getAdminDb, FieldValue } from "@/lib/firebase/admin"
 import type { Listing, SearchShardDoc, SearchEntry } from "@/lib/types"
+import { hybridSearch as hybridSearchCore, trackListingClick as trackClickCore } from "@/lib/search/hybridSearch"
 
 const POPULARITY_BOOST = 0.001 // weight per impression
 const ENGAGEMENT_BOOST = 0.05  // weight per click
@@ -195,5 +196,27 @@ export async function submitListing(input: SubmitListingInput & { id: string }) 
   )
 
   return { ok: true, id }
+}
+
+/**
+ * Wrapper for hybrid search - exports for use in Server Components
+ */
+export async function searchListingsHybrid(
+  searchQuery: string,
+  limit: number = 60,
+  options?: { sort?: 'relevance' | 'popular' | 'recent'; categoryFilter?: string[] }
+) {
+  return await hybridSearchCore(searchQuery, {
+    limit,
+    sort: options?.sort,
+    categoryFilter: options?.categoryFilter
+  })
+}
+
+/**
+ * Wrapper for click tracking - exports for use in Server Components
+ */
+export async function trackClickHybrid(listingId: string, searchQuery: string) {
+  return await trackClickCore(listingId, searchQuery)
 }
 

@@ -3,18 +3,33 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Menu, X, LayoutDashboard, FilePlus, FileText, User, LogOut, Home } from "lucide-react"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
-import { signOut } from "@/lib/firebase/authService"
+import { LayoutDashboard, FilePlus, FileText, User as UserIcon, LogOut, Home, Clock, Calendar } from "lucide-react"
+import { signOut, getFirebaseAuth } from "@/lib/firebase/authService"
+import { onAuthStateChanged, type User } from "firebase/auth"
 import { cn } from "@/lib/utils"
+import {
+    Sidebar,
+    SidebarContent,
+    SidebarFooter,
+    SidebarGroup,
+    SidebarGroupContent,
+    SidebarGroupLabel,
+    SidebarHeader,
+    SidebarInset,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+    SidebarProvider,
+    SidebarRail,
+    SidebarSeparator,
+    SidebarTrigger,
+} from "@/components/ui/sidebar"
 
 interface UserLayoutProps {
     children: React.ReactNode
 }
 
-const menuItems = [
+const mainMenuItems = [
     {
         href: "/user/dashboard" as const,
         label: "Dashboard",
@@ -25,6 +40,9 @@ const menuItems = [
         label: "My Listing",
         icon: FileText,
     },
+]
+
+const actionsMenuItems = [
     {
         href: "/user/create-listing" as const,
         label: "Create Listing",
@@ -33,12 +51,52 @@ const menuItems = [
     {
         href: "/user/profile" as const,
         label: "Profile",
-        icon: User,
+        icon: UserIcon,
     },
 ]
 
-function SidebarNav() {
+function AppSidebar() {
     const pathname = usePathname()
+    const [user, setUser] = React.useState<User | null>(null)
+    const [currentTime, setCurrentTime] = React.useState<string>("")
+    const [currentDate, setCurrentDate] = React.useState<string>("")
+
+    // Subscribe to auth state
+    React.useEffect(() => {
+        const auth = getFirebaseAuth()
+        if (!auth) return
+
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            setUser(user)
+        })
+
+        return () => unsubscribe()
+    }, [])
+
+    // Update time and date every minute
+    React.useEffect(() => {
+        const updateDateTime = () => {
+            const now = new Date()
+            // 12-hour format with AM/PM
+            let hours = now.getHours()
+            const minutes = now.getMinutes().toString().padStart(2, "0")
+            const ampm = hours >= 12 ? 'PM' : 'AM'
+            hours = hours % 12
+            hours = hours ? hours : 12 // 0 should be 12
+            const formattedHours = hours.toString().padStart(2, "0")
+            setCurrentTime(`${formattedHours}:${minutes} ${ampm}`)
+
+            // Format: "Thursday | 03 Oct 2025"
+            const dayName = now.toLocaleDateString('en-US', { weekday: 'long' })
+            const date = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+            setCurrentDate(`${dayName} | ${date}`)
+        }
+
+        updateDateTime()
+        const interval = setInterval(updateDateTime, 60000) // Update every minute
+
+        return () => clearInterval(interval)
+    }, [])
 
     const handleSignOut = async () => {
         const result = await signOut()
@@ -47,119 +105,268 @@ function SidebarNav() {
         }
     }
 
+    // Get first letter of email for avatar fallback
+    const getAvatarLetter = () => {
+        if (user?.email) {
+            return user.email.charAt(0).toUpperCase()
+        }
+        return "U"
+    }
+
     return (
-        <nav className="flex flex-col h-full">
-            {/* Logo/Brand */}
-            <div className="p-4 flex items-center gap-2">
-                <div className="h-8 w-8 rounded-lg bg-red-600 flex items-center justify-center text-white font-bold">
-                    D
-                </div>
-                <span className="font-semibold text-gray-900">Business Area</span>
-            </div>
-
-            <Separator />
-
-            {/* Navigation Links */}
-            <div className="flex-1 p-3 space-y-1">
-                {menuItems.map((item) => {
-                    const Icon = item.icon
-                    const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
-
-                    return (
-                        <Link
-                            key={item.href}
-                            href={item.href as any}
-                            className={cn(
-                                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                                isActive
-                                    ? "bg-red-50 text-red-600"
-                                    : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                            )}
-                        >
-                            <Icon className="h-4 w-4 shrink-0" />
-                            <span>{item.label}</span>
-                        </Link>
-                    )
-                })}
-            </div>
-
-            <Separator />
-
-            {/* Back to Site & Sign Out */}
-            <div className="p-3 space-y-1">
-                <Link
-                    href="/"
-                    className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors"
-                >
-                    <Home className="h-4 w-4 shrink-0" />
-                    <span>Back to Site</span>
+        <Sidebar collapsible="icon" className="bg-gray-100">
+            <SidebarHeader className="border-b border-gray-200 bg-gray-100">
+                {/* Logo/Brand - Expanded State */}
+                <Link href="/" className="flex items-center gap-3 px-3 py-2 group-data-[collapsible=icon]:hidden hover:opacity-80 transition-opacity">
+                    <div className="relative h-10 w-10 shrink-0">
+                        <img
+                            src="/logo.png"
+                            alt="Dhamtari Directory"
+                            className="h-full w-full object-contain"
+                            onError={(e) => {
+                                e.currentTarget.style.display = 'none'
+                                const fallback = e.currentTarget.nextElementSibling as HTMLElement | null
+                                if (fallback) fallback.classList.remove('hidden')
+                            }}
+                        />
+                        <div className="hidden h-full w-full rounded-lg bg-red-600 flex items-center justify-center text-white font-bold text-base">
+                            D
+                        </div>
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                        <span className="font-bold text-gray-900 text-base leading-tight">Dhamtari Directory</span>
+                        <span className="font-medium text-gray-600 text-xs">Business Area</span>
+                    </div>
                 </Link>
 
-                <button
-                    onClick={handleSignOut}
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors"
-                >
-                    <LogOut className="h-4 w-4 shrink-0" />
-                    <span>Sign Out</span>
-                </button>
-            </div>
-        </nav>
+                {/* Logo Only - Collapsed State */}
+                <Link href="/" className="hidden group-data-[collapsible=icon]:flex items-center justify-center py-3 hover:opacity-80 transition-opacity">
+                    <div className="relative h-8 w-8">
+                        <img
+                            src="/logo.png"
+                            alt="Dhamtari Directory"
+                            className="h-full w-full object-contain"
+                            onError={(e) => {
+                                e.currentTarget.style.display = 'none'
+                                const fallback = e.currentTarget.nextElementSibling as HTMLElement | null
+                                if (fallback) fallback.classList.remove('hidden')
+                            }}
+                        />
+                        <div className="hidden h-full w-full rounded-lg bg-red-600 flex items-center justify-center text-white font-bold text-sm">
+                            D
+                        </div>
+                    </div>
+                </Link>
+
+                {/* User Profile Section */}
+                <div className="px-3 py-3 group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:hidden">
+                    <div className="rounded-lg bg-white border border-gray-200 p-3 space-y-3">
+                        {/* Profile Avatar & Name */}
+                        <div className="flex items-center gap-3">
+                            {user?.photoURL ? (
+                                <img
+                                    src={user.photoURL}
+                                    alt={user.displayName || "User"}
+                                    className="h-10 w-10 rounded-full object-cover ring-2 ring-gray-200"
+                                    onError={(e) => {
+                                        e.currentTarget.style.display = 'none'
+                                        const fallback = e.currentTarget.nextElementSibling as HTMLElement
+                                        if (fallback) fallback.style.display = 'flex'
+                                    }}
+                                />
+                            ) : null}
+                            <div
+                                className="h-10 w-10 rounded-full bg-red-500 flex items-center justify-center text-white font-semibold text-base ring-2 ring-gray-200"
+                                style={{ display: user?.photoURL ? 'none' : 'flex' }}
+                            >
+                                {getAvatarLetter()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-gray-900 truncate">
+                                    {user?.displayName || (user?.email?.split('@')[0]) || "User"}
+                                </p>
+                                <p className="text-xs text-gray-600">Welcome back</p>
+                            </div>
+                        </div>
+
+                        {/* Date & Time */}
+                        <div className="space-y-1.5 pt-2 border-t border-gray-100">
+                            <div className="flex items-center gap-2 text-xs text-gray-700">
+                                <Calendar className="h-3.5 w-3.5 text-gray-500" />
+                                <span className="font-medium">{currentDate || "Loading..."}</span>
+                            </div>
+                            <div className="flex items-center gap-2 pl-5">
+                                <Clock className="h-4 w-4 text-gray-500" />
+                                <span className="text-xl font-bold text-gray-900">
+                                    {currentTime || "--:--"}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Collapsed State Avatar */}
+                <div className="hidden group-data-[collapsible=icon]:flex justify-center py-2">
+                    {user?.photoURL ? (
+                        <img
+                            src={user.photoURL}
+                            alt={user.displayName || "User"}
+                            className="h-8 w-8 rounded-full object-cover ring-2 ring-gray-300"
+                            onError={(e) => {
+                                e.currentTarget.style.display = 'none'
+                                const fallback = e.currentTarget.nextElementSibling as HTMLElement
+                                if (fallback) fallback.style.display = 'flex'
+                            }}
+                        />
+                    ) : null}
+                    <div
+                        className="h-8 w-8 rounded-full bg-red-500 flex items-center justify-center text-white font-semibold text-sm ring-2 ring-gray-300"
+                        style={{ display: user?.photoURL ? 'none' : 'flex' }}
+                    >
+                        {getAvatarLetter()}
+                    </div>
+                </div>
+            </SidebarHeader>
+
+            <SidebarContent className="bg-gray-100">
+                {/* Main Navigation Group */}
+                <SidebarGroup>
+                    <SidebarGroupLabel className="text-gray-700 font-semibold">Main</SidebarGroupLabel>
+                    <SidebarGroupContent>
+                        <SidebarMenu>
+                            {mainMenuItems.map((item) => {
+                                const Icon = item.icon
+                                const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
+
+                                return (
+                                    <SidebarMenuItem key={item.href}>
+                                        <SidebarMenuButton
+                                            asChild
+                                            isActive={isActive}
+                                            tooltip={item.label}
+                                            size="lg"
+                                            className="group-data-[collapsible=icon]:justify-center"
+                                        >
+                                            <Link href={item.href}>
+                                                <Icon className="h-6 w-6 group-data-[collapsible=icon]:h-7 group-data-[collapsible=icon]:w-7" />
+                                                <span className="font-medium">{item.label}</span>
+                                            </Link>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                )
+                            })}
+                        </SidebarMenu>
+                    </SidebarGroupContent>
+                </SidebarGroup>
+
+                <SidebarSeparator className="bg-gray-300" />
+
+                {/* Actions Group */}
+                <SidebarGroup>
+                    <SidebarGroupLabel className="text-gray-700 font-semibold">My Business</SidebarGroupLabel>
+                    <SidebarGroupContent>
+                        <SidebarMenu>
+                            {actionsMenuItems.map((item) => {
+                                const Icon = item.icon
+                                const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
+
+                                return (
+                                    <SidebarMenuItem key={item.href}>
+                                        <SidebarMenuButton
+                                            asChild
+                                            isActive={isActive}
+                                            tooltip={item.label}
+                                            size="lg"
+                                            className="group-data-[collapsible=icon]:justify-center"
+                                        >
+                                            <Link href={item.href}>
+                                                <Icon className="h-6 w-6 group-data-[collapsible=icon]:h-7 group-data-[collapsible=icon]:w-7" />
+                                                <span className="font-medium">{item.label}</span>
+                                            </Link>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                )
+                            })}
+                        </SidebarMenu>
+                    </SidebarGroupContent>
+                </SidebarGroup>
+            </SidebarContent>
+
+            <SidebarFooter className="border-t border-gray-200 bg-gray-100">
+                <SidebarMenu>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton
+                            asChild
+                            tooltip="Back to Site"
+                            size="lg"
+                            className="group-data-[collapsible=icon]:justify-center"
+                        >
+                            <Link href="/">
+                                <Home className="h-6 w-6 group-data-[collapsible=icon]:h-7 group-data-[collapsible=icon]:w-7" />
+                                <span className="font-medium">Back to Site</span>
+                            </Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton
+                            onClick={handleSignOut}
+                            tooltip="Sign Out"
+                            size="lg"
+                            className="group-data-[collapsible=icon]:justify-center text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                            <LogOut className="h-6 w-6 group-data-[collapsible=icon]:h-7 group-data-[collapsible=icon]:w-7" />
+                            <span className="font-medium">Sign Out</span>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                </SidebarMenu>
+            </SidebarFooter>
+
+            <SidebarRail />
+        </Sidebar>
     )
 }
 
 /**
- * User Area Layout Component
- * Provides sidebar navigation for authenticated user pages
- * Mobile: Sheet drawer, Desktop: Fixed sidebar
- * No public header/footer rendered
+ * User Area Layout Component with ShadCN Sidebar
+ * Provides collapsible sidebar navigation for authenticated user pages
+ * Mobile: Sheet drawer, Desktop: Collapsible sidebar (icon/expanded)
  */
 export function LayoutUser({ children }: UserLayoutProps) {
-    const [mobileOpen, setMobileOpen] = React.useState(false)
-
     return (
-        <div className="min-h-screen bg-gray-50">
-            {/* Mobile Header with Menu Trigger */}
-            <div className="lg:hidden sticky top-0 z-40 bg-white border-b">
-                <div className="flex items-center justify-between px-4 py-3">
-                    <div className="flex items-center gap-2">
-                        <div className="h-7 w-7 rounded-lg bg-red-600 flex items-center justify-center text-white font-bold text-sm">
-                            D
+        <SidebarProvider defaultOpen={true}>
+            <div className="flex min-h-screen w-full bg-gray-50">
+                <AppSidebar />
+                <SidebarInset>
+                    {/* Header with Trigger - No elevation or border */}
+                    <header className="sticky top-0 z-10 flex h-14 items-center gap-4 bg-gray-50 px-4">
+                        <SidebarTrigger />
+                        <div className="flex items-center gap-2">
+                            <div className="relative h-7 w-7 md:hidden">
+                                <img
+                                    src="/logo.png"
+                                    alt="Dhamtari Directory"
+                                    className="h-full w-full object-contain"
+                                    onError={(e) => {
+                                        e.currentTarget.style.display = 'none'
+                                        e.currentTarget.nextElementSibling?.classList.remove('hidden')
+                                    }}
+                                />
+                                <div className="hidden h-full w-full rounded-lg bg-red-600 flex items-center justify-center text-white font-bold text-sm">
+                                    D
+                                </div>
+                            </div>
+                            <span className="font-semibold text-gray-900 md:hidden">Business Area</span>
                         </div>
-                        <span className="font-semibold text-gray-900">Business Area</span>
-                    </div>
+                    </header>
 
-                    <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-                        <SheetTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="lg:hidden"
-                                aria-label="Open navigation menu"
-                            >
-                                <Menu className="h-5 w-5" />
-                            </Button>
-                        </SheetTrigger>
-                        <SheetContent side="left" className="w-72 p-0">
-                            <SidebarNav />
-                        </SheetContent>
-                    </Sheet>
-                </div>
+                    {/* Main Content */}
+                    <main className="flex-1">
+                        <div className="mx-auto max-w-5xl p-4 sm:p-5 lg:p-6">
+                            {children}
+                        </div>
+                    </main>
+                </SidebarInset>
             </div>
-
-            {/* Desktop Layout */}
-            <div className="lg:grid lg:grid-cols-[260px_1fr] lg:gap-0">
-                {/* Desktop Sidebar - Fixed */}
-                <aside className="hidden lg:block fixed left-0 top-0 h-screen w-[260px] bg-white border-r">
-                    <SidebarNav />
-                </aside>
-
-                {/* Main Content Area */}
-                <main className="lg:col-start-2 lg:ml-[260px] min-h-screen">
-                    <div className="mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">
-                        {children}
-                    </div>
-                </main>
-            </div>
-        </div>
+        </SidebarProvider>
     )
 }

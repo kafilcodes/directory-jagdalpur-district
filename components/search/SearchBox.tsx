@@ -38,7 +38,7 @@ export default function SearchBox() {
           <SelectTrigger className="h-12 w-full sm:w-56 bg-transparent border-0 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-base">
             <SelectValue placeholder="All categories" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-white dark:bg-gray-800">
             <SelectItem value="__all">All categories</SelectItem>
             {categories.map((c) => (
               <SelectItem key={c} value={c}>

@@ -32,7 +32,13 @@ import {
     AlertTriangle,
     Save,
     RefreshCw,
+    X,
+    ChevronDown,
+    ChevronUp,
+    Phone as PhoneIcon,
 } from "lucide-react"
+import { ErrorCard } from "@/components/common/ErrorCard"
+import { BusinessConfirmationCard } from "@/components/common/BusinessConfirmationCard"
 import { useRouter } from "next/navigation"
 import Script from "next/script"
 import {
@@ -55,7 +61,7 @@ import {
 const STEPS = [
     { id: 1, name: "Business Info", icon: Building2, description: "Search and select your business" },
     { id: 2, name: "Details", icon: FileText, description: "Add business details" },
-    { id: 3, name: "Media", icon: ImageIcon, description: "Upload photos" },
+    { id: 3, name: "Media", icon: ImageIcon, description: "Business photos" },
     { id: 4, name: "Payment", icon: CreditCard, description: "Choose plan and pay" },
 ]
 
@@ -75,10 +81,6 @@ export function CreateListingFormNew() {
     const [isFetchingDetails, setIsFetchingDetails] = React.useState(false)
     const [locationError, setLocationError] = React.useState<string | null>(null)
 
-    // Media state
-    const [photoFiles, setPhotoFiles] = React.useState<File[]>([])
-    const [photoPreviews, setPhotoPreviews] = React.useState<string[]>([])
-
     // Payment state
     const [selectedPlan, setSelectedPlan] = React.useState<'free' | 'sponsored' | 'featured'>('free')
     const [isProcessingPayment, setIsProcessingPayment] = React.useState(false)
@@ -87,6 +89,18 @@ export function CreateListingFormNew() {
     // Draft state
     const [showDraftBanner, setShowDraftBanner] = React.useState(false)
     const [draftAge, setDraftAge] = React.useState<string | null>(null)
+
+    // UI state
+    const [showHelperSection, setShowHelperSection] = React.useState(false)
+    const [errorDetails, setErrorDetails] = React.useState<any>(null)
+
+    // Refs for inputs
+    const urlInputRef = React.useRef<HTMLInputElement>(null)
+    const phoneInputRef = React.useRef<HTMLInputElement>(null)
+    const websiteInputRef = React.useRef<HTMLInputElement>(null)
+
+    // Debounce timer for URL fetch
+    const fetchDebounceRef = React.useRef<NodeJS.Timeout | null>(null)
 
     // Load draft on mount
     React.useEffect(() => {
@@ -186,12 +200,15 @@ export function CreateListingFormNew() {
     const handleFetchFromUrl = async () => {
         if (!googleMapsUrl.trim()) {
             setError("Please enter a Google Maps URL")
+            setErrorDetails(null)
             return
         }
 
         setIsFetchingDetails(true)
         setLocationError(null)
         setError(null)
+        setErrorDetails(null)
+        setSelectedPlace(null)
 
         try {
             // First, check if it's a short URL and resolve it
@@ -213,11 +230,26 @@ export function CreateListingFormNew() {
                         placeId = resolveData.placeId
                         console.log('Resolved Place ID:', placeId)
                     }
+                } else {
+                    const errorData = await resolveResponse.json()
+                    setError("Could not resolve URL")
+                    setErrorDetails({
+                        title: "Invalid URL",
+                        details: "Unable to extract business information from this URL.",
+                        debugInfo: errorData
+                    })
+                    setIsFetchingDetails(false)
+                    return
                 }
             }
 
             if (!placeId) {
-                setError("Could not extract Place ID from URL. Please try: (1) Open Google Maps, (2) Search your business, (3) Click your listing, (4) Use Share → Copy link. Or enter details manually below.")
+                setError("Could not extract Place ID from URL")
+                setErrorDetails({
+                    title: "Invalid Google Maps URL",
+                    details: "Please use: (1) Open Google Maps, (2) Search your business, (3) Click your listing, (4) Use Share → Copy link.",
+                    showHelper: true
+                })
                 setIsFetchingDetails(false)
                 return
             }
@@ -228,9 +260,19 @@ export function CreateListingFormNew() {
             if (!result.success) {
                 if (result.locationRestricted) {
                     setLocationError(result.error || "Location restricted to Dhamtari district only")
+                    setErrorDetails({
+                        title: result.errorTitle || "Location Not Allowed",
+                        details: result.errorDetails || result.error,
+                        debugInfo: result.debugInfo
+                    })
                     setGoogleMapsUrl("")
                 } else {
-                    setError(`Failed to fetch place details: ${result.error || 'Unknown error'}. You can enter your business details manually below.`)
+                    setError(result.error || "Failed to fetch place details")
+                    setErrorDetails({
+                        title: "API Error",
+                        details: "Could not fetch business details from Google Maps. You can enter your business details manually below.",
+                        debugInfo: result
+                    })
                 }
                 setIsFetchingDetails(false)
                 return
@@ -257,10 +299,28 @@ export function CreateListingFormNew() {
             }
         } catch (error) {
             console.error('Error fetching from URL:', error)
-            setError("Failed to process URL. Please try again or enter details manually.")
+            setError("Network error or server unavailable")
+            setErrorDetails({
+                title: "Connection Error",
+                details: "Failed to connect to the server. Please check your internet connection and try again.",
+                debugInfo: { error: error instanceof Error ? error.message : String(error) }
+            })
         } finally {
             setIsFetchingDetails(false)
         }
+    }
+
+    // Debounced fetch handler
+    const handleUrlChange = (value: string) => {
+        setGoogleMapsUrl(value)
+
+        // Clear any existing timeout
+        if (fetchDebounceRef.current) {
+            clearTimeout(fetchDebounceRef.current)
+        }
+
+        // Don't auto-fetch, let user click the button
+        // This prevents excessive API calls while typing
     }
 
     // Navigate steps
@@ -316,8 +376,8 @@ export function CreateListingFormNew() {
                 return true
 
             case 3: // Media
-                if (photoFiles.length === 0 && (!selectedPlace || !selectedPlace.photos.length)) {
-                    setError("Please upload at least one photo")
+                if (!selectedPlace || !selectedPlace.photos.length) {
+                    setError("No photos available from Google Business Profile")
                     return false
                 }
                 return true
@@ -331,33 +391,6 @@ export function CreateListingFormNew() {
         if (validateStep(currentStep)) {
             goToNextStep()
         }
-    }
-
-    // Handle photo upload
-    const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = Array.from(e.target.files || [])
-        const maxFiles = selectedPlan === 'free' ? 5 : selectedPlan === 'sponsored' ? 10 : 999
-
-        if (photoFiles.length + files.length > maxFiles) {
-            setError(`Maximum ${maxFiles} photos allowed for ${selectedPlan} plan`)
-            return
-        }
-
-        setPhotoFiles(prev => [...prev, ...files])
-
-        // Create previews
-        files.forEach(file => {
-            const reader = new FileReader()
-            reader.onloadend = () => {
-                setPhotoPreviews(prev => [...prev, reader.result as string])
-            }
-            reader.readAsDataURL(file)
-        })
-    }
-
-    const removePhoto = (index: number) => {
-        setPhotoFiles(prev => prev.filter((_, i) => i !== index))
-        setPhotoPreviews(prev => prev.filter((_, i) => i !== index))
     }
 
     // Payment handler
@@ -465,37 +498,18 @@ export function CreateListingFormNew() {
         setUploadProgress(10)
 
         try {
-            // Upload photos first
-            const uploadedPhotoUrls: string[] = []
+            // Photos come from Google Places API only
+            setUploadProgress(10)
 
-            for (let i = 0; i < photoFiles.length; i++) {
-                const file = photoFiles[i]
-                const formData = new FormData()
-                formData.append('file', file)
-                formData.append('folder', 'listings')
-
-                setUploadProgress(10 + ((i + 1) / photoFiles.length) * 40)
-
-                // Upload to Firebase Storage via API
-                const uploadResponse = await fetch('/api/upload-image', {
-                    method: 'POST',
-                    body: formData,
-                })
-
-                if (!uploadResponse.ok) {
-                    throw new Error('Failed to upload photo')
-                }
-
-                const uploadData = await uploadResponse.json()
-                uploadedPhotoUrls.push(uploadData.url)
-            }
+            // Get photos from selectedPlace (Google Places API)
+            const googlePhotoUrls = selectedPlace?.photos.slice(0, 10) || []
 
             setUploadProgress(60)
 
             // Create listing in Firestore
             const listingData = {
                 ...formData,
-                photos: uploadedPhotoUrls,
+                photos: googlePhotoUrls,
                 plan: selectedPlan,
                 ...(orderId && { orderId }),
                 ...(paymentId && { paymentId }),
@@ -510,22 +524,46 @@ export function CreateListingFormNew() {
 
             setUploadProgress(80)
 
+            const responseData = await response.json()
+
             if (!response.ok) {
-                const errorText = await response.text()
-                let errorMessage = 'Failed to create listing'
-                try {
-                    const errorData = JSON.parse(errorText)
-                    errorMessage = errorData.error || errorMessage
-                } catch {
-                    errorMessage = errorText || errorMessage
+                // Handle specific error codes
+                if (response.status === 404 || responseData.error?.includes('NOT_FOUND')) {
+                    throw new Error('Database collection not found. Please contact support.')
                 }
-                throw new Error(errorMessage)
+                if (responseData.error === 'already_has_listing') {
+                    throw new Error('You already have a listing. Please edit your existing listing.')
+                }
+                throw new Error(responseData.error || 'Failed to create listing')
+            }
+
+            setUploadProgress(90)
+
+            // Store payment details if paid plan
+            if (paymentId && orderId) {
+                try {
+                    await fetch('/api/listings/payments', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            listingId: responseData.id,
+                            orderId,
+                            paymentId,
+                            plan: selectedPlan,
+                            amount: PLANS[selectedPlan].priceRupees,
+                        }),
+                    })
+                } catch (err) {
+                    console.error('Payment record error:', err)
+                    // Don't fail the whole process if payment record fails
+                }
             }
 
             setUploadProgress(100)
 
-            // Clear draft
+            // Clear draft and hide draft banner
             clearDraft()
+            setShowDraftBanner(false)
 
             // Show success message
             setSuccess('Listing created successfully! Redirecting...')
@@ -590,19 +628,20 @@ export function CreateListingFormNew() {
                     <div>
                         <Label htmlFor="googleMapsUrl">Google Business Profile URL</Label>
                         <p className="text-xs text-gray-500 mt-1">
-                            Paste your Google Business Profile link (e.g., from Google Maps or Google Business)
+                            Paste your Google Business Profile link
                         </p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                         <div className="relative flex-1">
                             <Input
+                                ref={urlInputRef}
                                 id="googleMapsUrl"
                                 type="url"
                                 placeholder="https://maps.app.goo.gl/... or https://www.google.com/maps/place/..."
                                 value={googleMapsUrl}
-                                onChange={(e) => setGoogleMapsUrl(e.target.value)}
+                                onChange={(e) => handleUrlChange(e.target.value)}
                                 disabled={isFetchingDetails}
-                                className="pr-8"
+                                className={googleMapsUrl ? "pr-10" : ""}
                                 maxLength={500}
                             />
                             {googleMapsUrl && (
@@ -610,14 +649,12 @@ export function CreateListingFormNew() {
                                     type="button"
                                     onClick={() => {
                                         setGoogleMapsUrl('')
-                                        document.getElementById('googleMapsUrl')?.focus()
+                                        urlInputRef.current?.focus()
                                     }}
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 hover:bg-gray-100 rounded transition-colors"
                                     aria-label="Clear URL"
                                 >
-                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
+                                    <X className="h-3.5 w-3.5 text-gray-500" />
                                 </button>
                             )}
                         </div>
@@ -625,7 +662,7 @@ export function CreateListingFormNew() {
                             type="button"
                             onClick={handleFetchFromUrl}
                             disabled={isFetchingDetails || !googleMapsUrl.trim()}
-                            className="bg-red-600 hover:bg-red-700 text-white px-6 shrink-0"
+                            className="bg-red-600 hover:bg-red-700 text-white px-6 shrink-0 min-h-[44px]"
                         >
                             {isFetchingDetails ? (
                                 <>
@@ -640,48 +677,42 @@ export function CreateListingFormNew() {
                             )}
                         </Button>
                     </div>
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                        <p className="text-xs text-blue-800 font-semibold mb-2">
-                            📍 How to get your Google Business URL:
-                        </p>
-                        <ol className="text-xs text-blue-700 space-y-1.5 ml-4 list-decimal">
-                            <li>Open <strong>Google Maps</strong> (maps.google.com)</li>
-                            <li>Search for your business name</li>
-                            <li>Click on your business from the results</li>
-                            <li>Click the <strong>"Share"</strong> button (or three dots menu)</li>
-                            <li>Select <strong>"Share a link"</strong></li>
-                            <li>Copy the link and paste it above</li>
-                        </ol>
-                        <div className="mt-3 pt-3 border-t border-blue-300">
-                            <p className="text-xs text-blue-600">
-                                💡 <strong>Tip:</strong> Make sure your business is verified on Google Business Profile for best results.
-                            </p>
-                        </div>
+
+                    {/* Collapsible Helper Section */}
+                    <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+                        <button
+                            type="button"
+                            onClick={() => setShowHelperSection(!showHelperSection)}
+                            className="w-full px-3 py-2 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                        >
+                            <span className="text-xs font-medium text-gray-700">
+                                📍 How to get your Google Business URL
+                            </span>
+                            {showHelperSection ? (
+                                <ChevronUp className="h-3.5 w-3.5 text-gray-500" />
+                            ) : (
+                                <ChevronDown className="h-3.5 w-3.5 text-gray-500" />
+                            )}
+                        </button>
+                        {showHelperSection && (
+                            <div className="px-3 py-2 border-t border-gray-200 bg-gray-50">
+                                <ol className="text-xs text-gray-600 space-y-1 ml-4 list-decimal">
+                                    <li>Open <strong>Google Maps</strong> (maps.google.com)</li>
+                                    <li>Search for your business name</li>
+                                    <li>Click on your business from the results</li>
+                                    <li>Click the <strong>"Share"</strong> button</li>
+                                    <li>Select <strong>"Share a link"</strong></li>
+                                    <li>Copy the link and paste it above</li>
+                                </ol>
+                                <p className="text-xs text-gray-500 mt-2">
+                                    💡 <strong>Tip:</strong> Business must be verified on Google Business Profile
+                                </p>
+                            </div>
+                        )}
                     </div>
                 </div>
 
-                {/* Selected Place Details */}
-                {selectedPlace && (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                        <div className="flex items-start gap-3">
-                            <Check className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
-                            <div className="flex-1">
-                                <p className="font-medium text-green-900">{selectedPlace.name}</p>
-                                <p className="text-sm text-green-700 mt-1">{selectedPlace.address}</p>
-                                {selectedPlace.phone && (
-                                    <p className="text-sm text-green-600 mt-1">📞 {selectedPlace.phone}</p>
-                                )}
-                                {selectedPlace.rating > 0 && (
-                                    <p className="text-sm text-green-600 mt-1">
-                                        ⭐ {selectedPlace.rating} ({selectedPlace.userRatingCount} reviews)
-                                    </p>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                <Separator />
+                <Separator className="my-4" />
 
                 {/* Manual Entry Fallback */}
                 <div className="space-y-4">
@@ -738,6 +769,7 @@ export function CreateListingFormNew() {
                             </Label>
                             <div className="relative">
                                 <Input
+                                    ref={phoneInputRef}
                                     id="phone"
                                     type="tel"
                                     placeholder="+91 XXXXX XXXXX"
@@ -748,21 +780,19 @@ export function CreateListingFormNew() {
                                         setFormData(prev => ({ ...prev, phone: value }))
                                     }}
                                     maxLength={15}
-                                    className={formData.phone ? 'pr-8' : ''}
+                                    className={formData.phone ? 'pr-10' : ''}
                                 />
                                 {formData.phone && (
                                     <button
                                         type="button"
                                         onClick={() => {
                                             setFormData(prev => ({ ...prev, phone: '' }))
-                                            document.getElementById('phone')?.focus()
+                                            phoneInputRef.current?.focus()
                                         }}
-                                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+                                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 hover:bg-gray-100 rounded transition-colors"
                                         aria-label="Clear phone"
                                     >
-                                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
+                                        <X className="h-3.5 w-3.5 text-gray-500" />
                                     </button>
                                 )}
                             </div>
@@ -774,18 +804,34 @@ export function CreateListingFormNew() {
                                     ({(formData.website || '').length}/200)
                                 </span>
                             </Label>
-                            <Input
-                                id="website"
-                                type="url"
-                                placeholder="https://..."
-                                value={formData.website || ''}
-                                onChange={(e) => {
-                                    const value = e.target.value.slice(0, 200)
-                                    setFormData(prev => ({ ...prev, website: value }))
-                                }}
-                                maxLength={200}
-                                pattern="https?://.*"
-                            />
+                            <div className="relative">
+                                <Input
+                                    ref={websiteInputRef}
+                                    id="website"
+                                    type="url"
+                                    placeholder="https://..."
+                                    value={formData.website || ''}
+                                    onChange={(e) => {
+                                        const value = e.target.value.slice(0, 200)
+                                        setFormData(prev => ({ ...prev, website: value }))
+                                    }}
+                                    maxLength={200}
+                                    className={formData.website ? 'pr-10' : ''}
+                                />
+                                {formData.website && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setFormData(prev => ({ ...prev, website: '' }))
+                                            websiteInputRef.current?.focus()
+                                        }}
+                                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 hover:bg-gray-100 rounded transition-colors"
+                                        aria-label="Clear website"
+                                    >
+                                        <X className="h-3.5 w-3.5 text-gray-500" />
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -811,10 +857,10 @@ export function CreateListingFormNew() {
                         value={formData.category || ''}
                         onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
                     >
-                        <SelectTrigger id="category" className="bg-white dark:bg-gray-800">
+                        <SelectTrigger id="category" className="bg-white">
                             <SelectValue placeholder="Select a category" />
                         </SelectTrigger>
-                        <SelectContent className="bg-white dark:bg-gray-800">
+                        <SelectContent className="bg-white">
                             {CATEGORIES.map((cat) => (
                                 <SelectItem key={cat.slug} value={cat.label}>
                                     {cat.icon} {cat.label}
@@ -929,86 +975,45 @@ export function CreateListingFormNew() {
 
     // Step 3: Media
     const Step3Media = () => {
-        const maxPhotos = selectedPlan === 'free' ? 5 : selectedPlan === 'sponsored' ? 10 : 999
+        const maxPhotos = 10 // Fixed limit for Google Places photos
 
         return (
             <Card>
                 <CardHeader>
                     <CardTitle>Photos & Media</CardTitle>
-                    <p className="text-sm text-gray-600 mt-1">
-                        Upload photos of your business (Max: {maxPhotos} photos for {selectedPlan} plan)
+                    <p className="text-sm text-gray-600">
+                        Photos from your Google Business Profile (Max: {maxPhotos})
                     </p>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                    {/* Google Photos */}
-                    {selectedPlace && selectedPlace.photos.length > 0 && (
+                <CardContent className="space-y-3">
+                    {selectedPlace && selectedPlace.photos.length > 0 ? (
                         <div>
-                            <Label>Photos from Google Places</Label>
-                            <div className="grid grid-cols-3 gap-4 mt-2">
-                                {selectedPlace.photos.slice(0, 6).map((photo, index) => (
-                                    <div key={index} className="relative aspect-square rounded-lg overflow-hidden border">
+                            <p className="text-xs font-medium text-gray-700 mb-2">
+                                {selectedPlace.photos.slice(0, maxPhotos).length} photos from Google Maps
+                            </p>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                                {selectedPlace.photos.slice(0, maxPhotos).map((photo, index) => (
+                                    <div key={index} className="relative aspect-square rounded overflow-hidden border border-gray-200">
                                         <img
                                             src={getPlacePhotoUrl(photo.name, 400, 400)}
                                             alt={`Business photo ${index + 1}`}
                                             className="w-full h-full object-cover"
+                                            loading="lazy"
                                         />
                                     </div>
                                 ))}
                             </div>
                             <p className="text-xs text-gray-500 mt-2">
-                                These photos will be automatically included
+                                ✓ These photos will be automatically included in your listing
                             </p>
                         </div>
-                    )}
-
-                    {/* Upload Photos */}
-                    <div>
-                        <Label htmlFor="photos">Upload Additional Photos</Label>
-                        <div className="mt-2">
-                            <input
-                                id="photos"
-                                type="file"
-                                accept="image/*"
-                                multiple
-                                onChange={handlePhotoChange}
-                                className="hidden"
-                            />
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => document.getElementById('photos')?.click()}
-                                disabled={photoFiles.length >= maxPhotos}
-                            >
-                                <ImageIcon className="h-4 w-4 mr-2" />
-                                Choose Photos
-                            </Button>
+                    ) : (
+                        <div className="text-center py-8 border border-gray-200 rounded bg-gray-50">
+                            <ImageIcon className="h-10 w-10 text-gray-400 mx-auto mb-2" />
+                            <p className="text-sm text-gray-600">No photos available from Google Maps</p>
                             <p className="text-xs text-gray-500 mt-1">
-                                {photoFiles.length} / {maxPhotos} photos uploaded
+                                Make sure your business has photos on Google Business Profile
                             </p>
-                        </div>
-                    </div>
-
-                    {/* Photo Previews */}
-                    {photoPreviews.length > 0 && (
-                        <div className="grid grid-cols-3 gap-4">
-                            {photoPreviews.map((preview, index) => (
-                                <div key={index} className="relative aspect-square rounded-lg overflow-hidden border group">
-                                    <img
-                                        src={preview}
-                                        alt={`Upload ${index + 1}`}
-                                        className="w-full h-full object-cover"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => removePhoto(index)}
-                                        className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                                    >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            ))}
                         </div>
                     )}
                 </CardContent>
@@ -1084,7 +1089,7 @@ export function CreateListingFormNew() {
                     <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Photos:</span>
                         <span className="font-medium">
-                            {photoFiles.length + (selectedPlace?.photos.length || 0)} photos
+                            {selectedPlace?.photos.slice(0, 10).length || 0} photos
                         </span>
                     </div>
                     <Separator />
@@ -1101,12 +1106,12 @@ export function CreateListingFormNew() {
                     <CardContent className="py-4">
                         <div className="space-y-2">
                             <div className="flex items-center justify-between text-sm">
-                                <span className="font-medium text-blue-900">Creating listing...</span>
-                                <span className="text-blue-700">{uploadProgress}%</span>
+                                <span className="font-medium text-gray-800">Creating listing...</span>
+                                <span className="text-gray-600">{uploadProgress}%</span>
                             </div>
-                            <div className="w-full bg-blue-200 rounded-full h-2">
+                            <div className="w-full bg-gray-200 rounded-full h-2">
                                 <div
-                                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                    className="bg-red-500 h-2 rounded-full transition-all duration-300"
                                     style={{ width: `${uploadProgress}%` }}
                                 />
                             </div>
@@ -1119,67 +1124,88 @@ export function CreateListingFormNew() {
 
     return (
         <div className="space-y-6">
-            {/* Draft Banner */}
+            {/* Compact Draft Indicator */}
             {showDraftBanner && (
-                <Card className="border-blue-200 bg-blue-50">
-                    <CardContent className="py-4">
-                        <div className="flex items-start justify-between gap-4">
-                            <div className="flex gap-3">
-                                <Save className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
-                                <div className="text-sm">
-                                    <p className="font-medium text-blue-900">Draft Available</p>
-                                    <p className="text-blue-700 mt-1">
-                                        You have an unsaved draft from {draftAge}
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="flex gap-2">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={handleLoadDraft}
-                                >
-                                    Load Draft
-                                </Button>
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={handleDiscardDraft}
-                                >
-                                    Discard
-                                </Button>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
+                <div className="flex items-center justify-between bg-white border border-gray-200 rounded-lg px-3 py-2">
+                    <div className="flex items-center gap-2">
+                        <Save className="h-3.5 w-3.5 text-gray-600" />
+                        <span className="text-sm font-medium text-gray-800">
+                            Draft saved {draftAge}
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleLoadDraft}
+                            className="h-7 px-2 text-xs hover:bg-gray-50"
+                        >
+                            Load
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleDiscardDraft}
+                            className="h-7 px-2 text-xs text-gray-600 hover:bg-gray-50"
+                        >
+                            Discard
+                        </Button>
+                    </div>
+                </div>
             )}
 
-            {/* Error Message */}
-            {error && (
-                <Card className="border-red-200 bg-red-50">
-                    <CardContent className="py-4">
-                        <div className="flex gap-3">
-                            <AlertCircle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
-                            <div className="text-sm">
-                                <p className="font-medium text-red-900">Error</p>
-                                <p className="text-red-700 mt-1">{error}</p>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
+            {/* Location Error */}
+            {locationError && errorDetails && (
+                <ErrorCard
+                    title={errorDetails.title || "Location Not Allowed"}
+                    message={locationError}
+                    details={errorDetails.details}
+                    onRetry={() => {
+                        setLocationError(null)
+                        setErrorDetails(null)
+                        urlInputRef.current?.focus()
+                    }}
+                    onDismiss={() => {
+                        setLocationError(null)
+                        setErrorDetails(null)
+                    }}
+                />
             )}
 
-            {/* Success Message */}
-            {success && (
-                <Card className="border-green-200 bg-green-50">
+            {/* General Error */}
+            {error && !locationError && (
+                <ErrorCard
+                    title={errorDetails?.title || "Error"}
+                    message={error}
+                    details={errorDetails?.details}
+                    onRetry={errorDetails?.showHelper ? () => setShowHelperSection(true) : undefined}
+                    onDismiss={() => {
+                        setError(null)
+                        setErrorDetails(null)
+                    }}
+                />
+            )}
+
+            {/* Success - Business Fetched */}
+            {selectedPlace && (
+                <BusinessConfirmationCard
+                    name={selectedPlace.name}
+                    address={selectedPlace.address}
+                    onDismiss={() => setSelectedPlace(null)}
+                />
+            )}
+
+            {/* Success Message (Other) */}
+            {success && !selectedPlace && (
+                <Card className="border-green-200 bg-green-50 dark:bg-green-950/20">
                     <CardContent className="py-4">
                         <div className="flex gap-3">
                             <Check className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
                             <div className="text-sm">
-                                <p className="font-medium text-green-900">Success</p>
-                                <p className="text-green-700 mt-1">{success}</p>
+                                <p className="font-medium text-green-900 dark:text-green-100">Success</p>
+                                <p className="text-green-700 dark:text-green-300 mt-1">{success}</p>
                             </div>
                         </div>
                     </CardContent>

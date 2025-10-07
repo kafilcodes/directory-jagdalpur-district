@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { validateDhamtariAddress, isBusinessType } from '@/lib/listing-utils';
 
 const GOOGLE_PLACES_API_KEY = process.env.NEXT_GOOGLE_PLACES_API_KEY;
 
@@ -29,8 +30,9 @@ export async function POST(req: NextRequest) {
         }
 
         // Fetch place details from Google Places API (New)
+        // Format: https://places.googleapis.com/v1/places/{PLACE_ID}
         const response = await fetch(
-            `https://places.googleapis.com/v1/${placeId}`,
+            `https://places.googleapis.com/v1/places/${placeId}`,
             {
                 method: 'GET',
                 headers: {
@@ -57,74 +59,81 @@ export async function POST(req: NextRequest) {
 
         const data = await response.json();
 
-        // Validate location is within Dhamtari district
-        const lat = data.location?.latitude;
-        const lng = data.location?.longitude;
-        const address = data.formattedAddress || '';
+        // Extract variables for validation
+        const displayName = data.displayName?.text || '';
+        const formattedAddress = data.formattedAddress || '';
+        const types = data.types || [];
         const addressComponents = data.addressComponents || [];
 
-        console.log('Validating location:', {
-            lat,
-            lng,
-            address,
-            addressComponents: addressComponents.map((c: any) => ({
-                types: c.types,
-                shortName: c.shortName,
-                longName: c.longName
-            }))
+        // Extract PIN code from address components for validation
+        const pinCodeComponent = addressComponents?.find(
+            (comp: any) => comp.types?.includes('postal_code')
+        );
+        const pinCode = pinCodeComponent?.longText;
+
+        // Validate location using enhanced two-tier restriction
+        const locationValidation = validateDhamtariAddress(
+            formattedAddress || displayName || '',
+            pinCode,
+            addressComponents
+        );
+
+        // Validate business type with detailed reason
+        const businessValidation = isBusinessType(types || []);
+
+        console.log('🔍 Validation Results:', {
+            place: displayName,
+            isDhamtari: locationValidation.isDhamtari,
+            isChhattisgarh: locationValidation.isChhattisgarh,
+            isCommercial: businessValidation.isCommercial,
+            locationValid: locationValidation.isValid,
+            businessTypes: businessValidation.matchedTypes?.join(', ') || 'none',
         });
 
-        // Method 1: Check if "Dhamtari" is in the address (most reliable for Indian addresses)
-        const hasDhamtariInAddress = address.toLowerCase().includes('dhamtari') ||
-            address.toLowerCase().includes('493773'); // Pin code
-
-        // Method 2: Check address components for district
-        const hasDhamtariInComponents = addressComponents.some((component: any) => {
-            const longName = component.longName?.toLowerCase() || '';
-            const shortName = component.shortName?.toLowerCase() || '';
-            const types = component.types || [];
-
-            // Check if it's an administrative area or locality containing Dhamtari
-            const isAdministrative = types.includes('administrative_area_level_3') ||
-                types.includes('locality') ||
-                types.includes('sublocality') ||
-                types.includes('political');
-
-            return isAdministrative && (longName.includes('dhamtari') || shortName.includes('dhamtari'));
-        });
-
-        // Method 3: Coordinate bounds check (fallback)
-        const isInBounds = lat && lng &&
-            lat >= DHAMTARI_BOUNDS.minLat &&
-            lat <= DHAMTARI_BOUNDS.maxLat &&
-            lng >= DHAMTARI_BOUNDS.minLng &&
-            lng <= DHAMTARI_BOUNDS.maxLng;
-
-        // Business is valid if ANY of the checks pass
-        const isValidDhamtariBusiness = hasDhamtariInAddress || hasDhamtariInComponents || isInBounds;
-
-        console.log('Location validation result:', {
-            hasDhamtariInAddress,
-            hasDhamtariInComponents,
-            isInBounds,
-            isValidDhamtariBusiness
-        });
-
-        if (!isValidDhamtariBusiness) {
-            console.log('Location restriction triggered - business outside Dhamtari');
+        // Block non-commercial places first (higher priority)
+        if (!businessValidation.isCommercial) {
+            console.log('🚫 BLOCKED: Non-commercial place type');
+            console.log(`   Reason: ${businessValidation.reason}`);
             return NextResponse.json(
                 {
-                    success: false,
-                    error: 'This business is outside Dhamtari district. Only businesses located in Dhamtari, Chhattisgarh (PIN: 493773) are allowed.',
-                    locationRestricted: true,
+                    error: businessValidation.reason || 'Not a commercial business',
+                    locationRestricted: false,
+                    commercialRestricted: true,
+                    placeTypes: types,
                 },
                 { status: 400 }
             );
         }
 
-        console.log('Location validation passed - business is in Dhamtari');
+        // Then check location restrictions
+        if (!locationValidation.isValid) {
+            const isChhattisgarhBusiness = locationValidation.isChhattisgarh;
+
+            console.log(`🚫 BLOCKED: Business outside Dhamtari ${isChhattisgarhBusiness ? '(in Chhattisgarh)' : ''}`);
+            console.log(`   Reason: ${locationValidation.reason}`);
+
+            return NextResponse.json(
+                {
+                    error: locationValidation.reason || 'Location not in Dhamtari',
+                    locationRestricted: true,
+                    commercialRestricted: false,
+                    isDhamtari: locationValidation.isDhamtari,
+                    isChhattisgarh: isChhattisgarhBusiness,
+                    address: formattedAddress,
+                    pinCode: pinCode,
+                },
+                { status: 400 }
+            );
+        }
+
+        console.log('✅ ALLOWED: Valid Dhamtari business');
+        console.log(`   Types: ${businessValidation.matchedTypes?.join(', ')}`);
+        console.log(`   Address: ${formattedAddress}`);
 
         // Extract and format place details
+        const lat = data.location?.latitude;
+        const lng = data.location?.longitude;
+
         const placeDetails = {
             id: data.id,
             placeId: data.id?.replace('places/', ''),
@@ -151,7 +160,13 @@ export async function POST(req: NextRequest) {
             openingHours: data.regularOpeningHours?.weekdayDescriptions || [],
             currentOpeningHours: data.currentOpeningHours?.weekdayDescriptions || [],
             editorialSummary: data.editorialSummary?.text || '',
-            addressComponents: data.addressComponents || [],
+            addressComponents: data.addressComponents?.filter((comp: any) =>
+                comp && comp.types && Array.isArray(comp.types) && comp.types.length > 0
+            ).map((comp: any) => ({
+                longName: comp.longName || '',
+                shortName: comp.shortName || '',
+                types: comp.types || []
+            })) || [],
             plusCode: data.plusCode,
             viewport: data.viewport,
         };

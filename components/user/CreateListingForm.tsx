@@ -273,10 +273,10 @@ export function CreateListingForm() {
                             onValueChange={(value) => updateFormData("categorySlug", value)}
                             required
                         >
-                            <SelectTrigger id="categorySlug">
+                            <SelectTrigger id="categorySlug" className="bg-white dark:bg-gray-800">
                                 <SelectValue placeholder="Select a category" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="bg-white dark:bg-gray-800">
                                 {CATEGORIES.map((cat) => (
                                     <SelectItem key={cat.slug} value={cat.slug}>
                                         {cat.icon} {cat.label}
@@ -353,8 +353,8 @@ export function CreateListingForm() {
                                 type="button"
                                 onClick={() => updateFormData("planId", plan.id)}
                                 className={`relative p-4 rounded-lg border-2 transition-all text-left ${formData.planId === plan.id
-                                        ? "border-red-600 bg-red-50"
-                                        : "border-gray-200 hover:border-gray-300"
+                                    ? "border-red-600 bg-red-50"
+                                    : "border-gray-200 hover:border-gray-300"
                                     }`}
                             >
                                 {plan.popular && (

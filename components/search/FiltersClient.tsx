@@ -54,10 +54,10 @@ export default function FiltersClient() {
       <div className="sm:ml-auto w-full sm:w-64">
         <Label className="mb-1 block text-sm text-gray-600">Sort</Label>
         <Select value={sort} onValueChange={(v) => updateParam("sort", v)}>
-          <SelectTrigger className="bg-white">
+          <SelectTrigger className="bg-white dark:bg-gray-800">
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-white dark:bg-gray-800">
             {sortOptions.map((o) => (
               <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
             ))}

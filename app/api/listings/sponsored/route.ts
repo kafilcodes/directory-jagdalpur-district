@@ -20,6 +20,9 @@ function mapListing(id: string, data: any) {
     approved: !!x.approved,
     activeType: x.activePlan?.type || null,
     activeEndAt: x.activePlan?.endAt || null,
+    phone: x.phone || null,
+    email: x.email || null,
+    website: x.website || x.websiteUri || null,
   }
 }
 function stripPrivate(x: any) {

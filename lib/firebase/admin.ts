@@ -35,10 +35,32 @@ function init() {
     throw new Error("Missing Firebase Admin credentials: place service account JSON in project root or set FIREBASE_ADMIN_* env vars")
   }
 
+  // Get project ID from credential or env
+  const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'dhamtaridirectory'
+
   admin.initializeApp({
     credential,
     storageBucket,
+    projectId, // Explicitly set project ID
+    databaseURL: `https://${projectId}.firebaseio.com`, // Required for some Firebase services
   })
+
+  // Configure Firestore settings ONCE during initialization
+  try {
+    const db = admin.firestore()
+
+    // CRITICAL: Set the database ID for custom Firestore databases
+    const databaseId = process.env.FIREBASE_DATABASE_ID || 'dhamtaridirectory'
+
+    db.settings({
+      ignoreUndefinedProperties: true,
+      // For custom database IDs (not "(default)"), specify it here
+      databaseId: databaseId,
+    })
+  } catch (err) {
+    // Settings can only be called once, ignore if already set
+    console.log('Firestore settings already configured:', err)
+  }
 }
 
 export function getAdminApp() {
@@ -48,6 +70,9 @@ export function getAdminApp() {
 
 export function getAdminDb() {
   init()
+
+  // Database ID is already configured in settings during init()
+  // Just return the Firestore instance
   return admin.firestore()
 }
 
