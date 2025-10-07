@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { FilePlus2 } from "lucide-react"
 import Link from "next/link"
 import { redirect } from "next/navigation"
+import Image from "next/image"
 
 export const dynamic = "force-dynamic"
 
@@ -164,10 +165,12 @@ export default async function UserDashboardPage() {
                 <Card className="border-0 shadow-none bg-gray-50/50 dark:bg-gray-900/50">
                     <CardContent className="flex flex-col items-center justify-center py-16 text-center">
                         <div className="relative w-48 h-48 mb-6">
-                            <img
+                            <Image
                                 src="/empty_search.svg"
                                 alt="No listings"
-                                className="w-full h-full object-contain"
+                                fill
+                                sizes="192px"
+                                className="object-contain"
                             />
                         </div>
                         <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No listing found</h3>

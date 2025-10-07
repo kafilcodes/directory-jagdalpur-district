@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, Suspense } from "react"
 import { ArrowRight, MapPin, TrendingUp, Star, Users, Shield, Award, Building2, UtensilsCrossed, Stethoscope, GraduationCap, Dumbbell } from "lucide-react"
 import DynamicSearchBar from "@/components/search/DynamicSearchBar"
 import { Button } from "@/components/ui/button"
@@ -51,12 +51,9 @@ export default function HomePage() {
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Hero Section */}
       <section className={`relative isolate overflow-hidden pt-16 pb-24 ${HERO_MIN_H}`}>
-        {/* Hero background image: layered to show full image without cropping while covering */}
-        <div className="absolute inset-0 -z-10 graphic-compact">
-          {/* Cover layer (blurred) ensures full-bleed coverage */}
-          <Image src="/bg.png" alt="" fill priority sizes="100vw" className="object-cover object-center opacity-30 blur-sm" />
-          {/* Foreground layer shows the complete original image */}
-          <Image src="/bg.png" alt="" fill priority sizes="100vw" className="object-contain object-center" />
+        {/* Hero background image: always cover on all devices */}
+        <div className="absolute inset-0 -z-10">
+          <Image src="/bg.png" alt="" fill priority sizes="100vw" className="object-cover object-center opacity-40" />
         </div>
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative">
           <div className="text-center max-w-4xl mx-auto">
@@ -70,7 +67,7 @@ export default function HomePage() {
               <span className="text-red-500 relative inline-block pb-3 md:pb-4">
                 Businesses
                 <svg className="pointer-events-none absolute -bottom-1 left-0 w-full h-[0.35em] text-red-500 overflow-visible" viewBox="0 0 200 10" preserveAspectRatio="none" aria-hidden="true" style={{ zIndex: -1 }}>
-                  <path d="M0 7 Q50 0 100 7 T200 7" stroke="currentColor" fill="none" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+                  <path d="M0 7 Q50 0 100 7 T200 7" stroke="currentColor" fill="none" strokeWidth="4" vectorEffect="non-scaling-stroke" />
                 </svg>
               </span>
               <br />
@@ -139,16 +136,16 @@ export default function HomePage() {
         <div className="absolute top-20 left-10 w-20 h-20 bg-red-200 rounded-full blur-3xl opacity-30 -z-10"></div>
         <div className="absolute bottom-20 right-10 w-32 h-32 bg-blue-200 rounded-full blur-3xl opacity-30 -z-10"></div>
 
-        <section className="py-12 bg-tranparent ">
+        <section className="py-8 sm:py-12 bg-tranparent">
           <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8">
               {stats.map((stat, index) => (
                 <div key={index} className="text-center">
-                  <div className="inline-flex items-center justify-center w-12 h-12 bg-tranparent  text-[#EF4444] hover:text-red-100 rounded-full mb-3 outline outline-1 outline-red-200 shadow-sm">
+                  <div className="inline-flex items-center justify-center w-8 h-8 sm:w-12 sm:h-12 bg-tranparent text-[#EF4444] hover:text-red-100 rounded-full mb-2 sm:mb-3 outline outline-1 outline-red-200 shadow-sm">
                     {stat.icon}
                   </div>
-                  <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
-                  <div className="text-sm text-gray-600">{stat.label}</div>
+                  <div className="text-lg sm:text-2xl font-bold text-gray-900">{stat.value}</div>
+                  <div className="text-xs sm:text-sm text-gray-600">{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -275,7 +272,9 @@ export default function HomePage() {
 
 
       {/* Listing Detail Sheet - Uses URL params */}
-      <ListingDetailSheet />
+      <Suspense fallback={null}>
+        <ListingDetailSheet />
+      </Suspense>
     </div>
   )
 }

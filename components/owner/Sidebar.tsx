@@ -7,6 +7,7 @@ import { useEffect, useState, useMemo } from "react"
 import { onAuthChange } from "@/lib/firebase/authService"
 import { getFirebaseApp } from "@/lib/firebase/client"
 import { getFirestore, doc, getDoc } from "firebase/firestore"
+import Image from "next/image"
 
 const items = [
   { href: "/user/dashboard" as const, label: "Dashboard", icon: LayoutDashboard },
@@ -57,12 +58,16 @@ export default function OwnerSidebar() {
       {/* Logo Section */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-800">
         {!logoError ? (
-          <img
-            src="/logo.png"
-            alt="Dhamtari Directory"
-            className="h-10 w-auto mx-auto"
-            onError={() => setLogoError(true)}
-          />
+          <div className="relative h-10 w-full max-w-[120px] mx-auto">
+            <Image
+              src="/logo.png"
+              alt="Dhamtari Directory"
+              fill
+              sizes="120px"
+              className="object-contain"
+              onError={() => setLogoError(true)}
+            />
+          </div>
         ) : (
           <div className="h-10 w-10 mx-auto rounded-full bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400 grid place-items-center text-xs font-bold">
             DD
@@ -75,11 +80,16 @@ export default function OwnerSidebar() {
         <div className="p-4 border-b border-gray-200 dark:border-gray-800">
           <div className="flex items-center gap-3">
             {photoURL ? (
-              <img
-                src={photoURL}
-                alt={user.displayName || "User"}
-                className="h-10 w-10 rounded-full object-cover ring-2 ring-red-100 dark:ring-red-900"
-              />
+              <div className="relative h-10 w-10 shrink-0">
+                <Image
+                  src={photoURL}
+                  alt={user.displayName || "User"}
+                  fill
+                  sizes="40px"
+                  className="rounded-full object-cover ring-2 ring-red-100 dark:ring-red-900"
+                  unoptimized
+                />
+              </div>
             ) : (
               <div className="h-10 w-10 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white font-semibold text-sm shadow-sm">
                 {(user.displayName || user.email || "U")[0].toUpperCase()}

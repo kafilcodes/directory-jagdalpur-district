@@ -10,21 +10,52 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
   title: {
-    default: "Dhamtari Directory",
+    default: "Dhamtari Directory - Find Local Businesses & Services in Dhamtari",
     template: "%s | Dhamtari Directory",
   },
-  description: "Find and connect with local businesses and service providers.",
+  description: "Discover trusted local businesses, services, and professionals in Dhamtari. Your comprehensive directory for hotels, restaurants, healthcare, education, shopping, and more. Connect with verified businesses in Dhamtari district.",
+  keywords: ["Dhamtari directory", "Dhamtari businesses", "local businesses Dhamtari", "Dhamtari services", "Dhamtari restaurants", "Dhamtari hotels", "Dhamtari healthcare", "business directory Dhamtari", "Chhattisgarh businesses"],
+  authors: [{ name: "Dhamtari Directory Team" }],
+  creator: "Dhamtari Directory",
+  publisher: "Dhamtari Directory",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   openGraph: {
-    title: "Dhamtari Directory",
-    description: "Find and connect with local businesses and service providers.",
+    title: "Dhamtari Directory - Find Local Businesses & Services",
+    description: "Discover trusted local businesses, services, and professionals in Dhamtari. Your comprehensive directory for hotels, restaurants, healthcare, education, shopping, and more.",
     url: process.env.NEXT_PUBLIC_SITE_URL || "https://example.com",
     siteName: "Dhamtari Directory",
+    locale: "en_IN",
     type: "website",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Dhamtari Directory - Local Business Directory",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Dhamtari Directory",
-    description: "Find and connect with local businesses and service providers.",
+    title: "Dhamtari Directory - Find Local Businesses & Services",
+    description: "Discover trusted local businesses, services, and professionals in Dhamtari district.",
+    images: ["/og-image.png"],
+  },
+  alternates: {
+    canonical: process.env.NEXT_PUBLIC_SITE_URL || "https://example.com",
+  },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
   },
 }
 

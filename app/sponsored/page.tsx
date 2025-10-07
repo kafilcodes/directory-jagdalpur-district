@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, Suspense } from "react"
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -141,7 +141,9 @@ export default function SponsoredPage() {
       </div>
 
       {/* Listing Detail Sheet - Uses URL params */}
-      <ListingDetailSheet />
+      <Suspense fallback={null}>
+        <ListingDetailSheet />
+      </Suspense>
     </div>
   )
 }

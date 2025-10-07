@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { LayoutDashboard, FilePlus, FileText, User as UserIcon, LogOut, Home, Clock, Calendar } from "lucide-react"
 import { signOut, getFirebaseAuth } from "@/lib/firebase/authService"
@@ -119,10 +120,12 @@ function AppSidebar() {
                 {/* Logo/Brand - Expanded State */}
                 <Link href="/" className="flex items-center gap-3 px-3 py-2 group-data-[collapsible=icon]:hidden hover:opacity-80 transition-opacity">
                     <div className="relative h-10 w-10 shrink-0">
-                        <img
+                        <Image
                             src="/logo.png"
                             alt="Dhamtari Directory"
-                            className="h-full w-full object-contain"
+                            fill
+                            sizes="40px"
+                            className="object-contain"
                             onError={(e) => {
                                 e.currentTarget.style.display = 'none'
                                 const fallback = e.currentTarget.nextElementSibling as HTMLElement | null
@@ -142,10 +145,12 @@ function AppSidebar() {
                 {/* Logo Only - Collapsed State */}
                 <Link href="/" className="hidden group-data-[collapsible=icon]:flex items-center justify-center py-3 hover:opacity-80 transition-opacity">
                     <div className="relative h-8 w-8">
-                        <img
+                        <Image
                             src="/logo.png"
                             alt="Dhamtari Directory"
-                            className="h-full w-full object-contain"
+                            fill
+                            sizes="32px"
+                            className="object-contain"
                             onError={(e) => {
                                 e.currentTarget.style.display = 'none'
                                 const fallback = e.currentTarget.nextElementSibling as HTMLElement | null
@@ -164,23 +169,21 @@ function AppSidebar() {
                         {/* Profile Avatar & Name */}
                         <div className="flex items-center gap-3">
                             {user?.photoURL ? (
-                                <img
-                                    src={user.photoURL}
-                                    alt={user.displayName || "User"}
-                                    className="h-10 w-10 rounded-full object-cover ring-2 ring-gray-200"
-                                    onError={(e) => {
-                                        e.currentTarget.style.display = 'none'
-                                        const fallback = e.currentTarget.nextElementSibling as HTMLElement
-                                        if (fallback) fallback.style.display = 'flex'
-                                    }}
-                                />
-                            ) : null}
-                            <div
-                                className="h-10 w-10 rounded-full bg-red-500 flex items-center justify-center text-white font-semibold text-base ring-2 ring-gray-200"
-                                style={{ display: user?.photoURL ? 'none' : 'flex' }}
-                            >
-                                {getAvatarLetter()}
-                            </div>
+                                <div className="relative h-10 w-10 shrink-0">
+                                    <Image
+                                        src={user.photoURL}
+                                        alt={user.displayName || "User"}
+                                        fill
+                                        sizes="40px"
+                                        className="rounded-full object-cover ring-2 ring-gray-300"
+                                        unoptimized
+                                    />
+                                </div>
+                            ) : (
+                                <div className="h-10 w-10 rounded-full bg-red-500 flex items-center justify-center text-white font-semibold text-sm ring-2 ring-gray-300">
+                                    {getAvatarLetter()}
+                                </div>
+                            )}
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm font-semibold text-gray-900 truncate">
                                     {user?.displayName || (user?.email?.split('@')[0]) || "User"}
@@ -208,23 +211,21 @@ function AppSidebar() {
                 {/* Collapsed State Avatar */}
                 <div className="hidden group-data-[collapsible=icon]:flex justify-center py-2">
                     {user?.photoURL ? (
-                        <img
-                            src={user.photoURL}
-                            alt={user.displayName || "User"}
-                            className="h-8 w-8 rounded-full object-cover ring-2 ring-gray-300"
-                            onError={(e) => {
-                                e.currentTarget.style.display = 'none'
-                                const fallback = e.currentTarget.nextElementSibling as HTMLElement
-                                if (fallback) fallback.style.display = 'flex'
-                            }}
-                        />
-                    ) : null}
-                    <div
-                        className="h-8 w-8 rounded-full bg-red-500 flex items-center justify-center text-white font-semibold text-sm ring-2 ring-gray-300"
-                        style={{ display: user?.photoURL ? 'none' : 'flex' }}
-                    >
-                        {getAvatarLetter()}
-                    </div>
+                        <div className="relative h-8 w-8">
+                            <Image
+                                src={user.photoURL}
+                                alt={user.displayName || "User"}
+                                fill
+                                sizes="32px"
+                                className="rounded-full object-cover ring-2 ring-gray-300"
+                                unoptimized
+                            />
+                        </div>
+                    ) : (
+                        <div className="h-8 w-8 rounded-full bg-red-500 flex items-center justify-center text-white font-semibold text-sm ring-2 ring-gray-300">
+                            {getAvatarLetter()}
+                        </div>
+                    )}
                 </div>
             </SidebarHeader>
 
@@ -342,10 +343,12 @@ export function LayoutUser({ children }: UserLayoutProps) {
                         <SidebarTrigger />
                         <div className="flex items-center gap-2">
                             <div className="relative h-7 w-7 md:hidden">
-                                <img
+                                <Image
                                     src="/logo.png"
                                     alt="Dhamtari Directory"
-                                    className="h-full w-full object-contain"
+                                    fill
+                                    sizes="28px"
+                                    className="object-contain"
                                     onError={(e) => {
                                         e.currentTarget.style.display = 'none'
                                         e.currentTarget.nextElementSibling?.classList.remove('hidden')

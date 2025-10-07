@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { Search, MapPin, Star, X } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { CategoryBadge } from "@/components/common/CategoryBadge"
+import Image from "next/image"
 
 export type DynamicSearchBarProps = {
   placeholder?: string
@@ -279,10 +280,13 @@ export default function DynamicSearchBar({ placeholder = "Search listings...", s
                       {/* Thumbnail with Plan Badge */}
                       <div className="relative h-16 w-16 sm:h-20 sm:w-20 rounded-xl bg-gray-100 flex items-center justify-center shrink-0 overflow-hidden">
                         {imageUrl ? (
-                          <img
+                          <Image
                             src={imageUrl}
                             alt={it.name || it.businessName || "Listing"}
-                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+                            fill
+                            sizes="(max-width: 640px) 64px, 80px"
+                            className="object-cover transition-transform duration-300 group-hover:scale-110"
+                            unoptimized
                           />
                         ) : (
                           <span className="text-gray-400 text-xl sm:text-2xl font-bold">

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { User, Mail, Calendar, Shield, Briefcase } from "lucide-react"
 import { PaymentReceipts } from "@/components/user/PaymentReceipts"
 import { getAdminDb } from "@/lib/firebase/admin"
+import Image from "next/image"
 
 export const dynamic = "force-dynamic"
 
@@ -53,11 +54,16 @@ export default async function UserProfilePage() {
                     <div className="flex flex-col sm:flex-row items-start gap-4">
                         <div className="relative shrink-0">
                             {photoURL ? (
-                                <img
-                                    src={photoURL}
-                                    alt={user.displayName || "User"}
-                                    className="h-16 w-16 rounded-full object-cover ring-2 ring-red-100"
-                                />
+                                <div className="relative h-16 w-16">
+                                    <Image
+                                        src={photoURL}
+                                        alt={user.displayName || "User"}
+                                        fill
+                                        sizes="64px"
+                                        className="rounded-full object-cover ring-2 ring-red-100"
+                                        unoptimized
+                                    />
+                                </div>
                             ) : (
                                 <div className="h-16 w-16 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white font-semibold text-xl shadow-sm">
                                     {(user.displayName || user.email || "U")[0].toUpperCase()}

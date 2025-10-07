@@ -12,6 +12,7 @@
 "use client"
 
 import * as React from "react"
+import Image from "next/image"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -889,11 +890,13 @@ export function CreateListingFormNew4Step() {
                                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                                                     {store.uploadedImages.map((img, index) => (
                                                         <div key={img.id} className="relative group">
-                                                            <div className="aspect-square rounded-lg overflow-hidden border-2 border-gray-200">
-                                                                <img
+                                                            <div className="aspect-square rounded-lg overflow-hidden border-2 border-gray-200 relative">
+                                                                <Image
                                                                     src={img.localUrl}
                                                                     alt={`Business photo ${index + 1}`}
-                                                                    className="w-full h-full object-cover"
+                                                                    fill
+                                                                    sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
+                                                                    className="object-cover"
                                                                 />
                                                             </div>
                                                             <div className="absolute top-2 left-2 flex gap-1">
