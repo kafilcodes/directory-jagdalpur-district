@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { User, Mail, Calendar, Shield, Briefcase } from "lucide-react"
 import { PaymentReceipts } from "@/components/user/PaymentReceipts"
+import { getAdminDb } from "@/lib/firebase/admin"
 
 export const dynamic = "force-dynamic"
 
@@ -18,6 +19,12 @@ export default async function UserProfilePage() {
             </div>
         )
     }
+
+    // Fetch user data from Firestore to get photoURL
+    const db = getAdminDb()
+    const userDoc = await db.collection("users").doc(user.uid).get()
+    const userData = userDoc.exists ? userDoc.data() : null
+    const photoURL = userData?.photoURL || user.photoURL || null
 
     // Extract username from email (part before @)
     const username = user.email?.split('@')[0] || "User"
@@ -45,9 +52,9 @@ export default async function UserProfilePage() {
                 <CardContent className="p-6">
                     <div className="flex flex-col sm:flex-row items-start gap-4">
                         <div className="relative shrink-0">
-                            {user.photoURL ? (
+                            {photoURL ? (
                                 <img
-                                    src={user.photoURL}
+                                    src={photoURL}
                                     alt={user.displayName || "User"}
                                     className="h-16 w-16 rounded-full object-cover ring-2 ring-red-100"
                                 />
@@ -76,7 +83,7 @@ export default async function UserProfilePage() {
                         </div>
                     </div>
 
-                    <div className="grid sm:grid-cols-2 gap-4 pt-4 border-t border-gray-200">
+                    <div className="grid sm:grid-cols-2 gap-4 pt-4 ">
                         <div className="flex items-start gap-3">
                             <div className="p-1.5 bg-gray-100 rounded">
                                 <Mail className="h-4 w-4 text-gray-600" />

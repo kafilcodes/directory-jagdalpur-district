@@ -102,8 +102,8 @@ export const MONETIZATION_PLANS: MonetizationPlan[] = [
         id: "sponsored",
         name: "Sponsored Listing",
         durationWeeks: 1,
-        priceINR: 199,
-        pricePaise: 19900,
+        priceINR: 299,
+        pricePaise: 29900,
         features: [
             "Everything in Featured",
             "Top of category pages",

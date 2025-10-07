@@ -157,10 +157,10 @@ export function PaymentReceipts({ userEmail }: PaymentReceiptsProps) {
                             return (
                                 <div
                                     key={payment.id}
-                                    className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-red-200 transition-colors"
+                                    className="p-4 border border-gray-200 rounded-lg hover:border-red-200 transition-colors space-y-3"
                                 >
-                                    <div className="flex items-start gap-3 flex-1">
-                                        <div className="p-2 bg-red-50 rounded-lg">
+                                    <div className="flex items-start gap-3">
+                                        <div className="p-2 bg-red-50 rounded-lg flex-shrink-0">
                                             <FileText className="h-5 w-5 text-red-600" />
                                         </div>
                                         <div className="flex-1 min-w-0">
@@ -182,37 +182,32 @@ export function PaymentReceipts({ userEmail }: PaymentReceiptsProps) {
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     <CreditCard className="h-3 w-3" />
-                                                    <span className="font-mono">Order: {payment.orderId}</span>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="font-mono">Payment ID: {payment.paymentId}</span>
+                                                    <span className="font-mono truncate">Order: {payment.orderId}</span>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-3 ml-4">
-                                        <div className="text-right">
+                                    <div className="flex items-center justify-between pt-2 ">
+                                        <div>
                                             <p className="text-lg font-bold text-gray-900">
-                                                ₹{Math.round(payment.amount)}
+                                                ₹{payment.amount}
                                             </p>
                                             <p className="text-xs text-gray-500">{payment.currency?.toUpperCase()}</p>
                                         </div>
                                         <Button
-                                            size="sm"
+                                            size="icon"
                                             variant="outline"
                                             onClick={() => handleDownloadReceipt(payment)}
                                             disabled={downloadingId === payment.id}
-                                            className="gap-2"
+                                            className="h-9 w-9 sm:w-auto sm:px-4 sm:gap-2"
+                                            title="Download receipt"
                                         >
                                             {downloadingId === payment.id ? (
-                                                <>
-                                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                                    Loading...
-                                                </>
+                                                <Loader2 className="h-4 w-4 animate-spin" />
                                             ) : (
                                                 <>
                                                     <Download className="h-4 w-4" />
-                                                    Download
+                                                    <span className="hidden sm:inline">Download</span>
                                                 </>
                                             )}
                                         </Button>

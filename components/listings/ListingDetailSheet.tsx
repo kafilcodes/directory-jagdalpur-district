@@ -466,20 +466,20 @@ export default function ListingDetailSheet() {
                           )}
                         </p>
                       </div>
-                      <Carousel className="w-full">
-                        <CarouselContent>
-                          {allImages.map((image: string, index: number) => (
-                            <CarouselItem key={index} className="md:basis-1/2">
-                              <GalleryImageWithSkeleton
-                                src={image}
-                                alt={`${displayName} - Image ${index + 1}`}
-                              />
-                            </CarouselItem>
-                          ))}
-                        </CarouselContent>
-                        <CarouselPrevious className="left-2" />
-                        <CarouselNext className="right-2" />
-                      </Carousel>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {allImages.map((image: string, index: number) => (
+                          <button
+                            key={index}
+                            onClick={() => window.open(image, '_blank')}
+                            className="relative aspect-square rounded-lg overflow-hidden hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-red-500"
+                          >
+                            <GalleryImageWithSkeleton
+                              src={image}
+                              alt={`${displayName} - Image ${index + 1}`}
+                            />
+                          </button>
+                        ))}
+                      </div>
                     </TabsContent>
                   )}
 

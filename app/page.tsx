@@ -110,7 +110,7 @@ export default function HomePage() {
               <div className="flex items-center justify-center">
                 <span className="inline-flex items-center text-sm text-gray-500 mr-2">Popular:</span>
               </div>
-              <div className="mt-2 overflow-x-auto no-scrollbar [-webkit-overflow-scrolling:touch]">
+              <div className="mt-2 overflow-x-auto scrollbar-hide [-webkit-overflow-scrolling:touch]">
                 <div className="flex items-center gap-2 px-1 sm:justify-center min-w-max">
                   {[
                     { label: "Hotels", Icon: Building2, slug: "hotels" },

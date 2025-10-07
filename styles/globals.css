@@ -230,6 +230,16 @@
     animation: fade-in-up 0.5s ease-out;
   }
 
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari, Opera */
+  }
+
   /* Responsive graphic wrapper for SVGs and decorative images */
   .graphic-compact {
     max-width: 48.6%;

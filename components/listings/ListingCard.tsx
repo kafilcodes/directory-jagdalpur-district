@@ -92,11 +92,15 @@ export function ListingCard({
       </CardHeader>
 
       <CardContent className="px-4 pb-4 pt-0 space-y-2">
-        {/* Category */}
-
-        <Badge variant="secondary" className="text-xs capitalize">
-          {category}
-        </Badge>
+        {/* Category with icon using modular component */}
+        <CategoryBadge
+          category={category}
+          variant="secondary"
+          showText={true}
+          showIcon={true}
+          iconSize="h-3 w-3"
+          className="text-xs"
+        />
 
         {/* Address - smaller font, no rating */}
         {cleanAddress && (

@@ -70,7 +70,7 @@ export default function SearchControls() {
   }
 
   return (
-    <div className="flex items-center gap-3 overflow-x-auto pb-2">
+    <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
       {/* Category filters */}
       <div className="flex gap-2 flex-nowrap">
         {CATEGORY_CHIPS.map((category) => {

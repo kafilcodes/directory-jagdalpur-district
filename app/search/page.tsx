@@ -85,7 +85,7 @@ export default async function SearchPage({ searchParams }: any) {
 
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {results.map((it: any, index: number) => {
             // Extract images properly from Firestore data structure
             const imageUrl = it.thumbnail ||
@@ -99,8 +99,8 @@ export default async function SearchPage({ searchParams }: any) {
             // Extract formatted address
             const address = it.address?.formattedAddress || it.formattedAddress || it.address || ""
 
-            // Extract plan type
-            const planType = it.planType || it.activePlan?.type || it.monetization?.type
+            // Extract plan type - check 'plan' field first (DB stores as 'plan'), then fallback
+            const planType = it.plan || it.planType || it.activePlan?.type || it.monetization?.type
 
             const cardElement = require("react").createElement(require("@/components/listings/ListingCardClient").default, {
               key: it.id,

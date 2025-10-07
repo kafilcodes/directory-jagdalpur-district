@@ -68,7 +68,7 @@ export default function FeaturedCarousel({ onSelectListing }: { onSelectListing?
               const opacityClass = loading ? "" : circularDiff === 0 ? "opacity-100" : circularDiff === 1 ? "opacity-80" : "opacity-50"
 
               return (
-                <CarouselItem key={item?.id ?? idx} className="basis-[85%] sm:basis-1/2 lg:basis-1/3">
+                <CarouselItem key={item?.id ?? idx} className="basis-full sm:basis-1/2 lg:basis-1/3">
                   <Card
                     onClick={() => !loading && onSelectListing?.(item)}
                     className={`group overflow-hidden bg-white rounded-2xl border-0 shadow-md hover:shadow-xl ${CAROUSEL_TRANSITION} transition-opacity duration-300 ${opacityClass} h-full cursor-pointer`}
@@ -114,7 +114,7 @@ export default function FeaturedCarousel({ onSelectListing }: { onSelectListing?
                             showIcon={true}
                           />
 
-                          
+
 
                           {/* Title */}
                           <h3 className="font-bold text-lg text-white line-clamp-2 leading-tight">

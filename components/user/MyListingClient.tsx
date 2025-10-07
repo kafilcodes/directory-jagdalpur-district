@@ -427,38 +427,8 @@ export const MyListingClient = memo(function MyListingClient({ listing, stats, u
                                     </div>
                                 )}
 
-                                <Separator />
+                                
 
-                                <div className="flex items-start gap-3">
-                                    <MapPin className="h-5 w-5 text-gray-500 mt-0.5" />
-                                    <div>
-                                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Address</p>
-                                        {address.formattedAddress ? (
-                                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                                                {address.formattedAddress}
-                                            </p>
-                                        ) : (
-                                            <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                                                {address.line1 && <p>{address.line1}</p>}
-                                                {address.line2 && <p>{address.line2}</p>}
-                                                {address.city && <p>{address.city}, {address.state || ''} {address.postalCode || ''}</p>}
-                                                {address.country && <p>{address.country}</p>}
-                                            </div>
-                                        )}
-
-                                        {listing.googleMapsUri && (
-                                            <a
-                                                href={listing.googleMapsUri}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 flex items-center gap-1 mt-2"
-                                            >
-                                                View on Google Maps
-                                                <ExternalLink className="h-3 w-3" />
-                                            </a>
-                                        )}
-                                    </div>
-                                </div>
                             </CardContent>
                         </Card>
                     </TabsContent>
