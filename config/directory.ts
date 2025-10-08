@@ -85,7 +85,7 @@ export const MONETIZATION_PLANS: MonetizationPlan[] = [
     {
         id: "featured",
         name: "Featured Listing",
-        durationWeeks: 4, // 1 month
+        durationWeeks: 1, // 1 week
         priceINR: 499,
         pricePaise: 49900,
         popular: true,

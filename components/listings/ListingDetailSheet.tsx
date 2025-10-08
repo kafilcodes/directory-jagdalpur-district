@@ -455,9 +455,9 @@ export default function ListingDetailSheet() {
 
                   {/* Gallery Tab - Plan-based limits: free=5, sponsored=10, featured=20 */}
                   {hasGallery && (
-                    <TabsContent value="gallery" className="mt-6 space-y-4">
+                    <TabsContent value="gallery" className="mt-4 ">
                       <div className="flex items-center justify-between">
-                        <p className="text-sm text-gray-600">
+                        <p className="text-xs text-gray-600">
                           {allImages.length} {allImages.length === 1 ? 'image' : 'images'}
                           {allImages.length >= galleryLimit && (
                             <span className="ml-1 text-gray-500">
@@ -466,12 +466,12 @@ export default function ListingDetailSheet() {
                           )}
                         </p>
                       </div>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-0">
                         {allImages.map((image: string, index: number) => (
                           <button
                             key={index}
                             onClick={() => window.open(image, '_blank')}
-                            className="relative aspect-square rounded-lg overflow-hidden hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-red-500"
+                            className="relative m-2   rounded-lg overflow-hidden hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-red-500"
                           >
                             <GalleryImageWithSkeleton
                               src={image}

@@ -22,10 +22,10 @@ export const PLANS = {
   sponsored: {
     id: "sponsored" as const,
     label: "Sponsored",
-    pricePaise: 30000, // ₹300
-    priceRupees: 300,
+    pricePaise: 29900, // ₹299
+    priceRupees: 299,
     currency: "INR",
-    display: "₹300/week",
+    display: "₹299/week",
     duration: "7 days",
     durationDays: 7,
     features: [
@@ -42,10 +42,10 @@ export const PLANS = {
   featured: {
     id: "featured" as const,
     label: "Featured",
-    pricePaise: 50000, // ₹500
-    priceRupees: 500,
+    pricePaise: 49900, // ₹499
+    priceRupees: 499,
     currency: "INR",
-    display: "₹500/week",
+    display: "₹499/week",
     duration: "7 days",
     durationDays: 7,
     features: [
