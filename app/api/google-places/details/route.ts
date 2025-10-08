@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
                         'internationalPhoneNumber,nationalPhoneNumber,websiteUri,' +
                         'rating,userRatingCount,googleMapsUri,businessStatus,' +
                         'photos,regularOpeningHours,currentOpeningHours,primaryType,' +
-                        'addressComponents,plusCode,viewport,editorialSummary',
+                        'addressComponents,plusCode,viewport,editorialSummary,reviews',
                 },
             }
         );
@@ -156,6 +156,14 @@ export async function POST(req: NextRequest) {
                 widthPx: photo.widthPx,
                 heightPx: photo.heightPx,
                 authorAttributions: photo.authorAttributions,
+            })) || [],
+            reviews: data.reviews?.map((review: any) => ({
+                authorName: review.authorAttribution?.displayName || '',
+                authorPhoto: review.authorAttribution?.photoUri || '',
+                rating: review.rating || 0,
+                relativeTime: review.relativePublishTimeDescription || '',
+                time: review.publishTime || '',
+                text: review.text?.text || review.originalText?.text || '',
             })) || [],
             openingHours: data.regularOpeningHours?.weekdayDescriptions || [],
             currentOpeningHours: data.currentOpeningHours?.weekdayDescriptions || [],

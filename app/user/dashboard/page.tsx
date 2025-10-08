@@ -158,11 +158,11 @@ export default async function UserDashboardPage() {
         return (
             <div className="space-y-6">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Dashboard</h1>
+                    <h1 className="text-3xl font-bold tracking-tight  ">Dashboard</h1>
                     <p className="text-gray-600 dark:text-gray-400 mt-1">Track your listing performance and analytics</p>
                 </div>
 
-                <Card className="border-0 shadow-none bg-gray-50/50 dark:bg-gray-900/50">
+                <Card className="border-0 shadow-none">
                     <CardContent className="flex flex-col items-center justify-center py-16 text-center">
                         <div className="relative w-48 h-48 mb-6">
                             <Image
@@ -173,13 +173,13 @@ export default async function UserDashboardPage() {
                                 className="object-contain"
                             />
                         </div>
-                        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No listing found</h3>
-                        <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md">
+                        <h3 className="text-xl font-semibold  mb-2">No listing found</h3>
+                        <p className=" text-sm text-gray-600  mb-6 max-w-md">
                             Create your first listing to start tracking analytics and grow your business
                         </p>
                         <Link
                             href={"/user/create-listing" as any}
-                            className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-red-600 to-red-500 px-6 py-3 text-sm font-medium text-white hover:from-red-700 hover:to-red-600 transition-all shadow-sm hover:shadow-md"
+                            className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-red-600 to-red-500 px-6 py-3 text-xs font-medium text-white hover:from-red-700 hover:to-red-600 transition-all shadow-sm hover:shadow-md"
                         >
                             <FilePlus2 className="h-4 w-4" />
                             Create Your First Listing

@@ -23,6 +23,14 @@ export interface PlaceDetails {
     googleMapsUri?: string
     businessStatus?: string
     photos?: Array<{ name: string; widthPx?: number; heightPx?: number }>
+    reviews?: Array<{
+        authorName: string
+        authorPhoto: string
+        rating: number
+        relativeTime: string
+        time: string
+        text: string
+    }>
     openingHours?: string[]
     currentOpeningHours?: string[]
     regularOpeningHours?: {

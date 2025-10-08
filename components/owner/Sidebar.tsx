@@ -3,10 +3,9 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { LayoutDashboard, FilePlus2, FileText, User, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useEffect, useState, useMemo } from "react"
+import { useEffect, useState } from "react"
 import { onAuthChange } from "@/lib/firebase/authService"
-import { getFirebaseApp } from "@/lib/firebase/client"
-import { getFirestore, doc, getDoc } from "firebase/firestore"
+import { useUserPhoto } from "@/hooks/useUserPhoto"
 import Image from "next/image"
 
 const items = [
@@ -19,39 +18,19 @@ const items = [
 export default function OwnerSidebar() {
   const pathname = usePathname()
   const [user, setUser] = useState<any>(null)
-  const [photoURL, setPhotoURL] = useState<string | null>(null)
   const [logoError, setLogoError] = useState(false)
-  const app = useMemo(() => getFirebaseApp(), [])
+
+  // Use consolidated photoURL hook with shared cache
+  const { photoURL } = useUserPhoto(user)
 
   useEffect(() => {
-    const unsubscribe = onAuthChange(async (firebaseUser) => {
+    const unsubscribe = onAuthChange((firebaseUser) => {
       setUser(firebaseUser)
-
-      // Fetch photoURL from Firestore when user signs in
-      if (firebaseUser && app) {
-        try {
-          const db = getFirestore(app)
-          const userDocRef = doc(db, "users", firebaseUser.uid)
-          const userDocSnap = await getDoc(userDocRef)
-
-          if (userDocSnap.exists()) {
-            const userData = userDocSnap.data()
-            setPhotoURL(userData?.photoURL || firebaseUser.photoURL || null)
-          } else {
-            setPhotoURL(firebaseUser.photoURL || null)
-          }
-        } catch (error) {
-          console.error("Error fetching user photo:", error)
-          setPhotoURL(firebaseUser.photoURL || null)
-        }
-      } else {
-        setPhotoURL(null)
-      }
     })
     return () => {
       if (unsubscribe) unsubscribe()
     }
-  }, [app])
+  }, [])
 
   return (
     <aside className="sticky top-4 h-fit w-full bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 shadow-md">

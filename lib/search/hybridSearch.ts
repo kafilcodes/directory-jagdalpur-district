@@ -307,13 +307,27 @@ export async function hybridSearch(
         // Merge results
         let results = mergeResults(shardResults, listingsResults)
 
-        // Apply category filter
+        // Apply category filter - handle both singular and plural forms
         if (categoryFilter.length > 0) {
-            const filterSet = new Set(categoryFilter.map(c => c.toLowerCase()))
-            results = results.filter(r =>
-                filterSet.has(r.cat.toLowerCase()) ||
-                filterSet.has(r.categorySlug?.toLowerCase() || '')
-            )
+            const filterSet = new Set<string>()
+
+            // Add both original and normalized versions (handle singular/plural)
+            for (const cat of categoryFilter) {
+                const lower = cat.toLowerCase()
+                filterSet.add(lower)
+                // Add singular/plural variants
+                if (lower.endsWith('s') && lower.length > 2) {
+                    filterSet.add(lower.slice(0, -1)) // stores -> store
+                } else {
+                    filterSet.add(lower + 's') // store -> stores
+                }
+            }
+
+            results = results.filter(r => {
+                const cat = r.cat.toLowerCase()
+                const slug = r.categorySlug?.toLowerCase() || ''
+                return filterSet.has(cat) || filterSet.has(slug)
+            })
         }
 
         // Sort results

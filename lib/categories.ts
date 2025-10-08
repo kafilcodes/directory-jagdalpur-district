@@ -7,6 +7,8 @@ export interface CategoryItem {
 export const CATEGORIES: CategoryItem[] = [
   { label: "Hotels", slug: "hotels" },
   { label: "Restaurants", slug: "restaurants" },
+  { label: "Stores", slug: "stores" },
+  { label: "Tourism", slug: "tourism" },
   { label: "Healthcare", slug: "healthcare" },
   { label: "Education", slug: "education" },
   { label: "Shopping", slug: "shopping" },

@@ -131,3 +131,61 @@ export async function PATCH(req: NextRequest, context: any) {
     }, { status: 500 })
   }
 }
+
+export async function DELETE(req: NextRequest, context: any) {
+  try {
+    const user = await getCurrentUser()
+    if (!user) {
+      return NextResponse.json({
+        ok: false,
+        error: "unauthorized",
+        message: "You must be signed in"
+      }, { status: 401 })
+    }
+
+    const params = await context.params
+    const { id } = params as { id: string }
+
+    const db = getAdminDb()
+    const ref = db.collection("listings").doc(id)
+    const snap = await ref.get()
+
+    if (!snap.exists) {
+      return NextResponse.json({
+        ok: false,
+        error: "not_found",
+        message: "Listing not found"
+      }, { status: 404 })
+    }
+
+    const data = snap.data() as any
+
+    // Verify ownership
+    if (data.ownerUid !== user.uid) {
+      return NextResponse.json({
+        ok: false,
+        error: "forbidden",
+        message: "You don't have permission to delete this listing"
+      }, { status: 403 })
+    }
+
+    // Delete the listing document
+    await ref.delete()
+
+    // Invalidate cache
+    invalidateListing(id)
+
+    return NextResponse.json({
+      ok: true,
+      message: "Listing deleted successfully"
+    })
+
+  } catch (e: any) {
+    console.error("[DELETE /api/listings/[id]] Error:", e)
+    return NextResponse.json({
+      ok: false,
+      error: "server_error",
+      message: e?.message || "Failed to delete listing"
+    }, { status: 500 })
+  }
+}

@@ -2,14 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const GOOGLE_PLACES_API_KEY = process.env.NEXT_GOOGLE_PLACES_API_KEY;
 
-// Dhamtari coordinates for location restriction
+// Dhamtari city center coordinates for location restriction
 const DHAMTARI_CENTER = {
     latitude: 21.4416,
     longitude: 81.5979,
 };
 
-// 50km radius to cover Dhamtari district
-const DHAMTARI_RADIUS = 50000; // in meters
+// 30km radius from Dhamtari city center (as per requirements)
+const DHAMTARI_RADIUS = 30000; // in meters
 
 export async function POST(req: NextRequest) {
     try {

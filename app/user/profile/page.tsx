@@ -1,10 +1,10 @@
 import { getCurrentUser } from "@/lib/auth/server"
+import { getUserPhotoURL } from "@/lib/auth/getUserPhotoURL"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { User, Mail, Calendar, Shield, Briefcase } from "lucide-react"
 import { PaymentReceipts } from "@/components/user/PaymentReceipts"
-import { getAdminDb } from "@/lib/firebase/admin"
 import Image from "next/image"
 
 export const dynamic = "force-dynamic"
@@ -21,11 +21,8 @@ export default async function UserProfilePage() {
         )
     }
 
-    // Fetch user data from Firestore to get photoURL
-    const db = getAdminDb()
-    const userDoc = await db.collection("users").doc(user.uid).get()
-    const userData = userDoc.exists ? userDoc.data() : null
-    const photoURL = userData?.photoURL || user.photoURL || null
+    // Fetch photoURL using cached server utility (deduplicates per request)
+    const photoURL = await getUserPhotoURL(user.uid, user.photoURL)
 
     // Extract username from email (part before @)
     const username = user.email?.split('@')[0] || "User"

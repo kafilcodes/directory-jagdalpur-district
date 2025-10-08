@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation"
 import { LayoutDashboard, FilePlus, FileText, User as UserIcon, LogOut, Home, Clock, Calendar } from "lucide-react"
 import { signOut, getFirebaseAuth } from "@/lib/firebase/authService"
 import { onAuthStateChanged, type User } from "firebase/auth"
+import { useUserPhoto } from "@/hooks/useUserPhoto"
 import { cn } from "@/lib/utils"
 import {
     Sidebar,
@@ -61,6 +62,9 @@ function AppSidebar() {
     const [user, setUser] = React.useState<User | null>(null)
     const [currentTime, setCurrentTime] = React.useState<string>("")
     const [currentDate, setCurrentDate] = React.useState<string>("")
+
+    // Use consolidated photoURL hook with shared cache
+    const { photoURL } = useUserPhoto(user)
 
     // Subscribe to auth state
     React.useEffect(() => {
@@ -168,11 +172,11 @@ function AppSidebar() {
                     <div className="rounded-lg bg-white border border-gray-200 p-3 space-y-3">
                         {/* Profile Avatar & Name */}
                         <div className="flex items-center gap-3">
-                            {user?.photoURL ? (
+                            {photoURL ? (
                                 <div className="relative h-10 w-10 shrink-0">
                                     <Image
-                                        src={user.photoURL}
-                                        alt={user.displayName || "User"}
+                                        src={photoURL}
+                                        alt={user?.displayName || "User"}
                                         fill
                                         sizes="40px"
                                         className="rounded-full object-cover ring-2 ring-gray-300"
@@ -210,11 +214,11 @@ function AppSidebar() {
 
                 {/* Collapsed State Avatar */}
                 <div className="hidden group-data-[collapsible=icon]:flex justify-center py-2">
-                    {user?.photoURL ? (
+                    {photoURL ? (
                         <div className="relative h-8 w-8">
                             <Image
-                                src={user.photoURL}
-                                alt={user.displayName || "User"}
+                                src={photoURL}
+                                alt={user?.displayName || "User"}
                                 fill
                                 sizes="32px"
                                 className="rounded-full object-cover ring-2 ring-gray-300"

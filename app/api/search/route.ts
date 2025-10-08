@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { searchListings } from "@/lib/search/server"
+import { hybridSearch } from "@/lib/search/hybridSearch"
 import { getCachedSearch, setCachedSearch } from "@/lib/cache/listingsCache"
 
 export const dynamic = "force-dynamic"
@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
   const q = String(searchParams.get("q") || "")
   const catsParam = searchParams.get("cats")
   const limit = Number(searchParams.get("limit") || 10)
-  const sort = String(searchParams.get("sort") || "relevance")
+  const sort = String(searchParams.get("sort") || "relevance") as 'relevance' | 'popular' | 'recent'
   const filter = String(searchParams.get("filter") || "")
   const cats = catsParam ? catsParam.split(",").filter(Boolean) : []
 
@@ -25,8 +25,12 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ ok: true, data: cached, cached: true })
     }
 
-    // Fetch from database if not cached
-    const data = await searchListings({ q, cats, limit, sort })
+    // Use hybrid search (combines search shards + listings collection)
+    const data = await hybridSearch(q, {
+      limit,
+      sort,
+      categoryFilter: cats.length > 0 ? cats : undefined
+    })
 
     // Store in cache for future requests
     setCachedSearch(q, data, cats, sort, filter)

@@ -13,12 +13,11 @@ const CATEGORY_CHIPS = [
   { label: "All", icon: null },
   { label: "Hotels", icon: Building2 },
   { label: "Restaurants", icon: UtensilsCrossed },
+  { label: "Stores", icon: ShoppingBag },
+  { label: "Tourism", icon: Car },
   { label: "Healthcare", icon: Stethoscope },
   { label: "Education", icon: GraduationCap },
-  { label: "Shopping", icon: ShoppingBag },
   { label: "Services", icon: Wrench },
-  { label: "Real Estate", icon: Home },
-  { label: "Transport", icon: Car },
 ]
 
 const SORT_OPTIONS = [

@@ -167,7 +167,7 @@ export default function Header({ canShowProfileIcon: _canShowProfileIcon = false
                 <NavigationMenuItem>
                   <Link href={"/browse" as any} aria-current={isActive("/browse") ? "page" : undefined} className={cn(
                     navigationMenuTriggerStyle(),
-                    isActive("/browse") && "bg-red-50 text-red-600",
+                    isActive("/browse") && " text-red-600",
                     "hover:text-red-500 transition-colors"
                   )}>
                     <Compass className="h-4 w-4 mr-2" />
@@ -177,7 +177,7 @@ export default function Header({ canShowProfileIcon: _canShowProfileIcon = false
                 <NavigationMenuItem>
                   <Link href={"/search" as any} aria-current={isActive("/search") ? "page" : undefined} className={cn(
                     navigationMenuTriggerStyle(),
-                    isActive("/search") && "bg-red-50 text-red-600",
+                    isActive("/search") && " text-red-600",
                     "hover:text-red-500 transition-colors"
                   )}>
                     <Search className="h-4 w-4 mr-2" />
@@ -187,7 +187,7 @@ export default function Header({ canShowProfileIcon: _canShowProfileIcon = false
                 <NavigationMenuItem>
                   <Link href={"/about" as any} aria-current={isActive("/about") ? "page" : undefined} className={cn(
                     navigationMenuTriggerStyle(),
-                    isActive("/about") && "bg-red-50 text-red-600",
+                    isActive("/about") && " text-red-600",
                     "hover:text-red-500 transition-colors"
                   )}>
                     <Info className="h-4 w-4 mr-2" />
@@ -248,7 +248,7 @@ export default function Header({ canShowProfileIcon: _canShowProfileIcon = false
                   onClick={() => setMobileMenuOpen(false)}
                   className={cn(
                     "flex items-center gap-3 rounded-md px-4 py-3 text-base font-medium hover:bg-gray-100",
-                    isActive("/search") && "bg-red-50 text-red-600"
+                    isActive("/search") && " text-red-600"
                   )}
                 >
                   <Search className="h-4 w-4" />
@@ -260,7 +260,7 @@ export default function Header({ canShowProfileIcon: _canShowProfileIcon = false
                   onClick={() => setMobileMenuOpen(false)}
                   className={cn(
                     "flex items-center gap-3 rounded-md px-4 py-3 text-base font-medium hover:bg-gray-100",
-                    isActive("/browse") && "bg-red-50 text-red-600"
+                    isActive("/browse") && " text-red-600"
                   )}
                 >
                   <Compass className="h-4 w-4" />
@@ -273,7 +273,7 @@ export default function Header({ canShowProfileIcon: _canShowProfileIcon = false
                   onClick={() => setMobileMenuOpen(false)}
                   className={cn(
                     "flex items-center gap-3 rounded-md px-4 py-3 text-base font-medium hover:bg-gray-100",
-                    isActive("/about") && "bg-red-50 text-red-600"
+                    isActive("/about") && " text-red-600"
                   )}
                 >
                   <Info className="h-4 w-4" />

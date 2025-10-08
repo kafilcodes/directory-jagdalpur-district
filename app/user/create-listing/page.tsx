@@ -60,7 +60,7 @@ export default async function UserCreateListingPage() {
     return (
         <div className="space-y-6">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+                <h1 className="text-3xl font-bold tracking-tight ">
                     Create Listing
                 </h1>
                 <p className="text-gray-600 dark:text-gray-400 mt-1">Add your business to the directory</p>

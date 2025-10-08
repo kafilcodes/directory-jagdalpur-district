@@ -125,14 +125,14 @@ export default function DynamicSearchBar({ placeholder = "Search listings...", s
   const heightClass = size === "lg" ? "h-12 text-base" : "h-10 text-sm"
 
   return (
-    <div className="w-full relative">
+    <div className="w-full relative z-50">
       <Command
         ref={commandRef}
         className={`
           group rounded-2xl border-2 bg-white relative overflow-visible
           transition-all duration-300 ease-out
           ${isFocused
-            ? 'border-red-500 shadow-2xl shadow-red-500/10 scale-105 z-50'
+            ? 'border-red-500 shadow-2xl shadow-red-500/10 scale-105'
             : 'border-gray-200 shadow-lg hover:shadow-xl hover:border-gray-300'
           }
         `}
@@ -189,24 +189,24 @@ export default function DynamicSearchBar({ placeholder = "Search listings...", s
             })}
           </div>
         </div>
-        {/* Enhanced Results Dropdown with smooth animations - Fixed overlay */}
+        {/* Enhanced Results Dropdown - Anchored to search container, scrolls with page */}
         <div
           className={`
-            fixed left-1/2 -translate-x-1/2 top-auto z-[100] mt-3 overflow-hidden rounded-2xl border-2 border-gray-200 bg-white shadow-2xl
+            absolute left-0 right-0 top-full z-50 mt-3 overflow-hidden rounded-2xl border-2 border-gray-200 bg-white shadow-2xl
             transition-all duration-300 ease-out
-            ${size === "lg" ? "w-full max-w-xl" : "w-full max-w-lg"}
             ${q.trim().length >= 1 && isOpen && (items.length > 0 || loading)
               ? 'max-h-[600px] opacity-100 translate-y-0'
               : 'max-h-0 opacity-0 -translate-y-2 pointer-events-none'
             }
           `}
-          style={{
-            top: commandRef.current ? `${commandRef.current.getBoundingClientRect().bottom + 12}px` : 'auto'
-          }}
         >
           <div className="max-h-[600px] overflow-y-auto p-3 custom-scrollbar">
             {loading && (
               <>
+                <div className="flex items-center gap-2 mb-3 text-sm text-gray-500">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-500 border-t-transparent" />
+                  <span>Searching...</span>
+                </div>
                 <SkeletonCard />
                 <div className="mt-3">
                   <SkeletonCard />
@@ -321,7 +321,7 @@ export default function DynamicSearchBar({ placeholder = "Search listings...", s
                               variant="secondary"
                               showText={true}
                               showIcon={true}
-                              iconSize="h-3 w-3"
+                              iconSize="h-3 w-3 "
                               className="text-xs"
                             />
                           )}
@@ -341,7 +341,7 @@ export default function DynamicSearchBar({ placeholder = "Search listings...", s
 
                 {/* View all results */}
                 {items.length > 0 && (
-                  <div className="border-t border-gray-200 pt-2 mt-2">
+                  <div className=" border-gray-200 pt-2 mt-2">
                     <button
                       onClick={() => {
                         setIsOpen(false)

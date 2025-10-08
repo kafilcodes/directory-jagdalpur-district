@@ -372,6 +372,10 @@ export function CreateListingFormNew4Step() {
                 phone: store.selectedPlace.phone || '',
                 website: store.selectedPlace.website || '',
                 category: category,
+                location: store.selectedPlace.location || null, // Store geo coordinates
+                reviews: store.selectedPlace.reviews || [], // Store reviews from Places API
+                rating: store.selectedPlace.rating || 0,
+                userRatingCount: store.selectedPlace.userRatingCount || 0,
                 photos: [], // Will be updated after upload
                 plan: store.selectedPlan,
                 ...(store.orderId && { orderId: store.orderId }),
@@ -420,24 +424,41 @@ export function CreateListingFormNew4Step() {
 
             const uploadResult = await uploadResponse.json()
 
-            if (!uploadResponse.ok) {
-                throw new Error(uploadResult.error || 'Failed to upload images')
+            if (!uploadResponse.ok || !uploadResult.ok || !uploadResult.urls || uploadResult.urls.length === 0) {
+                // Image upload failed - delete the listing document since it's incomplete
+                try {
+                    await fetch(`/api/listings/${listingId}`, { method: 'DELETE' })
+                } catch {
+                    // Ignore deletion error - listing will be in 'creating' status
+                }
+                throw new Error(uploadResult.error || 'Failed to upload images to Firebase Storage')
             }
 
             setSuccess("🔗 Updating listing with image URLs...")
             setUploadProgress(85)
 
-            // Step 3: Update listing with image URLs
-            const updateResponse = await fetch(`/api/listings/${listingId}`, {
+            // Step 3: Update listing with image URLs and activate listing
+            // Determine primary image index (find image matching primaryImageId or default to 0)
+            let primaryImageIndex = 0
+            if (store.primaryImageId) {
+                const foundIndex = store.uploadedImages.findIndex(img => img.id === store.primaryImageId)
+                if (foundIndex >= 0) {
+                    primaryImageIndex = foundIndex
+                }
+            }
+
+            const updateResponse = await fetch(`/api/listings/${listingId}/photos`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     photos: uploadResult.urls,
+                    primaryImageIndex: primaryImageIndex,
                 }),
             })
 
             if (!updateResponse.ok) {
-                throw new Error('Failed to update listing with images')
+                const updateError = await updateResponse.json()
+                throw new Error(updateError.message || 'Failed to update listing with images')
             }
 
             setUploadProgress(95)

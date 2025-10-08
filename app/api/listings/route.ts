@@ -27,7 +27,17 @@ const CreateListingSchema = z.object({
   location: z.object({
     lat: z.number(),
     lng: z.number(),
-  }).optional(),
+  }).optional().nullable(),
+  reviews: z.array(z.object({
+    authorName: z.string(),
+    authorPhoto: z.string().optional(),
+    rating: z.number(),
+    relativeTime: z.string().optional(),
+    time: z.string().optional(),
+    text: z.string(),
+  })).optional(),
+  rating: z.number().optional(),
+  userRatingCount: z.number().optional(),
   photos: z.array(z.string()).optional(),
   openingHours: z.array(z.string()).optional(),
   amenities: z.array(z.string()).optional(),
@@ -97,6 +107,7 @@ export async function POST(req: NextRequest) {
       : null // Free plan has no expiry
 
     // Create listing using safe collection utilities
+    // Note: status starts as 'creating' until images are uploaded
     const listingData = {
       id,
       ownerUid: user.uid,
@@ -113,7 +124,11 @@ export async function POST(req: NextRequest) {
       state: data.state || 'Chhattisgarh',
       pincode: data.pincode || '',
       location: data.location || null,
-      photos: data.photos || [],
+      reviews: data.reviews || [],
+      rating: data.rating || 0,
+      userRatingCount: data.userRatingCount || 0,
+      photos: [], // Will be populated via /api/listings/[id]/photos endpoint
+      primaryImageIndex: 0, // Will be set when photos are uploaded
       openingHours: data.openingHours || [],
       amenities: data.amenities || [],
       plan: data.plan,
@@ -121,7 +136,7 @@ export async function POST(req: NextRequest) {
       paymentId: data.paymentId || null,
       isPublic: data.isPublic !== false,
       approved: true,
-      status: data.status || 'active',
+      status: 'creating', // Changed from 'active' - will be set to 'active' when photos are uploaded
       placeId: data.placeId || null,
       googlePlaceData: data.googlePlaceData || null,
       monetization: data.monetization || {},
