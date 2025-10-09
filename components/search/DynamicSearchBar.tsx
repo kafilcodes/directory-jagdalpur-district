@@ -77,13 +77,15 @@ export default function DynamicSearchBar({ placeholder = "Search listings...", s
         const json = await response.json()
         if (alive && json.ok) {
           setItems(json.data || [])
+          // Keep dropdown open even if no results (to show no-results message)
           setIsOpen(true)
         }
       } catch (error) {
         console.error('Search error:', error)
         if (alive) {
           setItems([])
-          setIsOpen(false)
+          // Keep dropdown open to show error message
+          setIsOpen(true)
         }
       } finally {
         if (alive) setLoading(false)
@@ -194,7 +196,7 @@ export default function DynamicSearchBar({ placeholder = "Search listings...", s
           className={`
             absolute left-0 right-0 top-full z-50 mt-3 overflow-hidden rounded-2xl border-2 border-gray-200 bg-white shadow-2xl
             transition-all duration-300 ease-out
-            ${q.trim().length >= 1 && isOpen && (items.length > 0 || loading)
+            ${q.trim().length >= 2 && isOpen
               ? 'max-h-[600px] opacity-100 translate-y-0'
               : 'max-h-0 opacity-0 -translate-y-2 pointer-events-none'
             }
@@ -218,11 +220,14 @@ export default function DynamicSearchBar({ placeholder = "Search listings...", s
             )}
             {!loading && q.trim().length >= 2 && items.length === 0 && (
               <div className="p-8 text-center animate-fade-in">
-                <div className="mx-auto h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-                  <Search className="h-8 w-8 text-gray-400" />
+                <div className="mx-auto w-24 h-20 mb-4 flex items-center justify-center">
+                  {require("react").createElement(require("@/components/icons/EmptySearch").default, {
+                    width: 96,
+                    height: 80
+                  })}
                 </div>
-                <p className="text-sm font-medium text-gray-900 mb-1">No results found</p>
-                <p className="text-xs text-gray-500">Try different keywords</p>
+                <p className="text-sm font-medium text-gray-900 mb-1">No listings found for &quot;{q}&quot;</p>
+                <p className="text-xs text-gray-500">Try different keywords or browse categories</p>
               </div>
             )}
             {!loading && items.length > 0 && (

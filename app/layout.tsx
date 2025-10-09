@@ -6,6 +6,8 @@ import HeaderServer from "@/components/layout/HeaderServer"
 import Footer from "@/components/layout/Footer"
 import { Providers } from "./providers"
 import "@/lib/utils/suppress-dev-errors" // Suppress expected dev errors
+import { SpeedInsights } from "@vercel/speed-insights/next"
+import { Analytics } from "@vercel/analytics/next"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -86,6 +88,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               duration: 4000,
             }}
           />
+          <SpeedInsights />
+          <Analytics />
         </Providers>
       </body>
     </html>
