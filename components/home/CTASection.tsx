@@ -59,7 +59,7 @@ export default function CTASection() {
                     onClick={handleGetStarted}
                     size="lg"
                     variant="secondary"
-                    className="group gap-2 px-8 py-4 text-lg font-semibold bg-white text-red-600 border border-white hover:bg-red-50 hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
+                    className="group gap-2 px-8 py-4 text-lg font-semibold bg-white text-red-600 border border-white  hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
                 >
                     Get Started
                     <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />

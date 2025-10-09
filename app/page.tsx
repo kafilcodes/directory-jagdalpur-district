@@ -15,12 +15,12 @@ import { useRouter } from "next/navigation"
 import { normalizeCategoryToSlug } from "@/lib/categories"
 import { HERO_MIN_H, SECTION_VSPACE } from "@/lib/ui-home"
 
-// Stats data
+// Stats data - Updated values per requirements
 const stats = [
-  { label: "Active Listings", value: "2,500+", icon: <TrendingUp className="h-5 w-5" /> },
-  { label: "Happy Customers", value: "10,000+", icon: <Users className="h-5 w-5" /> },
+  { label: "Active Listings", value: "500+", icon: <TrendingUp className="h-5 w-5" /> },
   { label: "Verified Businesses", value: "500+", icon: <Shield className="h-5 w-5" /> },
-  { label: "5-Star Reviews", value: "1,200+", icon: <Star className="h-5 w-5" /> },
+  { label: "5-Star Reviews", value: "300+", icon: <Star className="h-5 w-5" /> },
+  { label: "Happy Customers", value: "10,000+", icon: <Users className="h-5 w-5" /> },
 ]
 
 // Categories data
@@ -105,7 +105,10 @@ export default function HomePage() {
             {/* Quick Search Tags */}
             <div className="mt-6">
               <div className="flex items-center justify-center">
-                <span className="inline-flex items-center text-sm text-gray-500 mr-2">Popular:</span>
+                <span className="inline-flex items-center gap-1.5 text-sm text-gray-500 mr-2">
+                  <TrendingUp className="h-4 w-4 text-red-500 animate-pulse" aria-hidden="true" />
+                  Trending:
+                </span>
               </div>
               <div className="mt-2 overflow-x-auto scrollbar-hide [-webkit-overflow-scrolling:touch]">
                 <div className="flex items-center gap-2 px-1 sm:justify-center min-w-max">
@@ -141,7 +144,7 @@ export default function HomePage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8">
               {stats.map((stat, index) => (
                 <div key={index} className="text-center">
-                  <div className="inline-flex items-center justify-center w-8 h-8 sm:w-12 sm:h-12 bg-tranparent text-[#EF4444] hover:text-red-100 rounded-full mb-2 sm:mb-3 outline outline-1 outline-red-200 shadow-sm">
+                  <div className="inline-flex items-center justify-center w-8 h-8 sm:w-12 sm:h-12 bg-tranparent text-[#EF4444] hover:text-red-100 rounded-full mb-2 sm:mb-3 outline outline-1 outline-red-200 shadow-sm hover:scale-110 transition-transform duration-300 cursor-pointer">
                     {stat.icon}
                   </div>
                   <div className="text-lg sm:text-2xl font-bold text-gray-900">{stat.value}</div>
@@ -231,33 +234,54 @@ export default function HomePage() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            <Card className="text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-0 shadow-md">
-              <CardContent className="p-8">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 text-red-500 rounded-full mb-6 transition-transform duration-300 hover:scale-110">
-                  <Shield className="h-8 w-8" />
+            <Card className="group text-center hover:shadow-2xl transition-all duration-500 hover:-translate-y-3 border-0 shadow-md bg-white overflow-hidden relative align-center">
+              <CardContent className="p-8 relative z-10">
+                <div className="w-full max-w-[200px] sm:max-w-[240px] md:max-w-[280px] mx-auto mb-6">
+                  <Image
+                    src="/verified_listing.svg"
+                    alt="Verified Listings"
+                    width={280}
+                    height={210}
+                    className="w-70 h-50 justify-center align-center  pl-3 pt-3"
+                    priority
+                  />
                 </div>
                 <h3 className="text-xl font-semibold mb-4 text-gray-900">Verified Listings</h3>
-                <p className="text-gray-600 leading-relaxed text-sm sm:text-base lg:text-lg">All businesses are verified to ensure authenticity and reliability</p>
+                <p className="text-gray-600 leading-relaxed text-sm sm:text-base">All businesses are verified to ensure authenticity and reliability</p>
               </CardContent>
             </Card>
 
-            <Card className="text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-0 shadow-md">
-              <CardContent className="p-8">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 text-red-500 rounded-full mb-6 transition-transform duration-300 hover:scale-110">
-                  <Users className="h-8 w-8" />
+            <Card className="group text-center hover:shadow-2xl transition-all duration-500 hover:-translate-y-3 border-0 shadow-md bg-white overflow-hidden relative align-center">
+              <CardContent className="p-8 relative z-10">
+                <div className="w-full max-w-[150px] sm:max-w-[240px] md:max-w-[280px] mx-auto mb-6">
+                  <Image
+                    src="/community_reviews.svg"
+                    alt="Community Reviews"
+                    width={280}
+                    height={210}
+                    className="w-70 h-50 justify-center align-center  pl-3 pt-3"
+                    priority
+                  />
                 </div>
                 <h3 className="text-xl font-semibold mb-4 text-gray-900">Community Reviews</h3>
-                <p className="text-gray-600 leading-relaxed text-sm sm:text-base lg:text-lg">Real reviews from real customers to help you make informed decisions</p>
+                <p className="text-gray-600 leading-relaxed text-sm sm:text-base">Real reviews from real customers to help you make informed decisions</p>
               </CardContent>
             </Card>
 
-            <Card className="text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-0 shadow-md">
-              <CardContent className="p-8">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 text-red-500 rounded-full mb-6 transition-transform duration-300 hover:scale-110">
-                  <Award className="h-8 w-8" />
+            <Card className="group text-center hover:shadow-2xl transition-all duration-500 hover:-translate-y-3 border-0 shadow-md bg-white overflow-hidden relative align-center">
+              <CardContent className="p-8 relative z-10">
+                <div className="w-full max-w-[200px] sm:max-w-[240px] md:max-w-[280px] mx-auto mb-6">
+                  <Image
+                    src="/best_deals.svg"
+                    alt="Best Deals"
+                    width={280}
+                    height={210}
+                    className="w-70 h-50 justify-center align-center  pl-3 pt-3"
+                    priority
+                  />
                 </div>
                 <h3 className="text-xl font-semibold mb-4 text-gray-900">Best Deals</h3>
-                <p className="text-gray-600 leading-relaxed text-sm sm:text-base lg:text-lg">Exclusive offers and discounts from premium local businesses</p>
+                <p className="text-gray-600 leading-relaxed text-sm sm:text-base">Exclusive offers and discounts from premium local businesses</p>
               </CardContent>
             </Card>
           </div>

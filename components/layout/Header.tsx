@@ -329,7 +329,7 @@ export default function Header({ canShowProfileIcon: _canShowProfileIcon = false
               <button
                 onClick={handleGoogleSignIn}
                 disabled={signingIn}
-                className="inline-flex items-center justify-center gap-2 h-11 px-4 rounded-md border shadow-sm bg-white hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+                className="inline-flex items-center justify-center gap-2 h-11 px-4 rounded-md border shadow-sm bg-white hover:border-red-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
                 aria-label="Sign in with Google"
               >
                 <svg className="h-5 w-5" viewBox="0 0 48 48" aria-hidden="true">
