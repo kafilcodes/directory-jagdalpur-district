@@ -37,7 +37,7 @@ export default async function MyListingsPage() {
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className="rounded-lg border bg-white p-6 text-gray-600">No listings yet.</div>
+        <div className="rounded-lg border-0 shadow-md bg-white p-6 text-gray-600">No listings yet.</div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {items.map((it) => (

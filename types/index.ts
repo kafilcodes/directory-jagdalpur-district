@@ -2,14 +2,21 @@ export type Listing = {
   id: string
   name: string
   category: string
-  address: string
+  categorySlug?: string
+  address: string | { formattedAddress: string }
   phone?: string
   email?: string
   website?: string
+  description?: string
+  openingHours?: string
   photos?: string[]
   rating?: number
-  createdAt: number
-  updatedAt: number
+  status?: 'active' | 'pending' | 'rejected'
+  plan?: 'free' | 'premium' | 'featured'
+  views?: number
+  clicks?: number
+  createdAt: any
+  updatedAt?: number
   approved: boolean
 }
 

@@ -12,19 +12,19 @@ import Misc from "@/components/icons/Misc"
 export const dynamic = "force-static"
 
 export const metadata: Metadata = {
-  title: "About • Dhamtari Directory",
-  description: "Dhamtari Directory connects people with trusted local businesses. Discover, compare and contact verified listings across categories.",
+  title: "About • Dial Dhamtari",
+  description: "Dial Dhamtari connects people with trusted local businesses. Discover, compare and contact verified listings across categories.",
   openGraph: {
-    title: "About • Dhamtari Directory",
-    description: "Discover how Dhamtari Directory helps businesses grow and people find what they need.",
+    title: "About • Dial Dhamtari",
+    description: "Discover how Dial Dhamtari helps businesses grow and people find what they need.",
     url: "https://dhamtari.directory/about",
-    siteName: "Dhamtari Directory",
+    siteName: "Dial Dhamtari",
     images: [{ url: "/logo.png", width: 256, height: 256 }],
     type: "website",
   },
   twitter: {
     card: "summary",
-    title: "About • Dhamtari Directory",
+    title: "About • Dial Dhamtari",
     description: "Find trusted local businesses in Dhamtari.",
     images: ["/logo.png"],
   },
@@ -67,7 +67,7 @@ export default function AboutPage() {
   return (
     <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
       <header className="text-center max-w-3xl mx-auto">
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900">About Dhamtari Directory</h1>
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900">About Dial Dhamtari</h1>
         <p className="mt-3 text-gray-600">We connect people with trusted local businesses and help entrepreneurs grow with modern, searchable profiles.</p>
       </header>
 
@@ -141,10 +141,10 @@ export default function AboutPage() {
           __html: JSON.stringify({
             '@context': 'https://schema.org',
             '@type': 'AboutPage',
-            name: 'About • Dhamtari Directory',
+            name: 'About • Dial Dhamtari',
             description: 'Directory for trusted local businesses in Dhamtari',
             url: 'https://dhamtari.directory/about',
-            publisher: { '@type': 'Organization', name: 'Dhamtari Directory' }
+            publisher: { '@type': 'Organization', name: 'Dial Dhamtari' }
           })
         }}
       />

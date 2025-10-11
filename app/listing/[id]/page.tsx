@@ -24,11 +24,11 @@ export async function generateMetadata({ params }: any) {
         name = d?.name || d?.listingName || name
         description = `${name} - ${d?.category || d?.listingType || "Local service"}`
       }
-    } catch {}
+    } catch { }
   }
 
   return {
-    title: `${name} | Dhamtari Directory`,
+    title: `${name} | Dial Dhamtari`,
     description,
   }
 }

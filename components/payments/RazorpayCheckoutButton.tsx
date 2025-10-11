@@ -53,7 +53,7 @@ export default function RazorpayCheckoutButton({
       key,
       amount,
       currency,
-      name: "Dhamtari Directory",
+      name: "Dial Dhamtari",
       description: "Test Transaction",
       order_id: res.order.id,
       handler: async function (response: any) {

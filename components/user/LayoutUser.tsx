@@ -126,7 +126,7 @@ function AppSidebar() {
                     <div className="relative h-10 w-10 shrink-0">
                         <Image
                             src="/logo.png"
-                            alt="Dhamtari Directory"
+                            alt="Dial Dhamtari"
                             fill
                             sizes="40px"
                             className="object-contain"
@@ -141,7 +141,7 @@ function AppSidebar() {
                         </div>
                     </div>
                     <div className="flex flex-col min-w-0">
-                        <span className="font-bold text-gray-900 text-base leading-tight">Dhamtari Directory</span>
+                        <span className="font-bold text-gray-900 text-base leading-tight">Dial Dhamtari</span>
                         <span className="font-medium text-gray-600 text-xs">Business Area</span>
                     </div>
                 </Link>
@@ -151,7 +151,7 @@ function AppSidebar() {
                     <div className="relative h-8 w-8">
                         <Image
                             src="/logo.png"
-                            alt="Dhamtari Directory"
+                            alt="Dial Dhamtari"
                             fill
                             sizes="32px"
                             className="object-contain"
@@ -349,7 +349,7 @@ export function LayoutUser({ children }: UserLayoutProps) {
                             <div className="relative h-7 w-7 md:hidden">
                                 <Image
                                     src="/logo.png"
-                                    alt="Dhamtari Directory"
+                                    alt="Dial Dhamtari"
                                     fill
                                     sizes="28px"
                                     className="object-contain"

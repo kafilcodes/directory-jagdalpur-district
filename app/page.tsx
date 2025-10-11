@@ -89,7 +89,7 @@ export default function HomePage() {
                     __html: JSON.stringify({
                       "@context": "https://schema.org",
                       "@type": "WebSite",
-                      name: "Dhamtari Directory",
+                      name: "Dial Dhamtari",
                       url: (process.env.NEXT_PUBLIC_SITE_URL || "https://example.com"),
                       potentialAction: {
                         "@type": "SearchAction",
@@ -229,7 +229,7 @@ export default function HomePage() {
       <section className="py-20 bg-gradient-to-b from-gray-50 to-white">
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Why Choose Dhamtari Directory?</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Why Choose Dial Dhamtari?</h2>
             <p className="text-sm sm:text-base lg:text-lg text-gray-600">Your trusted local business companion</p>
           </div>
 

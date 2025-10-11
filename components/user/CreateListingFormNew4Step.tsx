@@ -302,7 +302,7 @@ export function CreateListingFormNew4Step() {
                 key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
                 amount: plan.pricePaise,
                 currency: "INR",
-                name: "Dhamtari Directory",
+                name: "Dial Dhamtari",
                 description: `${plan.label} Plan - ${plan.duration}`,
                 order_id: orderData.orderId,
                 handler: function (response: any) {

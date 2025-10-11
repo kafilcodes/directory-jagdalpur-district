@@ -40,7 +40,7 @@ export default function OwnerSidebar() {
           <div className="relative h-10 w-full max-w-[120px] mx-auto">
             <Image
               src="/logo.png"
-              alt="Dhamtari Directory"
+              alt="Dial Dhamtari"
               fill
               sizes="120px"
               className="object-contain"

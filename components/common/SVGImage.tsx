@@ -54,6 +54,7 @@ export function SVGImage({
                 width={width}
                 height={height}
                 className={className || "w-full h-auto"}
+                style={{ width: 'auto', height: 'auto', maxWidth: '100%' }}
                 onError={() => {
                     setError(true)
                     setLoading(false)

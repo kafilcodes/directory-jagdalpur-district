@@ -1,6 +1,6 @@
 import Header from "./Header"
 
-export default async function HeaderServer() {
+export default function HeaderServer() {
   return <Header />
 }
 

@@ -80,7 +80,7 @@ export default async function UserMyListingPage() {
     const user = await getCurrentUser()
 
     if (!user) {
-        redirect("/auth/login" as any)
+        redirect("/" as any)
     }
 
     const listingResult = await getUserListing(user.uid)

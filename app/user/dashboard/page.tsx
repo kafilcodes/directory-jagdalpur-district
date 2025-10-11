@@ -148,7 +148,7 @@ export default async function UserDashboardPage() {
     const user = await getCurrentUser()
 
     if (!user) {
-        redirect("/auth/login" as any)
+        redirect("/" as any)
     }
 
     const stats = await getStats(user.uid)

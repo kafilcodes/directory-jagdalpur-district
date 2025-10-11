@@ -1,7 +1,7 @@
 "use client"
 import * as React from "react"
 import Link from "next/link"
-import { Search, PlusCircle, Info, FileText, Compass, Building2, UtensilsCrossed, ShoppingBag, Car, Stethoscope, GraduationCap, Wrench, Store, Star, TrendingUp } from "lucide-react"
+import { Search, PlusCircle, Info, FileText, Compass, Building2, UtensilsCrossed, ShoppingBag, Car, Stethoscope, GraduationCap, Wrench, Store, Star, TrendingUp, Mail } from "lucide-react"
 import { Facebook as FacebookSvg, X as XSvg, Instagram as InstagramSvg } from "@/components/icons/SocialSvgr"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
@@ -12,7 +12,7 @@ function LogoSmall() {
   return (
     <span className="relative inline-flex h-8 w-8 items-center justify-center">
       {ok ? (
-        <Image src="/logo.png" alt="Dhamtari Directory" width={32} height={32} className="h-8 w-8 object-contain" priority unoptimized onError={() => setOk(false)} />
+        <Image src="/logo.png" alt="Dial Dhamtari" width={32} height={32} className="h-8 w-8 object-contain" priority unoptimized onError={() => setOk(false)} />
       ) : (
         <span className="h-8 w-8 grid place-items-center rounded-full bg-red-100 text-red-600 text-xs font-bold" aria-label="Logo fallback">DD</span>
       )}
@@ -46,11 +46,10 @@ export default function Footer() {
         <div className="py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
           {/* Brand Section */}
           <div className="space-y-4">
-            <Link href="/" aria-label="Dhamtari Directory" className="inline-flex items-center gap-3 group">
+            <Link href="/" aria-label="Dial Dhamtari" className="inline-flex items-center gap-3 group">
               <LogoSmall />
               <div className="flex flex-col leading-tight">
-                <span className="text-xl font-bold text-gray-900 group-hover:text-red-500 transition-colors">Dhamtari</span>
-                <span className="text-sm text-gray-500 -mt-0.5">Directory</span>
+                <span className="text-xl font-bold text-gray-900 group-hover:text-red-500 transition-colors">Dial Dhamtari</span>
               </div>
             </Link>
             <p className="text-sm text-gray-600 leading-relaxed">
@@ -96,6 +95,10 @@ export default function Footer() {
               <Link href="/about" className="text-sm text-gray-600 hover:text-red-500 transition-colors inline-flex items-center gap-2">
                 <Info className="h-4 w-4" />
                 About Us
+              </Link>
+              <Link href="/contact" className="text-sm text-gray-600 hover:text-red-500 transition-colors inline-flex items-center gap-2">
+                <Mail className="h-4 w-4" />
+                Contact
               </Link>
               <Link href="/policies" className="text-sm text-gray-600 hover:text-red-500 transition-colors inline-flex items-center gap-2">
                 <FileText className="h-4 w-4" />
@@ -150,7 +153,7 @@ export default function Footer() {
         <div className="border-t border-gray-200 py-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-xs text-gray-500 text-center sm:text-left">
-              © 2025 Dhamtari Directory. All rights reserved to Dhamtari District Administration
+              © 2025 Dial Dhamtari. All rights reserved to Dhamtari District Administration
             </p>
             <div className="flex items-center gap-3">
               <Link href="/policies" className="text-xs text-gray-500 hover:text-red-500 transition-colors">

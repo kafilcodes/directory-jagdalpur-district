@@ -30,7 +30,9 @@ function SearchPageContent() {
         if (sort) params.append("sort", sort)
         if (cats.length > 0) params.append("cats", cats.join(","))
         if (premiumFilter) params.append("filter", premiumFilter)
-        params.append("limit", "60")
+
+        // If no search query, only fetch 10 listings initially
+        params.append("limit", q ? "60" : "50")
 
         const response = await fetch(`/api/search?${params.toString()}`)
         if (!response.ok) throw new Error("Search failed")
@@ -56,8 +58,8 @@ function SearchPageContent() {
 
   const total = results.length
   const displayedResults = results.slice(0, displayCount)
-  const canLoadMore = displayCount < 20 && displayCount < total
   const hasMore = total > displayCount
+  const canLoadMore = hasMore
 
   if (loading) {
     return (
@@ -159,28 +161,31 @@ function SearchPageContent() {
         })}
       </div>
 
-      {/* Load More / Try Searching */}
-      {total > 0 && (
+      {/* Load More Button */}
+      {total > 0 && canLoadMore && (
         <div className="flex justify-center pt-6">
-          {canLoadMore ? (
-            <Button
-              onClick={() => setDisplayCount(Math.min(20, total))}
-              variant="outline"
-              size="lg"
-              className="px-8"
-            >
-              Load More ({Math.min(20, total) - displayCount} more listings)
-            </Button>
-          ) : displayCount >= 20 && hasMore ? (
-            <div className="text-center space-y-2">
-              <p className="text-sm text-gray-600">
-                Showing 20 of {total} listings
-              </p>
-              <p className="text-sm font-medium text-gray-900">
-                Try searching with specific keywords to find what you&apos;re looking for
-              </p>
-            </div>
-          ) : null}
+          <Button
+            onClick={() => setDisplayCount(prev => Math.min(prev + 10, total))}
+            variant="outline"
+            size="lg"
+            className="px-8"
+          >
+            Load More ({Math.min(10, total - displayCount)} more listings)
+          </Button>
+        </div>
+      )}
+
+      {/* Empty state when no query and no results */}
+      {total === 0 && !q && !loading && (
+        <div className="flex flex-col items-center justify-center py-16 space-y-6">
+          <div className="relative w-48 h-36">
+            <EmptySearch width={192} height={144} />
+          </div>
+          <div className="text-center space-y-2 max-w-md mt-10">
+            <p className="text-sm text-gray-600">
+              No listings found. Try searching for businesses, services, or categories.
+            </p>
+          </div>
         </div>
       )}
 

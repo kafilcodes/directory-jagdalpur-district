@@ -47,7 +47,7 @@ export function ListingCard({
     ?.trim() || address
 
   return (
-    <Card className="group bg-white border border-gray-200 rounded-lg overflow-hidden transition-all duration-200 hover:shadow-lg hover:border-gray-300 cursor-pointer">
+    <Card className="group bg-white border-0 shadow-md rounded-lg overflow-hidden transition-all duration-200 hover:shadow-xl cursor-pointer">
       {/* Image - reduced size */}
       {displayImage ? (
         <div className="relative h-40 w-full bg-gray-100 overflow-hidden">

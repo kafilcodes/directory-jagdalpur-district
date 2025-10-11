@@ -39,7 +39,8 @@ import {
   Star,
   TrendingUp,
   Compass,
-  Info
+  Info,
+  Mail
 } from "lucide-react"
 import Image from "next/image"
 import { Facebook as FacebookSvg, X as XSvg, Instagram as InstagramSvg } from "@/components/icons/SocialSvgr"
@@ -70,7 +71,7 @@ function LogoMark() {
   const [ok, setOk] = React.useState(true)
   return ok ? (
     <div className="relative h-8 w-8">
-      <Image src="/logo.png" alt="Dhamtari Directory" width={32} height={32} className="h-8 w-8 object-contain" priority unoptimized onError={() => setOk(false)} />
+      <Image src="/logo.png" alt="Dial Dhamtari" width={32} height={32} className="h-8 w-8 object-contain" priority unoptimized onError={() => setOk(false)} />
     </div>
   ) : (
     <div className="h-8 w-8 rounded-full bg-red-100 text-red-600 grid place-items-center text-xs font-bold" aria-label="Logo fallback">DD</div>
@@ -149,19 +150,18 @@ export default function Header({ canShowProfileIcon: _canShowProfileIcon = false
   return (
     <header className="sticky top-0 z-50 w-full bg-gradient-to-b from-gray-50 to-white">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="relative flex h-16 items-center justify-between">
+        <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center gap-8 pr-28">
-            <Link href="/" className="flex items-center space-x-2 group" aria-label="Dhamtari Directory home">
+          <div className="flex items-center gap-6">
+            <Link href="/" className="flex items-center space-x-2 group" aria-label="Dial Dhamtari home">
               <LogoMark />
               <div className="flex flex-col">
-                <span className="text-xl font-bold text-gray-900">Dhamtari</span>
-                <span className="text-xs text-gray-500 -mt-1">Directory</span>
+                <span className="text-xl font-bold text-gray-900">Dial Dhamtari</span>
               </div>
             </Link>
 
             {/* Desktop Navigation */}
-            <NavigationMenu className="hidden lg:flex">
+            <NavigationMenu className="hidden lg:flex ml-4">
               <NavigationMenuList>
 
                 <NavigationMenuItem>
@@ -194,11 +194,22 @@ export default function Header({ canShowProfileIcon: _canShowProfileIcon = false
                     About
                   </Link>
                 </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <Link href={"/contact" as any} aria-current={isActive("/contact") ? "page" : undefined} className={cn(
+                    navigationMenuTriggerStyle(),
+                    isActive("/contact") && " text-red-600",
+                    "hover:text-red-500 transition-colors"
+                  )}>
+                    <Mail className="h-4 w-4 mr-2" />
+                    Contact
+                  </Link>
+                </NavigationMenuItem>
               </NavigationMenuList>
             </NavigationMenu>
           </div>
-          {/* Center social icons on lg+ to avoid overlap */}
-          <div className="hidden lg:flex absolute left-1/2 -translate-x-1/2 items-center gap-3 text-gray-600">
+
+          {/* Center section with social icons */}
+          <div className="hidden lg:flex items-center gap-3 text-gray-600 mx-8">
             <a href="#" aria-label="Facebook" className="opacity-80 hover:opacity-100 hover:text-red-500 transition-colors">
               <FacebookSvg />
             </a>
@@ -209,7 +220,6 @@ export default function Header({ canShowProfileIcon: _canShowProfileIcon = false
               <InstagramSvg />
             </a>
           </div>
-
 
           {/* Desktop Actions */}
           <div className="hidden lg:flex items-center gap-4">
@@ -278,6 +288,19 @@ export default function Header({ canShowProfileIcon: _canShowProfileIcon = false
                 >
                   <Info className="h-4 w-4" />
                   About
+                </Link>
+
+                <Link
+                  href={"/contact" as any}
+                  aria-current={isActive("/contact") ? "page" : undefined}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={cn(
+                    "flex items-center gap-3 rounded-md px-4 py-3 text-base font-medium hover:bg-gray-100",
+                    isActive("/contact") && " text-red-600"
+                  )}
+                >
+                  <Mail className="h-4 w-4" />
+                  Contact
                 </Link>
 
                 <div className="border-t pt-4">

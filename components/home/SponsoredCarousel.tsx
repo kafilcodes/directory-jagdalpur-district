@@ -78,7 +78,7 @@ export default function SponsoredCarousel({ onSelectListing }: SponsoredCarousel
               {items.map((listing) => (
                 <CarouselItem key={listing.id} className="pl-4 basis-full sm:basis-1/2 lg:basis-1/3">
                   <Card
-                    className="group cursor-pointer hover:shadow-xl transition-all duration-300 overflow-hidden h-full"
+                    className="group cursor-pointer border-0 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden h-full"
                     onClick={() => onSelectListing?.(listing)}
                   >
                     {/* Image Section */}
@@ -137,11 +137,18 @@ export default function SponsoredCarousel({ onSelectListing }: SponsoredCarousel
 
                     {/* Content Section */}
                     <CardContent className="p-3 space-y-2">
-                      {/* Title only - no ratings */}
+                      {/* Title and Rating */}
                       <div>
                         <h3 className="font-semibold text-lg group-hover:text-red-500 transition-colors line-clamp-1">
                           {listing.name}
                         </h3>
+                        {/* Rating - only show if available */}
+                        {listing.rating && typeof listing.rating === 'number' && listing.rating > 0 && (
+                          <div className="flex items-center gap-1 mt-1">
+                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                            <span className="text-sm font-medium text-gray-900">{listing.rating.toFixed(1)}</span>
+                          </div>
+                        )}
                       </div>
 
                       {/* Location */}
