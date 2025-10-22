@@ -282,6 +282,7 @@ export async function hybridSearch(
         limit?: number
         sort?: 'relevance' | 'popular' | 'recent'
         categoryFilter?: string[]
+        planFilter?: string // "sponsored" | "featured" | "premium" (both)
     }
 ): Promise<SearchResult[]> {
     if (!searchQuery || searchQuery.trim().length === 0) {
@@ -291,6 +292,7 @@ export async function hybridSearch(
     const limit = options?.limit || 60
     const sort = options?.sort || 'relevance'
     const categoryFilter = options?.categoryFilter || []
+    const planFilter = options?.planFilter || ""
 
     try {
         const db = getAdminDb() as Firestore
@@ -328,6 +330,17 @@ export async function hybridSearch(
                 const slug = r.categorySlug?.toLowerCase() || ''
                 return filterSet.has(cat) || filterSet.has(slug)
             })
+        }
+
+        // Apply plan filter
+        if (planFilter) {
+            if (planFilter === "sponsored") {
+                results = results.filter(r => r.planType === "sponsored")
+            } else if (planFilter === "featured") {
+                results = results.filter(r => r.planType === "featured")
+            } else if (planFilter === "premium" || planFilter === "featured,sponsored" || planFilter === "sponsored,featured") {
+                results = results.filter(r => r.planType === "sponsored" || r.planType === "featured")
+            }
         }
 
         // Sort results

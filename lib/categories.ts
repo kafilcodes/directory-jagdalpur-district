@@ -1,30 +1,27 @@
+/**
+ * @deprecated Use /config/categories.ts instead
+ * This file is kept for backwards compatibility
+ */
+
 export interface CategoryItem {
   label: string
   slug: string
 }
 
-// Centralized category vocab to keep URL slugs consistent across Header/Search
-export const CATEGORIES: CategoryItem[] = [
-  { label: "Hotels", slug: "hotels" },
-  { label: "Restaurants", slug: "restaurants" },
-  { label: "Stores", slug: "stores" },
-  { label: "Tourism", slug: "tourism" },
-  { label: "Healthcare", slug: "healthcare" },
-  { label: "Education", slug: "education" },
-  { label: "Shopping", slug: "shopping" },
-  { label: "Services", slug: "services" },
-]
+// Re-export from unified categories for backwards compatibility
+import {
+  CATEGORIES as UNIFIED_CATS,
+  normalizeCategoryToSlug as normalize,
+  labelForSlug as getLabel
+} from "@/config/categories"
 
-const labelToSlug = new Map(CATEGORIES.map(c => [c.label.toLowerCase(), c.slug]))
-const slugToLabel = new Map(CATEGORIES.map(c => [c.slug, c.label]))
+export const CATEGORIES: CategoryItem[] = UNIFIED_CATS
 
 export function normalizeCategoryToSlug(input: string): string | null {
-  if (!input) return null
-  const lower = input.toLowerCase()
-  return labelToSlug.get(lower) || (slugToLabel.has(lower) ? lower : null)
+  return normalize(input)
 }
 
 export function labelForSlug(slug: string): string | null {
-  return slugToLabel.get(slug) || null
+  return getLabel(slug)
 }
 

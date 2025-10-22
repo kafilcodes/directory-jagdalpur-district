@@ -4,26 +4,23 @@ import { useMemo } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Filter, TrendingUp, Star, Clock, Building2, UtensilsCrossed, Stethoscope, GraduationCap, ShoppingBag, Wrench, Home, Car, X } from "lucide-react"
+import { Combobox } from "@/components/ui/combobox"
+import { Filter, TrendingUp, Star, Clock, Crown, Gem, Sparkles, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-import { CATEGORIES, normalizeCategoryToSlug, labelForSlug } from "@/lib/categories"
-
-const CATEGORY_CHIPS = [
-  { label: "All", icon: null },
-  { label: "Hotels", icon: Building2 },
-  { label: "Restaurants", icon: UtensilsCrossed },
-  { label: "Stores", icon: ShoppingBag },
-  { label: "Tourism", icon: Car },
-  { label: "Healthcare", icon: Stethoscope },
-  { label: "Education", icon: GraduationCap },
-  { label: "Services", icon: Wrench },
-]
+import { UNIFIED_CATEGORIES } from "@/config/categories"
 
 const SORT_OPTIONS = [
   { label: "Relevance", value: "relevance", icon: TrendingUp },
   { label: "Most Popular", value: "popular", icon: Star },
   { label: "Recent", value: "recent", icon: Clock },
+]
+
+// Plan filter options (uses filter param, not sort)
+const PLAN_FILTER_OPTIONS = [
+  { label: "Featured & Sponsored", value: "premium", icon: Sparkles },
+  { label: "Sponsored Only", value: "sponsored", icon: Crown },
+  { label: "Featured Only", value: "featured", icon: Gem },
 ]
 
 export default function SearchControls() {
@@ -32,10 +29,11 @@ export default function SearchControls() {
   const params = useSearchParams()
 
   const selectedSort = params.get("sort") || "relevance"
-  const currentCatsParam = params.get("cats") || params.get("category") || "All"
+  const selectedPlanFilter = params.get("filter") || ""
+  const currentCatsParam = params.get("cats") || params.get("category") || ""
   const selectedCategories = useMemo(() => {
-    const slugs = currentCatsParam === "All" ? [] : currentCatsParam.split(",").filter(Boolean)
-    return new Set(slugs)
+    const slugs = currentCatsParam.split(",").filter(Boolean)
+    return slugs
   }, [currentCatsParam])
 
   const apply = (next: URLSearchParams) => {
@@ -43,22 +41,17 @@ export default function SearchControls() {
     router.push(url as any, { scroll: false } as any)
   }
 
-  const toggleCategory = (label: string) => {
+  const handleCategoryChange = (value: string | string[]) => {
     const next = new URLSearchParams(params.toString())
-    if (label === "All") {
+    const categories = Array.isArray(value) ? value : value ? [value] : []
+
+    if (categories.length === 0) {
       next.delete("cats")
       next.delete("category")
-      apply(next)
-      return
+    } else {
+      next.set("cats", categories.join(","))
+      next.delete("category")
     }
-    const slug = normalizeCategoryToSlug(label)
-    if (!slug) return
-    const set = new Set(selectedCategories)
-    if (set.has(slug)) set.delete(slug)
-    else set.add(slug)
-    if (set.size === 0) next.delete("cats")
-    else next.set("cats", Array.from(set).join(","))
-    next.delete("category")
     apply(next)
   }
 
@@ -68,40 +61,53 @@ export default function SearchControls() {
     apply(next)
   }
 
+  const changePlanFilter = (value: string) => {
+    const next = new URLSearchParams(params.toString())
+    if (value) {
+      next.set("filter", value)
+    } else {
+      next.delete("filter")
+    }
+    apply(next)
+  }
+
+  // Prepare combobox options with category icons
+  const categoryOptions = UNIFIED_CATEGORIES.map((cat) => ({
+    value: cat.slug,
+    label: (
+      <div className="flex items-center gap-2">
+        <span className="text-base">{cat.icon}</span>
+        <span>{cat.label}</span>
+      </div>
+    ),
+    keywords: [cat.label, cat.slug, cat.name],
+  }))
+
   return (
-    <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
-      {/* Category filters */}
-      <div className="flex gap-2 flex-nowrap">
-        {CATEGORY_CHIPS.map((category) => {
-          const isSelected = selectedCategories.size === 0 && category.label === "All" || selectedCategories.has(normalizeCategoryToSlug(category.label) || "__nomatch__")
-          const Icon = category.icon
-          return (
-            <Button
-              key={category.label}
-              variant={isSelected ? "default" : "outline"}
-              size="sm"
-              onClick={() => toggleCategory(category.label)}
-              className={cn(
-                "transition-all gap-1.5 h-8 text-xs whitespace-nowrap",
-                isSelected ? "bg-red-500 hover:bg-red-600" : undefined
-              )}
-            >
-              {Icon && <Icon className="h-3 w-3" />}
-              {category.label}
-            </Button>
-          )
-        })}
+    <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide hover:text-red-600">
+      {/* Category Combobox Filter */}
+      <div className="min-w-[200px] max-w-[280px]">
+        <Combobox
+          options={categoryOptions}
+          value={selectedCategories}
+          onChange={handleCategoryChange}
+          placeholder="All Categories"
+          searchPlaceholder="Search categories..."
+          emptyText="No category found."
+          multiple={true}
+          className="h-8 text-xs"
+        />
       </div>
 
-      {/* Sort dropdown - reduced size */}
+      {/* Sort dropdown - white background like filter */}
       <Popover>
         <PopoverTrigger asChild>
-          <Button variant="outline" size="sm" className="gap-1.5 h-8 text-xs whitespace-nowrap">
+          <Button variant="outline" size="sm" className="gap-1.5 h-8 text-xs whitespace-nowrap hover:text-red-600">
             <Filter className="h-3 w-3" />
             {SORT_OPTIONS.find(o => o.value === selectedSort)?.label ?? "Relevance"}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-40 p-1.5">
+        <PopoverContent className="w-40 p-1.5 bg-white">
           {SORT_OPTIONS.map((option) => {
             const Icon = option.icon
             return (
@@ -110,7 +116,66 @@ export default function SearchControls() {
                 onClick={() => changeSort(option.value)}
                 className={cn(
                   "w-full text-left px-2.5 py-1.5 text-xs rounded-md hover:bg-gray-100 flex items-center gap-1.5",
-                  selectedSort === option.value && "bg-gray-100 font-medium"
+                  selectedSort === option.value && "bg-gray-100 text-red-600 font-medium"
+                )}
+              >
+                <Icon className="h-3 w-3 text-gray-500" />
+                {option.label}
+              </button>
+            )
+          })}
+        </PopoverContent>
+      </Popover>
+
+      {/* Plan Filter dropdown - Featured/Sponsored */}
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              "gap-1.5 h-8 text-xs whitespace-nowrap hover:text-red-600",
+              selectedPlanFilter && "bg-red-50 text-red-600 border-red-200"
+            )}
+          >
+            {selectedPlanFilter ? (
+              <>
+                {PLAN_FILTER_OPTIONS.find(o => o.value === selectedPlanFilter)?.icon &&
+                  (() => {
+                    const Icon = PLAN_FILTER_OPTIONS.find(o => o.value === selectedPlanFilter)?.icon!
+                    return <Icon className="h-3 w-3" />
+                  })()
+                }
+                {PLAN_FILTER_OPTIONS.find(o => o.value === selectedPlanFilter)?.label ?? "Plans"}
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-3 w-3" />
+                Plans
+              </>
+            )}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-48 p-1.5 bg-white">
+          <button
+            onClick={() => changePlanFilter("")}
+            className={cn(
+              "w-full text-left px-2.5 py-1.5 text-xs rounded-md hover:bg-gray-100 flex items-center gap-1.5",
+              !selectedPlanFilter && "bg-gray-100 text-red-600 font-medium"
+            )}
+          >
+            <Filter className="h-3 w-3 text-gray-500" />
+            All Plans
+          </button>
+          {PLAN_FILTER_OPTIONS.map((option) => {
+            const Icon = option.icon
+            return (
+              <button
+                key={option.value}
+                onClick={() => changePlanFilter(option.value)}
+                className={cn(
+                  "w-full text-left px-2.5 py-1.5 text-xs rounded-md hover:bg-gray-100 flex items-center gap-1.5",
+                  selectedPlanFilter === option.value && "bg-gray-100 text-red-600 font-medium"
                 )}
               >
                 <Icon className="h-3 w-3 text-gray-500" />
@@ -125,7 +190,7 @@ export default function SearchControls() {
       <Button
         onClick={() => {
           const next = new URLSearchParams(params.toString())
-          next.delete("q"); next.delete("cats"); next.delete("category"); next.delete("sort")
+          next.delete("q"); next.delete("cats"); next.delete("category"); next.delete("sort"); next.delete("filter")
           apply(next)
         }}
         variant="ghost"

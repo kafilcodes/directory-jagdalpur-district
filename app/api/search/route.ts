@@ -8,15 +8,202 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const q = String(searchParams.get("q") || "")
   const catsParam = searchParams.get("cats")
-  const limit = Number(searchParams.get("limit") || 10)
+  const limit = Number(searchParams.get("limit") || 12) // Default to 12 for better UX
   const sort = String(searchParams.get("sort") || "relevance") as 'relevance' | 'popular' | 'recent'
   const filter = String(searchParams.get("filter") || "")
+  const offset = Number(searchParams.get("offset") || 0)
   const cats = catsParam ? catsParam.split(",").filter(Boolean) : []
 
   try {
-    // Return empty results for empty queries instead of error
+    // Browse mode: no query or query too short
+    // Default behavior shows all listings with pagination
     if (!q || q.trim().length < 2) {
-      return NextResponse.json({ ok: true, data: [] })
+      // Check cache for browse mode too
+      const browseCacheKey = `browse:${cats.join(",")}:${sort}:${offset}:${limit}`
+      const cached = getCachedSearch(browseCacheKey, cats, sort, filter)
+      if (cached && offset === 0) { // Only use cache for initial page
+        return NextResponse.json({ ok: true, data: cached, cached: true, browsing: true })
+      }
+
+      const db = (await import("@/lib/firebase/admin")).getAdminDb()
+
+      // Build query for browse mode
+      let query = db.collection("listings")
+        .where("approved", "==", true)
+        .where("status", "==", "active")
+
+      // Apply plan filter if specified (sponsored, featured, or both)
+      if (filter) {
+        if (filter === "sponsored") {
+          query = query.where("plan", "==", "sponsored")
+        } else if (filter === "featured") {
+          query = query.where("plan", "==", "featured")
+        } else if (filter === "premium" || filter === "featured,sponsored" || filter === "sponsored,featured") {
+          // Both featured and sponsored
+          query = query.where("plan", "in", ["featured", "sponsored"])
+        }
+      }
+
+      // Apply category filter if specified
+      // Note: Firestore 'in' operator supports up to 10 values
+      if (cats.length > 0) {
+        // Create variations to match both singular/plural and different formats
+        const categoryVariations = cats.flatMap(cat => {
+          const variations = [cat]
+          // Add singular version (remove 's' at end)
+          if (cat.endsWith('s') && cat !== 'electronics') {
+            variations.push(cat.slice(0, -1))
+          }
+          // Add plural version (add 's' at end)
+          if (!cat.endsWith('s')) {
+            variations.push(cat + 's')
+          }
+          // Handle special cases
+          if (cat === 'homeservices') variations.push('home', 'services')
+          if (cat === 'home') variations.push('homeservices')
+          if (cat === 'furniture') variations.push('home_goods_store')
+          if (cat === 'home_goods_store') variations.push('furniture')
+          if (cat === 'sports') variations.push('gyms', 'gym')
+          if (cat === 'gyms' || cat === 'gym') variations.push('sports')
+          if (cat === 'healthcare') variations.push('pharmacy', 'health')
+          if (cat === 'pharmacy') variations.push('healthcare')
+
+          return [...new Set(variations)] // Remove duplicates
+        })
+
+        // Firestore 'in' operator has limit of 10 values
+        const uniqueVariations = [...new Set(categoryVariations)].slice(0, 10)
+        console.log(`[API - Search] Category filter: ${cats.join(',')} -> ${uniqueVariations.join(',')}`)
+
+        query = query.where("categorySlug", "in", uniqueVariations)
+      }
+
+      // Apply sorting
+      if (sort === "popular") {
+        query = query.orderBy("views", "desc")
+      } else if (sort === "recent") {
+        query = query.orderBy("createdAt", "desc")
+      } else {
+        // Default: recent for browse mode
+        query = query.orderBy("createdAt", "desc")
+      }
+
+      // Cap browse mode at 27 total listings max (or unlimited for filtered views)
+      const maxBrowseLimit = filter ? 999 : 27 // No limit for plan-filtered views
+      const remainingAllowed = maxBrowseLimit - offset
+      const actualLimit = Math.min(limit, remainingAllowed)
+
+      // First, get total count of available listings for this query
+      let countQuery = db.collection("listings")
+        .where("approved", "==", true)
+        .where("status", "==", "active")
+
+      // Apply same filters to count query
+      if (filter) {
+        if (filter === "sponsored") {
+          countQuery = countQuery.where("plan", "==", "sponsored")
+        } else if (filter === "featured") {
+          countQuery = countQuery.where("plan", "==", "featured")
+        } else if (filter === "premium" || filter === "featured,sponsored" || filter === "sponsored,featured") {
+          countQuery = countQuery.where("plan", "in", ["featured", "sponsored"])
+        }
+      }
+      if (cats.length > 0) {
+        const categoryVariations = cats.flatMap(cat => {
+          const variations = [cat]
+          if (cat.endsWith('s') && cat !== 'electronics') {
+            variations.push(cat.slice(0, -1))
+          }
+          if (!cat.endsWith('s')) {
+            variations.push(cat + 's')
+          }
+          if (cat === 'homeservices') variations.push('home', 'services')
+          if (cat === 'home') variations.push('homeservices')
+          if (cat === 'furniture') variations.push('home_goods_store')
+          if (cat === 'home_goods_store') variations.push('furniture')
+          if (cat === 'sports') variations.push('gyms', 'gym')
+          if (cat === 'gyms' || cat === 'gym') variations.push('sports')
+          if (cat === 'healthcare') variations.push('pharmacy', 'health')
+          if (cat === 'pharmacy') variations.push('healthcare')
+          return [...new Set(variations)]
+        })
+        const uniqueVariations = [...new Set(categoryVariations)].slice(0, 10)
+        countQuery = countQuery.where("categorySlug", "in", uniqueVariations)
+      }
+
+      // Get total count (expensive but necessary for accurate "Show More" logic)
+      const countSnap = await countQuery.count().get()
+      const totalAvailable = countSnap.data().count
+
+      // Apply pagination
+      if (actualLimit > 0) {
+        query = query.offset(offset).limit(actualLimit)
+      } else {
+        // Already reached max, return empty
+        return NextResponse.json({
+          ok: true,
+          data: [],
+          browsing: true,
+          offset,
+          limit: 0,
+          hasMore: false,
+          maxReached: true
+        })
+      }
+
+      const snap = await query.get()
+
+      const data = snap.docs.map(doc => {
+        const listing = doc.data()
+        return {
+          id: doc.id,
+          name: listing.name || listing.businessName || '',
+          cat: listing.category || '',
+          category: listing.category || '',
+          categorySlug: listing.categorySlug || '',
+          description: listing.description || '',
+          address: listing.address || '',
+          city: listing.city || '',
+          phone: listing.phone || '',
+          email: listing.email || '',
+          website: listing.website || '',
+          location: listing.location || null,
+          plan: listing.plan || 'free',
+          planType: listing.plan || 'free',
+          rating: listing.rating || 0,
+          reviewCount: listing.reviewCount || listing.totalUserRatings || 0,
+          imp: listing.views || 0,
+          clk: listing.clicks || 0,
+          createdAt: listing.createdAt || 0,
+          updatedAt: listing.updatedAt || 0,
+          photos: listing.photos || [],
+          images: listing.images || [],
+          thumbnail: listing.thumbnail || '',
+          googlePhotos: listing.googlePhotos || []
+        }
+      })
+
+      // Cache browse results for initial page only
+      if (offset === 0) {
+        const browseCacheKey = `browse:${cats.join(",")}:${sort}:${offset}:${limit}`
+        setCachedSearch(browseCacheKey, data, cats, sort, filter)
+      }
+
+      // Check if there might be more results
+      const hasMore = (offset + data.length) < totalAvailable && (offset + data.length) < maxBrowseLimit
+
+      console.log(`[API - Browse] Total available: ${totalAvailable}, Fetched: ${data.length}, Offset: ${offset}, HasMore: ${hasMore}`)
+
+      return NextResponse.json({
+        ok: true,
+        data,
+        browsing: true,
+        offset,
+        limit: actualLimit,
+        hasMore,
+        maxReached: (offset + data.length) >= maxBrowseLimit || (offset + data.length) >= totalAvailable,
+        totalAvailable // Send to client for accurate tracking
+      })
     }
 
     // Check cache first (5-minute TTL configured in listingsCache.ts)
@@ -29,7 +216,8 @@ export async function GET(req: NextRequest) {
     const data = await hybridSearch(q, {
       limit,
       sort,
-      categoryFilter: cats.length > 0 ? cats : undefined
+      categoryFilter: cats.length > 0 ? cats : undefined,
+      planFilter: filter || undefined
     })
 
     // Store in cache for future requests

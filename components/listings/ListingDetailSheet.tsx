@@ -484,69 +484,99 @@ export default function ListingDetailSheet() {
                   )}
 
                   {/* Reviews Tab - Always show with empty state */}
-                  <TabsContent value="reviews" className="mt-6 space-y-4">
+                  <TabsContent value="reviews" className="mt-6 space-y-6">
                     {reviews.length > 0 ? (
                       <>
-                        {/* Review Summary */}
-                        <Card>
-                          <CardContent className="p-6">
-                            <div className="flex items-center justify-between mb-4">
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-3xl font-bold">{listing.rating || 4.5}</span>
-                                  <div className="flex">
-                                    {[1, 2, 3, 4, 5].map((star) => (
-                                      <Star
-                                        key={star}
-                                        className={cn(
-                                          "h-5 w-5",
-                                          star <= Math.floor(listing.rating || 4.5)
-                                            ? "fill-yellow-400 text-yellow-400"
-                                            : "text-gray-300"
-                                        )}
-                                      />
-                                    ))}
+                        {/* Review Summary - Enhanced Design */}
+                        <Card className="border-none shadow-lg bg-gradient-to-br from-yellow-50 to-orange-50">
+                          <CardContent className="p-8">
+                            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+                              {/* Rating Display */}
+                              <div className="text-center sm:text-left">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <span className="text-5xl font-bold text-gray-900">{listing.rating || 4.5}</span>
+                                  <div className="flex flex-col">
+                                    <div className="flex gap-1">
+                                      {[1, 2, 3, 4, 5].map((star) => (
+                                        <Star
+                                          key={star}
+                                          className={cn(
+                                            "h-5 w-5",
+                                            star <= Math.floor(listing.rating || 4.5)
+                                              ? "fill-yellow-400 text-yellow-400"
+                                              : "fill-gray-300 text-gray-300"
+                                          )}
+                                        />
+                                      ))}
+                                    </div>
+                                    <p className="text-sm text-gray-600 mt-1 font-medium">
+                                      {listing.userRatingCount || reviews.length} {(listing.userRatingCount || reviews.length) === 1 ? 'Review' : 'Reviews'}
+                                    </p>
                                   </div>
                                 </div>
-                                <p className="text-sm text-gray-500 mt-1">Based on {listing.userRatingCount || reviews.length} reviews</p>
+                                <p className="text-xs text-gray-500 mt-2">
+                                  Overall rating from verified customers
+                                </p>
                               </div>
                             </div>
                           </CardContent>
                         </Card>
 
-                        {/* Reviews List */}
+                        {/* Reviews List - Enhanced Cards */}
                         <div className="space-y-4">
+                          <h3 className="text-lg font-semibold text-gray-900">Customer Reviews</h3>
                           {reviews.map((review: any, idx: number) => (
-                            <Card key={idx}>
-                              <CardContent className="p-4">
-                                <div className="flex items-start gap-3">
-                                  <Avatar>
-                                    <AvatarImage src={review.authorPhoto || review.authorAttribution?.photoUri} />
-                                    <AvatarFallback>{(review.authorName || review.authorAttribution?.displayName || "A")[0]}</AvatarFallback>
+                            <Card key={idx} className="border-gray-200 hover:shadow-md transition-shadow duration-200">
+                              <CardContent className="p-6">
+                                <div className="flex items-start gap-4">
+                                  {/* Avatar */}
+                                  <Avatar className="h-12 w-12 border-2 border-gray-100">
+                                    <AvatarImage
+                                      src={review.authorPhoto || review.authorAttribution?.photoUri}
+                                      alt={review.authorName || review.authorAttribution?.displayName || "Reviewer"}
+                                    />
+                                    <AvatarFallback className="bg-gradient-to-br from-red-400 to-orange-400 text-white font-semibold">
+                                      {(review.authorName || review.authorAttribution?.displayName || "A")[0].toUpperCase()}
+                                    </AvatarFallback>
                                   </Avatar>
-                                  <div className="flex-1">
-                                    <div className="flex items-center justify-between mb-1">
+
+                                  {/* Review Content */}
+                                  <div className="flex-1 space-y-3">
+                                    {/* Header */}
+                                    <div className="flex items-start justify-between gap-2">
                                       <div>
-                                        <p className="font-medium">{review.authorName || review.authorAttribution?.displayName || "Anonymous"}</p>
-                                        <div className="flex items-center gap-2 mt-1">
-                                          <div className="flex">
+                                        <p className="font-semibold text-gray-900 text-base">
+                                          {review.authorName || review.authorAttribution?.displayName || "Anonymous"}
+                                        </p>
+                                        <div className="flex items-center gap-3 mt-1.5">
+                                          {/* Stars */}
+                                          <div className="flex gap-0.5">
                                             {[1, 2, 3, 4, 5].map((star) => (
                                               <Star
                                                 key={star}
                                                 className={cn(
-                                                  "h-3 w-3",
+                                                  "h-4 w-4",
                                                   star <= (review.rating || 0)
                                                     ? "fill-yellow-400 text-yellow-400"
-                                                    : "text-gray-300"
+                                                    : "fill-gray-300 text-gray-300"
                                                 )}
                                               />
                                             ))}
                                           </div>
-                                          <span className="text-xs text-gray-500">{review.relativeTime || review.relativePublishTimeDescription}</span>
+                                          {/* Time */}
+                                          <span className="text-xs text-gray-500">
+                                            {review.relativeTime || review.relativePublishTimeDescription || "Recently"}
+                                          </span>
                                         </div>
                                       </div>
                                     </div>
-                                    <p className="text-sm text-gray-600 mt-2">{review.text || review.originalText?.text || ""}</p>
+
+                                    {/* Review Text */}
+                                    {(review.text || review.originalText?.text) && (
+                                      <p className="text-sm text-gray-700 leading-relaxed">
+                                        {review.text || review.originalText?.text}
+                                      </p>
+                                    )}
                                   </div>
                                 </div>
                               </CardContent>
@@ -555,10 +585,12 @@ export default function ListingDetailSheet() {
                         </div>
                       </>
                     ) : (
-                      <div className="p-12 text-center">
-                        <Star className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                        <p className="text-gray-500 text-lg font-medium">No reviews available</p>
-                        <p className="text-gray-400 text-sm mt-2">This listing has no reviews yet</p>
+                      <div className="p-16 text-center bg-gray-50 rounded-lg">
+                        <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-200 rounded-full mb-4">
+                          <Star className="h-8 w-8 text-gray-400" />
+                        </div>
+                        <p className="text-gray-700 text-lg font-semibold mb-2">No reviews yet</p>
+                        <p className="text-gray-500 text-sm">Be the first to review this business</p>
                       </div>
                     )}
                   </TabsContent>

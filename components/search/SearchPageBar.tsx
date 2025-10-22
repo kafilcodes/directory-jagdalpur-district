@@ -22,12 +22,15 @@ export default function SearchPageBar() {
     const debouncedQ = useDebounce(q, 500)
 
     // Auto-search when debounced value changes
+    // When cleared, reverts to browse mode (no query = show all listings)
     useEffect(() => {
         const next = new URLSearchParams(params.toString())
         if (debouncedQ.trim()) {
             next.set("q", debouncedQ.trim())
         } else {
             next.delete("q")
+            // When search is cleared, revert to browse mode
+            // This will trigger the page to fetch initial 9 listings
         }
         router.push(`/search?${next.toString()}`, { scroll: false } as any)
     }, [debouncedQ, router, params])

@@ -6,10 +6,10 @@ function Skeleton({
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("animate-pulse rounded-md bg-muted relative overflow-hidden", className)}
+      className={cn("rounded-md bg-muted relative overflow-hidden", className)}
       {...props}
     >
-      {/* Shimmer overlay effect */}
+      {/* Shimmer overlay effect - no pulse or scale animations */}
       <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/40 to-transparent" />
     </div>
   )

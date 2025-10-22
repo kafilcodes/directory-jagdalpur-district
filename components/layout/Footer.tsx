@@ -128,14 +128,14 @@ export default function Footer() {
                 Advertise With Us
               </Link>
             </nav>
-          </div>          {/* Browse by Category */}
+          </div>          {/* Browse by Category - Show only 8, then "View More" */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Browse by Category</h3>
             <div className="grid grid-cols-2 gap-3">
-              {CATEGORIES.map((category) => (
+              {CATEGORIES.slice(0, 8).map((category) => (
                 <Link
                   key={category.slug}
-                  href={`/search?category=${category.slug}`}
+                  href={`/search?cats=${category.slug}`}
                   className="group flex items-center gap-2 text-sm text-gray-600 hover:text-red-500 transition-all duration-200"
                   aria-label={`Browse ${category.label}`}
                 >
@@ -146,6 +146,14 @@ export default function Footer() {
                 </Link>
               ))}
             </div>
+            {/* View More Link */}
+            <Link
+              href="/browse"
+              className="inline-flex items-center gap-1 text-xs text-red-500 hover:text-red-600 font-medium transition-colors mt-2"
+            >
+              <Compass className="h-3 w-3" />
+              View all categories
+            </Link>
           </div>
         </div>
 

@@ -168,7 +168,7 @@ export default function Header({ canShowProfileIcon: _canShowProfileIcon = false
                   <Link href={"/browse" as any} aria-current={isActive("/browse") ? "page" : undefined} className={cn(
                     navigationMenuTriggerStyle(),
                     isActive("/browse") && " text-red-600",
-                    "hover:text-red-500 transition-colors"
+                    "hover:text-red-600 transition-colors"
                   )}>
                     <Compass className="h-4 w-4 mr-2" />
                     Browse
@@ -178,7 +178,7 @@ export default function Header({ canShowProfileIcon: _canShowProfileIcon = false
                   <Link href={"/search" as any} aria-current={isActive("/search") ? "page" : undefined} className={cn(
                     navigationMenuTriggerStyle(),
                     isActive("/search") && " text-red-600",
-                    "hover:text-red-500 transition-colors"
+                    "hover:text-red-600 transition-colors"
                   )}>
                     <Search className="h-4 w-4 mr-2" />
                     Search
@@ -188,7 +188,7 @@ export default function Header({ canShowProfileIcon: _canShowProfileIcon = false
                   <Link href={"/about" as any} aria-current={isActive("/about") ? "page" : undefined} className={cn(
                     navigationMenuTriggerStyle(),
                     isActive("/about") && " text-red-600",
-                    "hover:text-red-500 transition-colors"
+                    "hover:text-red-600 transition-colors"
                   )}>
                     <Info className="h-4 w-4 mr-2" />
                     About
@@ -198,7 +198,7 @@ export default function Header({ canShowProfileIcon: _canShowProfileIcon = false
                   <Link href={"/contact" as any} aria-current={isActive("/contact") ? "page" : undefined} className={cn(
                     navigationMenuTriggerStyle(),
                     isActive("/contact") && " text-red-600",
-                    "hover:text-red-500 transition-colors"
+                    "hover:text-red-600 transition-colors"
                   )}>
                     <Mail className="h-4 w-4 mr-2" />
                     Contact
@@ -224,14 +224,14 @@ export default function Header({ canShowProfileIcon: _canShowProfileIcon = false
           {/* Desktop Actions */}
           <div className="hidden lg:flex items-center gap-4">
             {!isSignedIn && (
-              <Button onClick={onAddListing} variant="outline" className="gap-2 border-red-500 text-red-600 hover:bg-red-500 hover:text-white transition-colors group">
-                <PlusCircle className="h-4 w-4 text-red-500 group-hover:text-white" />
+              <Button onClick={onAddListing} variant="outline" className="gap-2 border-red-500 text-red-600 hover:bg-red-600 hover:text-white transition-colors group">
+                <PlusCircle className="h-4 w-4 text-red-600 group-hover:text-white" />
                 <span className="hidden lg:inline">Add Listing</span>
               </Button>
             )}
             {isSignedIn && (
               <Link href="/user/dashboard">
-                <Button variant="outline" size="icon" className="relative border rounded-md" aria-label="Open profile">
+                <Button variant="outline" size="icon" className="relative border text-red-600 rounded-md" aria-label="Open profile">
                   <User className="h-5 w-5" />
                 </Button>
               </Link>

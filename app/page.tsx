@@ -106,7 +106,7 @@ export default function HomePage() {
             <div className="mt-6">
               <div className="flex items-center justify-center">
                 <span className="inline-flex items-center gap-1.5 text-sm text-gray-500 mr-2">
-                  <TrendingUp className="h-4 w-4 text-red-500 animate-pulse" aria-hidden="true" />
+                  <TrendingUp className="h-4 w-4 text-red-500 animate-bounce" aria-hidden="true" />
                   Trending:
                 </span>
               </div>
@@ -139,12 +139,12 @@ export default function HomePage() {
         <div className="absolute top-20 left-10 w-20 h-20 bg-red-200 rounded-full blur-3xl opacity-30 -z-10"></div>
         <div className="absolute bottom-20 right-10 w-32 h-32 bg-blue-200 rounded-full blur-3xl opacity-30 -z-10"></div>
 
-        <section className="py-8 sm:py-12 bg-tranparent">
+        <section className="py-8 sm:py-12 bg-tranparent mt-14">
           <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-4">
               {stats.map((stat, index) => (
                 <div key={index} className="text-center">
-                  <div className="inline-flex items-center justify-center w-8 h-8 sm:w-12 sm:h-12 bg-tranparent text-[#EF4444] hover:text-red-100 rounded-full mb-2 sm:mb-3 outline outline-1 outline-red-200 shadow-sm hover:scale-110 transition-transform duration-300 cursor-pointer">
+                  <div className="inline-flex items-center justify-center w-8 h-8 sm:w-12 sm:h-12 bg-tranparent text-[#EF4444] hover:text-red-600 rounded-full mb-2 sm:mb-3 outline outline-1 outline-red-600 shadow-sm hover:scale-110 transition-transform duration-300 cursor-pointer">
                     {stat.icon}
                   </div>
                   <div className="text-lg sm:text-2xl font-bold text-gray-900">{stat.value}</div>
@@ -167,15 +167,15 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Categories Grid */}
+      {/* Categories Grid - Smaller Container */}
       <section className="py-16">
-        <div className=" mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Browse by Category</h2>
-            <p className="text-gray-600 text-sm sm:text-base lg:text-lg">Find exactly what you're looking for</p>
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Browse by Category</h2>
+            <p className="text-gray-600 text-sm sm:text-base">Find exactly what you're looking for</p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             {categories.map((category) => (
               <Card
                 key={category.name}
@@ -185,12 +185,12 @@ export default function HomePage() {
                 className="group cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-red-500/40 border-0"
                 onClick={() => { const slug = normalizeCategoryToSlug(category.name) || category.name.toLowerCase().replace(/\s+/g, "-"); router.push(`/search?category=${encodeURIComponent(slug)}`) }}
               >
-                <CardContent className="p-6 text-center">
-                  <div className={`mx-auto inline-flex items-center justify-center w-20 h-20 ${category.color} rounded-2xl mb-4 group-hover:scale-110 transition-transform`}>
-                    <span className="text-3xl">{category.icon}</span>
+                <CardContent className="p-4 sm:p-5 text-center">
+                  <div className={`mx-auto inline-flex items-center justify-center w-20 h-20 sm:w-20 sm:h-20 ${category.color} rounded-2xl mb-3 group-hover:scale-110 transition-transform`}>
+                    <span className="text-2xl sm:text-3xl">{category.icon}</span>
                   </div>
-                  <h3 className="font-semibold text-gray-900 mb-1">{category.name}</h3>
-                  <p className="text-xs sm:text-sm lg:text-base text-gray-500">{category.count} listings</p>
+                  <h3 className="font-semibold text-sm sm:text-base text-gray-900 mb-1">{category.name}</h3>
+                  <p className="text-xs text-gray-500">{category.count} listings</p>
                 </CardContent>
               </Card>
             ))}
@@ -299,6 +299,12 @@ export default function HomePage() {
       <Suspense fallback={null}>
         <ListingDetailSheet />
       </Suspense>
+
+      {/* AI Chatbot - Homepage Only */}
+      {(() => {
+        const { FloatingChatButton } = require("@/components/chatbot/FloatingChatButton")
+        return require("react").createElement(FloatingChatButton)
+      })()}
     </div>
   )
 }

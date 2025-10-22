@@ -49,17 +49,23 @@ function init() {
   try {
     const db = admin.firestore()
 
-    // CRITICAL: Set the database ID for custom Firestore databases
-    const databaseId = process.env.FIREBASE_DATABASE_ID || 'dhamtaridirectory'
+    // CRITICAL: Always use the database ID from environment variable
+    // Your project uses custom database ID: 'dhamtaridirectory'
+    const databaseId = process.env.FIREBASE_DATABASE_ID
+
+    if (!databaseId) {
+      throw new Error('FIREBASE_DATABASE_ID environment variable is required')
+    }
 
     db.settings({
       ignoreUndefinedProperties: true,
-      // For custom database IDs (not "(default)"), specify it here
-      databaseId: databaseId,
+      databaseId: databaseId, // Use the env value directly
     })
+
+    console.log(`[Firebase Admin] Initialized with database ID: ${databaseId}`)
   } catch (err) {
     // Settings can only be called once, ignore if already set
-    console.log('Firestore settings already configured:', err)
+    console.log('[Firebase Admin] Firestore settings already configured or error:', err)
   }
 }
 

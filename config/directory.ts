@@ -24,46 +24,17 @@ export interface MonetizationPlan {
 
 /**
  * Available provider categories
- * Used across search, listing creation, and browse pages
+ * @deprecated Use /config/categories.ts (UNIFIED_CATEGORIES) instead
+ * Kept for backwards compatibility
  */
-export const CATEGORIES: Category[] = [
-    {
-        slug: "hotels",
-        label: "Hotels",
-        icon: "🏨",
-        description: "Accommodations and lodging services",
-    },
-    {
-        slug: "restaurants",
-        label: "Restaurants",
-        icon: "🍽️",
-        description: "Dining, cafes, and food services",
-    },
-    {
-        slug: "healthcare",
-        label: "Healthcare",
-        icon: "🏥",
-        description: "Medical facilities and health services",
-    },
-    {
-        slug: "education",
-        label: "Education",
-        icon: "📚",
-        description: "Schools, colleges, and training centers",
-    },
-    {
-        slug: "shopping",
-        label: "Shopping",
-        icon: "🛍️",
-        description: "Retail stores and shopping centers",
-    },
-    {
-        slug: "services",
-        label: "Services",
-        icon: "🔧",
-        description: "Professional and local services",
-    },
-]
+import { UNIFIED_CATEGORIES } from "./categories"
+
+export const CATEGORIES: Category[] = UNIFIED_CATEGORIES.map(cat => ({
+    slug: cat.slug,
+    label: cat.label,
+    icon: cat.icon,
+    description: cat.description,
+}))
 
 /**
  * Monetization plans for featured/sponsored listings
@@ -115,17 +86,31 @@ export const MONETIZATION_PLANS: MonetizationPlan[] = [
 
 /**
  * Helper functions for category operations
+ * @deprecated Use functions from /config/categories.ts instead
  */
+import {
+    getCategoryBySlug as getBySlug,
+    getCategoryLabel as getLabel,
+    getAllCategorySlugs as getAllSlugs
+} from "./categories"
+
 export function getCategoryBySlug(slug: string): Category | undefined {
-    return CATEGORIES.find((c) => c.slug === slug)
+    const unified = getBySlug(slug)
+    if (!unified) return undefined
+    return {
+        slug: unified.slug,
+        label: unified.label,
+        icon: unified.icon,
+        description: unified.description,
+    }
 }
 
 export function getCategoryLabel(slug: string): string {
-    return getCategoryBySlug(slug)?.label || slug
+    return getLabel(slug)
 }
 
 export function getAllCategorySlugs(): string[] {
-    return CATEGORIES.map((c) => c.slug)
+    return getAllSlugs()
 }
 
 /**
