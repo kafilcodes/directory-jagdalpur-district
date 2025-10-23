@@ -139,7 +139,7 @@ export default function SponsoredCarousel({ onSelectListing }: SponsoredCarousel
                     <CardContent className="p-5 space-y-3">
                       {/* Title and Rating */}
                       <div>
-                        <h3 className="font-bold text-xl group-hover:text-red-500 transition-colors line-clamp-1 mb-2">
+                        <h3 className="font-bold text-xl group-hover:text-red-600 transition-colors line-clamp-1 mb-2">
                           {listing.name}
                         </h3>
                         {/* Rating - only show if available */}
@@ -153,7 +153,7 @@ export default function SponsoredCarousel({ onSelectListing }: SponsoredCarousel
 
                       {/* Location */}
                       <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <MapPin className="h-4 w-4 flex-shrink-0 text-gray-500" />
+                        <MapPin className="h-4 w-4 flex-shrink-0 text-red-600" />
                         <span className="line-clamp-1">{listing.address}</span>
                       </div>
 
@@ -164,7 +164,7 @@ export default function SponsoredCarousel({ onSelectListing }: SponsoredCarousel
                           <a
                             href={`tel:${listing.phone}`}
                             onClick={(e) => e.stopPropagation()}
-                            className="h-11 w-11 rounded-full hover:bg-red-50 hover:text-red-500 flex items-center justify-center transition-all hover:scale-110"
+                            className="h-11 w-11 rounded-full  hover:text-red-600 flex items-center justify-center transition-all hover:scale-110"
                             aria-label={`Call ${listing.name}`}
                           >
                             <Phone className="h-5 w-5" />
@@ -176,7 +176,7 @@ export default function SponsoredCarousel({ onSelectListing }: SponsoredCarousel
                           <a
                             href={`mailto:${listing.email}`}
                             onClick={(e) => e.stopPropagation()}
-                            className="h-11 w-11 rounded-full hover:bg-red-50 hover:text-red-500 flex items-center justify-center transition-all hover:scale-110"
+                            className="h-11 w-11 rounded-full  hover:text-red-600 flex items-center justify-center transition-all hover:scale-110"
                             aria-label={`Email ${listing.name}`}
                           >
                             <Mail className="h-5 w-5" />
@@ -190,7 +190,7 @@ export default function SponsoredCarousel({ onSelectListing }: SponsoredCarousel
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
-                            className="h-11 w-11 rounded-full hover:bg-red-50 hover:text-red-500 flex items-center justify-center transition-all hover:scale-110"
+                            className="h-11 w-11 rounded-full  hover:text-red-600 flex items-center justify-center transition-all hover:scale-110"
                             aria-label={`Visit ${listing.name} website`}
                           >
                             <Globe className="h-5 w-5" />
@@ -205,7 +205,7 @@ export default function SponsoredCarousel({ onSelectListing }: SponsoredCarousel
                             e.stopPropagation()
                             onSelectListing?.(listing)
                           }}
-                          className="w-full h-11 rounded-lg bg-gray-100 hover:bg-red-500 hover:text-white text-gray-900 flex items-center justify-center gap-2 font-semibold transition-all hover:scale-[1.02] shadow-sm"
+                          className="w-full h-11 rounded-lg bg-gray-100 hover:bg-red-600 hover:text-white text-gray-900 flex items-center justify-center gap-2 font-semibold transition-all hover:scale-[1.02] shadow-sm"
                           aria-label={`View ${listing.name} details`}
                         >
                           <ExternalLink className="h-4 w-4" />

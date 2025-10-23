@@ -115,15 +115,12 @@ export default function Footer() {
                 <PlusCircle className="h-4 w-4" />
                 Add Listing
               </Link>
-              <Link href="/user/dashboard" className="text-sm text-gray-600 hover:text-red-500 transition-colors inline-flex items-center gap-2">
-                <Building2 className="h-4 w-4" />
-                Dashboard
-              </Link>
-              <Link href="/sponsored" className="text-sm text-gray-600 hover:text-red-500 transition-colors inline-flex items-center gap-2">
+            
+              <Link href="/search?filter=sponsored" className="text-sm text-gray-600 hover:text-red-500 transition-colors inline-flex items-center gap-2">
                 <Star className="h-4 w-4" />
                 Sponsored Listings
               </Link>
-              <Link href="/about" className="text-sm text-gray-600 hover:text-red-500 transition-colors inline-flex items-center gap-2">
+              <Link href="/contact" className="text-sm text-gray-600 hover:text-red-500 transition-colors inline-flex items-center gap-2">
                 <TrendingUp className="h-4 w-4" />
                 Advertise With Us
               </Link>

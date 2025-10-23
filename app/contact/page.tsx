@@ -2,7 +2,9 @@ import type { Metadata } from "next"
 import Image from "next/image"
 import { Mail, Phone, MapPin, MessageCircle } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
+import { WhatsAppButton } from '@/components/common/WhatsappChat';
 
+// ... rest of your component
 export const metadata: Metadata = {
     title: "Contact Us • Dial Dhamtari",
     description: "Get in touch with Dial Dhamtari. Contact our support team for any questions, feedback, or assistance.",
@@ -21,6 +23,10 @@ export const metadata: Metadata = {
         images: ["/logo.png"],
     },
 }
+
+const handleWhatsAppClick = () => {
+    window.open('https://wa.me/1234567890', '_blank', 'noopener,noreferrer');
+};
 
 export default function ContactPage() {
     return (
@@ -131,9 +137,13 @@ export default function ContactPage() {
                                 <p className="text-sm text-gray-600 mb-3">
                                     Get instant help from our support team.
                                 </p>
-                                <button className="text-base font-medium text-gray-600 hover:text-red-700 transition-colors">
-                                    Start Chat
-                                </button>
+                                {/* <button className="text-base font-medium text-gray-600 hover:text-red-700 transition-colors" onClick={handleWhatsAppClick}>
+                                    Chat
+                                </button> */}
+                                <WhatsAppButton
+                                    phoneNumber="1234567890"
+                                    message="Hello, I would like to inquire about Dial Dhamtari."
+                                />
                             </div>
                         </div>
                     </CardContent>
