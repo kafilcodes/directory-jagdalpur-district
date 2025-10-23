@@ -11,6 +11,8 @@ import { Star, MapPin, ChevronRight } from "lucide-react"
 
 import Image from "next/image"
 
+const CITY_NAME = process.env.NEXT_PUBLIC_CITY_NAME || "Your City";
+
 const sponsoredListings = [
   {
     id: 1,
@@ -18,7 +20,7 @@ const sponsoredListings = [
     category: "Hotels",
     rating: 4.8,
     reviews: 456,
-    address: "Central Avenue, Dhamtari",
+    address: `Central Avenue, ${CITY_NAME}`,
     image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600",
     price: "₹2,500",
     badge: "Premium",
@@ -30,7 +32,7 @@ const sponsoredListings = [
     category: "Gym & Fitness",
     rating: 4.7,
     reviews: 234,
-    address: "Sports Complex, Dhamtari",
+    address: `Sports Complex, ${CITY_NAME}`,
     image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600",
     price: "₹1,200/mo",
     badge: "Popular"
@@ -41,7 +43,7 @@ const sponsoredListings = [
     category: "Restaurants",
     rating: 4.6,
     reviews: 789,
-    address: "Food Court, Dhamtari",
+    address: `Food Court, ${CITY_NAME}`,
     image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600",
     price: "₹500 for 2",
     badge: "Top Rated",
@@ -53,7 +55,7 @@ const sponsoredListings = [
     category: "Services",
     rating: 4.9,
     reviews: 123,
-    address: "Business Park, Dhamtari",
+    address: `Business Park, ${CITY_NAME}`,
     image: "https://images.unsplash.com/photo-1556761175-4b46a572b786?w=600",
     badge: "Verified"
   }

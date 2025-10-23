@@ -16,6 +16,10 @@ import {
 import { BusinessPlaceholder } from "@/components/common/BusinessPlaceholder"
 import { validateDhamtariAddress, isBusinessType, cachePlaceData, getCachedPlaceData } from "@/lib/listing-utils"
 
+// Dynamic configuration
+const CITY_NAME = process.env.NEXT_PUBLIC_CITY_NAME || "Dhamtari";
+const CITY_PIN_CODE = process.env.NEXT_PUBLIC_CITY_PIN_CODE || "493773";
+
 export interface BusinessSuggestion {
     placeId: string
     name: string
@@ -311,11 +315,11 @@ export function BusinessSearch({ onSelect, placeholder = "Search for your busine
                         )}
 
                         {!loading && query.trim().length >= 2 && suggestions.length === 0 && (
-                            <CommandEmpty>No businesses found in Dhamtari</CommandEmpty>
+                            <CommandEmpty>No businesses found in {CITY_NAME}</CommandEmpty>
                         )}
 
                         {!loading && suggestions.length > 0 && (
-                            <CommandGroup heading="Businesses in Dhamtari">
+                            <CommandGroup heading={`Businesses in ${CITY_NAME}`}>
                                 {suggestions.map((business) => (
                                     <CommandItem
                                         key={business.placeId}
@@ -412,7 +416,7 @@ export function BusinessSearch({ onSelect, placeholder = "Search for your busine
                                             {!validationError ? (
                                                 <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                                     <span className="text-green-600">✓</span>
-                                                    Dhamtari Location
+                                                    {CITY_NAME} Location
                                                 </span>
                                             ) : (
                                                 <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
@@ -662,7 +666,7 @@ export function BusinessSearch({ onSelect, placeholder = "Search for your busine
                             <div className="mb-3 text-sm text-gray-600 bg-amber-50 border border-amber-200 rounded-lg p-3">
                                 <strong className="text-amber-900">Cannot proceed:</strong> {validationError}
                                 <div className="mt-1 text-xs text-amber-700">
-                                    Please select a commercial business located in Dhamtari district (PIN: 493773).
+                                    Please select a commercial business located in {CITY_NAME} district (PIN: {CITY_PIN_CODE}).
                                 </div>
                             </div>
                         )}

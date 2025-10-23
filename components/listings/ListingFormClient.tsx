@@ -87,7 +87,7 @@ export default function ListingFormClient({ action, initialValues }: { action: (
           key,
           amount,
           currency: "INR",
-          name: "Dial Dhamtari",
+          name: process.env.NEXT_PUBLIC_APP_NAME || "Dial Dhamtari",
           description: "Featured Listing",
           order_id: orderId,
           prefill: {

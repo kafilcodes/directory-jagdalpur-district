@@ -4,22 +4,28 @@ import { Mail, Phone, MapPin, MessageCircle } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { WhatsAppButton } from '@/components/common/WhatsappChat';
 
+const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || "Dial Dhamtari";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://dhamtari.directory";
+const CONTACT_EMAIL = process.env.NEXT_PUBLIC_CONTACT_EMAIL || "odhamtari@gmail.com";
+const CONTACT_PHONE = process.env.NEXT_PUBLIC_CONTACT_PHONE || "+91-9340897799";
+const OFFICE_ADDRESS = process.env.NEXT_PUBLIC_OFFICE_ADDRESS || "NEAR CIVIL COURT RUDRI DISTRICT DHAMTARI C.G.493776";
+
 // ... rest of your component
 export const metadata: Metadata = {
-    title: "Contact Us • Dial Dhamtari",
-    description: "Get in touch with Dial Dhamtari. Contact our support team for any questions, feedback, or assistance.",
+    title: `Contact Us • ${APP_NAME}`,
+    description: `Get in touch with ${APP_NAME}. Contact our support team for any questions, feedback, or assistance.`,
     openGraph: {
-        title: "Contact Us • Dial Dhamtari",
-        description: "Contact the support team at Dial Dhamtari for assistance.",
-        url: "https://dhamtari.directory/contact",
-        siteName: "Dial Dhamtari",
+        title: `Contact Us • ${APP_NAME}`,
+        description: `Contact the support team at ${APP_NAME} for assistance.`,
+        url: `${SITE_URL}/contact`,
+        siteName: APP_NAME,
         images: [{ url: "/logo.png", width: 256, height: 256 }],
         type: "website",
     },
     twitter: {
         card: "summary",
-        title: "Contact Us • Dial Dhamtari",
-        description: "Get in touch with Dial Dhamtari support team.",
+        title: `Contact Us • ${APP_NAME}`,
+        description: `Get in touch with ${APP_NAME} support team.`,
         images: ["/logo.png"],
     },
 }
@@ -40,7 +46,7 @@ export default function ContactPage() {
                     Contact Us
                 </h1>
                 <p className="text-gray-600">
-                    Contact the support team at Dial Dhamtari.
+                    Contact the support team at {APP_NAME}.
                 </p>
             </div>
 
@@ -72,10 +78,10 @@ export default function ContactPage() {
                                     We respond to all emails within 72 hours.
                                 </p>
                                 <a
-                                    href="mailto:odhamtari@gmail.com"
+                                    href={`mailto:${CONTACT_EMAIL}`}
                                     className="text-base font-medium text-gray-900 hover:text-red-600 transition-colors"
                                 >
-                                    odhamtari@gmail.com
+                                    {CONTACT_EMAIL}
                                 </a>
                             </div>
                         </div>
@@ -95,7 +101,7 @@ export default function ContactPage() {
                                     Drop by our office for a chat.
                                 </p>
                                 <p className="text-base font-medium text-gray-900">
-                                    NEAR CIVIL COURT RUDRI DISTRICT DHAMTARI C.G.493776
+                                    {OFFICE_ADDRESS}
                                 </p>
                             </div>
                         </div>
@@ -115,10 +121,10 @@ export default function ContactPage() {
                                     We're available Mon-Fri, 9am-5pm.
                                 </p>
                                 <a
-                                    href="tel:+911234567890"
+                                    href={`tel:${CONTACT_PHONE}`}
                                     className="text-base font-medium text-gray-900 hover:text-red-600 transition-colors"
                                 >
-                                    +91 1234567890
+                                    {CONTACT_PHONE}
                                 </a>
                             </div>
                         </div>
@@ -141,8 +147,8 @@ export default function ContactPage() {
                                     Chat
                                 </button> */}
                                 <WhatsAppButton
-                                    phoneNumber="1234567890"
-                                    message="Hello, I would like to inquire about Dial Dhamtari."
+                                    phoneNumber={CONTACT_PHONE.replace(/[^0-9]/g, '')}
+                                    message={`Hello, I would like to inquire about ${APP_NAME}.`}
                                 />
                             </div>
                         </div>

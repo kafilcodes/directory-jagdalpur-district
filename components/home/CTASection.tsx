@@ -6,6 +6,8 @@ import { ArrowRight, TrendingUp, Users, Rocket } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { onAuthChange } from "@/lib/firebase/authService"
 
+const CITY_NAME = process.env.NEXT_PUBLIC_CITY_NAME || "Dhamtari";
+
 export default function CTASection() {
     const router = useRouter()
     const [isSignedIn, setIsSignedIn] = useState(false)
@@ -43,7 +45,7 @@ export default function CTASection() {
                     List Your Business Today
                 </h2>
                 <p className="text-red-100 mb-10 max-w-2xl mx-auto text-sm sm:text-base lg:text-lg leading-relaxed">
-                    Join thousands of successful businesses in Dhamtari. Get discovered by customers looking for services like yours.
+                    Join thousands of successful businesses in {CITY_NAME}. Get discovered by customers looking for services like yours.
                 </p>
                 <div className="flex items-center justify-center gap-6 mb-8 text-white/90">
                     <div className="flex items-center gap-2">

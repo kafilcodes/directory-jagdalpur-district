@@ -3,6 +3,14 @@ import { GoogleGenerativeAI } from "@google/generative-ai"
 import nlp from "compromise"
 import { getAdminDb } from "@/lib/firebase/admin"
 
+// Dynamic configuration
+const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || "Dial Dhamtari";
+const CITY_NAME = process.env.NEXT_PUBLIC_CITY_NAME || "Dhamtari";
+const STATE_NAME = process.env.NEXT_PUBLIC_STATE_NAME || "Chhattisgarh";
+const CONTACT_EMAIL = process.env.NEXT_PUBLIC_CONTACT_EMAIL || "odhamtari@gmail.com";
+const CONTACT_PHONE = process.env.NEXT_PUBLIC_CONTACT_PHONE || "+91-9340897799";
+const OFFICE_ADDRESS = process.env.NEXT_PUBLIC_OFFICE_ADDRESS || "NEAR CIVIL COURT RUDRI DISTRICT DHAMTARI C.G. 493776";
+
 /**
  * Custom RAG (Retrieval-Augmented Generation) Chatbot API
  * 
@@ -476,14 +484,14 @@ async function generateContactResponse() {
 
 Here's how you can reach us:
 
-📧 **Email:** odhamtari@gmail.com
+📧 **Email:** ${CONTACT_EMAIL}
 We respond to all emails within 72 hours.
 
 📍 **Office Address:** 
-NEAR CIVIL COURT RUDRI DISTRICT DHAMTARI C.G. 493776
+${OFFICE_ADDRESS}
 Drop by our office for a chat.
 
-☎️ **Phone:** +91 1234567890
+☎️ **Phone:** ${CONTACT_PHONE}
 We're available Mon-Fri, 9am-5pm.
 
 💬 **Live Chat:** 
@@ -500,7 +508,7 @@ Feel free to contact us for any questions, feedback, or support!`
 async function generateListingGuideResponse() {
     const guideInfo = `📝 **How to List Your Business**
 
-Follow these simple steps to list your business on Dial Dhamtari:
+Follow these simple steps to list your business on ${APP_NAME}:
 
 **Step 1:** Sign in to your account (click Sign In at the top right)
 
@@ -539,25 +547,25 @@ async function generateConversationalResponse(userMessage: string) {
     try {
         const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" })
 
-        const prompt = `You are the Directory AI Chatbot for Dhamtari district business directory website.
+        const prompt = `You are the Directory AI Chatbot for ${CITY_NAME} district business directory website.
 
 User Query: "${userMessage}"
 
 Context:
-- This is a business directory website for Dhamtari district, Chhattisgarh, India
+- This is a business directory website for ${CITY_NAME} district, ${STATE_NAME}, India
 - Users can search for local businesses, shops, restaurants, hotels, services
 - The user is having a casual conversation or greeting (NOT searching for a business)
 
 Instructions:
 - Provide a SHORT, FORMAL, and FRIENDLY response (1-2 sentences maximum)
 - For greetings: Greet back and briefly mention you can help find businesses
-- For questions about the chatbot: Briefly explain you help find local businesses in Dhamtari
+- For questions about the chatbot: Briefly explain you help find local businesses in ${CITY_NAME}
 - For "thank you": Acknowledge politely
 - For "goodbye": Say goodbye politely
 - DO NOT search or mention specific businesses
 - DO NOT offer services outside chatbot scope (only finding businesses)
 - Keep it professional and concise
-- If unsure, say: "I'm here to help you find businesses in Dhamtari. What are you looking for?"
+- If unsure, say: "I'm here to help you find businesses in ${CITY_NAME}. What are you looking for?"
 
 Your Response:`
 
@@ -568,7 +576,7 @@ Your Response:`
         return text
     } catch (error) {
         console.error("Conversational generation error:", error)
-        return "Hello! I'm here to help you find businesses in Dhamtari district. What are you looking for?"
+        return `Hello! I'm here to help you find businesses in ${CITY_NAME} district. What are you looking for?`
     }
 }
 
@@ -604,7 +612,7 @@ async function generateResponse(userMessage: string, searchTerms: string[], list
             : "No listings found matching your search."
 
         // Engineer the prompt for detailed responses
-        const prompt = `You are the Directory AI Chatbot for Dhamtari district, Chhattisgarh, India.
+        const prompt = `You are the Directory AI Chatbot for ${CITY_NAME} district, ${STATE_NAME}, India.
 
 User Query: "${userMessage}"
 Search Terms Used: ${searchTerms.join(', ')}

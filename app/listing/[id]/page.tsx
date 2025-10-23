@@ -1,6 +1,8 @@
 import { getAdminDb } from "@/lib/firebase/admin"
 import { notFound } from "next/navigation"
 
+const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || "Dial Dhamtari";
+
 function hasAdminEnv() {
   return (
     !!process.env.FIREBASE_ADMIN_PROJECT_ID &&
@@ -28,7 +30,7 @@ export async function generateMetadata({ params }: any) {
   }
 
   return {
-    title: `${name} | Dial Dhamtari`,
+    title: `${name} | ${APP_NAME}`,
     description,
   }
 }

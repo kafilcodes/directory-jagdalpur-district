@@ -3,6 +3,8 @@
 import React, { useEffect, useState } from "react"
 import type { JSX } from "react";
 
+// Dynamic configuration
+const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || "Dial Dhamtari";
 
 interface CategoryItem {
   name: string;
@@ -71,10 +73,12 @@ function LogoMark() {
   const [ok, setOk] = React.useState(true)
   return ok ? (
     <div className="relative h-8 w-8">
-      <Image src="/logo.png" alt="Dial Dhamtari" width={32} height={32} className="h-8 w-8 object-contain" priority unoptimized onError={() => setOk(false)} />
+      <Image src="/logo.png" alt={APP_NAME} width={32} height={32} className="h-8 w-8 object-contain" priority unoptimized onError={() => setOk(false)} />
     </div>
   ) : (
-    <div className="h-8 w-8 rounded-full bg-red-100 text-red-600 grid place-items-center text-xs font-bold" aria-label="Logo fallback">DD</div>
+    <div className="h-8 w-8 rounded-full bg-red-100 text-red-600 grid place-items-center text-xs font-bold" aria-label="Logo fallback">
+      {APP_NAME.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase()}
+    </div>
   )
 }
 
@@ -153,10 +157,10 @@ export default function Header({ canShowProfileIcon: _canShowProfileIcon = false
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-6">
-            <Link href="/" className="flex items-center space-x-2 group" aria-label="Dial Dhamtari home">
+            <Link href="/" className="flex items-center space-x-2 group" aria-label={`${APP_NAME} home`}>
               <LogoMark />
               <div className="flex flex-col">
-                <span className="text-xl font-bold text-gray-900">Dial Dhamtari</span>
+                <span className="text-xl font-bold text-gray-900">{APP_NAME}</span>
               </div>
             </Link>
 

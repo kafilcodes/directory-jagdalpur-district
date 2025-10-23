@@ -10,17 +10,26 @@ import { Analytics } from "@vercel/analytics/next"
 
 const inter = Inter({ subsets: ["latin"] })
 
+// Dynamic metadata from environment variables
+const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || "Dial Dhamtari";
+const CITY_NAME = process.env.NEXT_PUBLIC_CITY_NAME || "Dhamtari";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+const SITE_DESCRIPTION = process.env.NEXT_PUBLIC_SITE_DESCRIPTION ||
+  `Discover trusted local businesses, services, and professionals in ${CITY_NAME}. Your comprehensive directory for hotels, restaurants, healthcare, education, shopping, and more.`;
+const SITE_KEYWORDS = process.env.NEXT_PUBLIC_SITE_KEYWORDS ||
+  `${APP_NAME},${CITY_NAME} directory,${CITY_NAME} businesses,local businesses ${CITY_NAME}`;
+
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "Dial Dhamtari - Find Local Businesses & Services in Dhamtari",
-    template: "%s | Dial Dhamtari",
+    default: `${APP_NAME} - Find Local Businesses & Services in ${CITY_NAME}`,
+    template: `%s | ${APP_NAME}`,
   },
-  description: "Discover trusted local businesses, services, and professionals in Dhamtari. Your comprehensive directory for hotels, restaurants, healthcare, education, shopping, and more. Connect with verified businesses in Dhamtari district.",
-  keywords: ["Dial Dhamtari", "Dhamtari directory", "Dhamtari businesses", "local businesses Dhamtari", "Dhamtari services", "Dhamtari restaurants", "Dhamtari hotels", "Dhamtari healthcare", "business directory Dhamtari", "Chhattisgarh businesses"],
-  authors: [{ name: "Dial Dhamtari Team" }],
-  creator: "Dial Dhamtari",
-  publisher: "Dial Dhamtari",
+  description: SITE_DESCRIPTION,
+  keywords: SITE_KEYWORDS.split(',').map(k => k.trim()),
+  authors: [{ name: `${APP_NAME} Team` }],
+  creator: APP_NAME,
+  publisher: process.env.NEXT_PUBLIC_COPYRIGHT_HOLDER || APP_NAME,
   robots: {
     index: true,
     follow: true,
@@ -33,10 +42,10 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: "Dial Dhamtari - Find Local Businesses & Services",
-    description: "Discover trusted local businesses, services, and professionals in Dhamtari. Your comprehensive directory for hotels, restaurants, healthcare, education, shopping, and more.",
-    url: process.env.NEXT_PUBLIC_SITE_URL || "https://example.com",
-    siteName: "Dial Dhamtari",
+    title: `${APP_NAME} - Find Local Businesses & Services`,
+    description: SITE_DESCRIPTION,
+    url: SITE_URL,
+    siteName: APP_NAME,
     locale: "en_IN",
     type: "website",
     images: [
@@ -44,18 +53,18 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Dial Dhamtari - Local Business Directory",
+        alt: `${APP_NAME} - Local Business Directory`,
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Dial Dhamtari - Find Local Businesses & Services",
-    description: "Discover trusted local businesses, services, and professionals in Dhamtari district.",
+    title: `${APP_NAME} - Find Local Businesses & Services`,
+    description: `Discover trusted local businesses, services, and professionals in ${CITY_NAME} district.`,
     images: ["/og-image.png"],
   },
   alternates: {
-    canonical: process.env.NEXT_PUBLIC_SITE_URL || "https://example.com",
+    canonical: SITE_URL,
   },
   verification: {
     google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,

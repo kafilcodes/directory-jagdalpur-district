@@ -36,7 +36,11 @@ function init() {
   }
 
   // Get project ID from credential or env
-  const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'dhamtaridirectory'
+  const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+
+  if (!projectId) {
+    throw new Error('Missing Firebase Project ID: set FIREBASE_ADMIN_PROJECT_ID or NEXT_PUBLIC_FIREBASE_PROJECT_ID')
+  }
 
   admin.initializeApp({
     credential,

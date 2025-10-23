@@ -2,16 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const GOOGLE_PLACES_API_KEY = process.env.NEXT_GOOGLE_PLACES_API_KEY;
 
-// Dhamtari district center coordinates and radius
-const DHAMTARI_CENTER = {
-    lat: 20.7064,
-    lng: 81.5498,
+// City district center coordinates and radius (from environment)
+const CITY_CENTER = {
+    lat: parseFloat(process.env.NEXT_PUBLIC_MAP_CENTER_LAT || '21.0278'),
+    lng: parseFloat(process.env.NEXT_PUBLIC_MAP_CENTER_LNG || '81.6300'),
 };
-const RADIUS_KM = 50; // 50km radius = Dhamtari district + nearby Chhattisgarh areas as fallback
+const RADIUS_KM = Math.floor(parseInt(process.env.NEXT_PUBLIC_MAP_RADIUS || '30000', 10) / 1000); // Convert meters to km
 
 /**
  * Secure server-side proxy for Google Places Autocomplete API
- * Enforces strict geofencing around Dhamtari district
+ * Enforces geofencing around configured city district
  * Implements session token-based cost optimization
  */
 export async function POST(req: NextRequest) {
@@ -40,15 +40,15 @@ export async function POST(req: NextRequest) {
 
         const requestBody = {
             input: input.trim(),
-            // Use locationBias with larger radius for Dhamtari + Chhattisgarh
+            // Use locationBias with radius for city + nearby areas
             // Note: locationRestriction is stricter but can exclude valid results
             locationBias: {
                 circle: {
                     center: {
-                        latitude: DHAMTARI_CENTER.lat,
-                        longitude: DHAMTARI_CENTER.lng,
+                        latitude: CITY_CENTER.lat,
+                        longitude: CITY_CENTER.lng,
                     },
-                    radius: RADIUS_KM * 1000, // 50km radius for Dhamtari + nearby areas
+                    radius: RADIUS_KM * 1000, // Convert km to meters
                 },
             },
             languageCode: 'en',

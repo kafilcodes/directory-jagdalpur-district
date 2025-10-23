@@ -5,6 +5,8 @@ import { TypingIndicator } from "./TypingIndicator"
 import { ListingCard } from "./ListingCard"
 import { ErrorMessage } from "./ErrorMessage"
 
+const CITY_NAME = process.env.NEXT_PUBLIC_CITY_NAME || "Dhamtari";
+
 /**
  * React Chatbot Kit Configuration
  * 
@@ -42,7 +44,7 @@ const config = {
     // Initial message shown when chat opens
     initialMessages: [
         createChatBotMessage(
-            "Hi! I'm your Directory AI Chatbot. I can help you find local businesses in Dhamtari. Try asking me about restaurants, hotels, shops, or any service you're looking for!",
+            `Hi! I'm your Directory AI Chatbot. I can help you find local businesses in ${CITY_NAME}. Try asking me about restaurants, hotels, shops, or any service you're looking for!`,
             {}
         ),
     ],

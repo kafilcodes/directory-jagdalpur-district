@@ -34,6 +34,8 @@ import Image from "next/image"
 import { cn } from "@/lib/utils"
 import { CategoryBadge } from "@/components/common/CategoryBadge"
 
+const CITY_NAME = process.env.NEXT_PUBLIC_CITY_NAME || "Dhamtari";
+
 const amenityIcons: Record<string, React.ReactNode> = {
   "Wifi": <Wifi className="h-4 w-4" />,
   "Parking": <Car className="h-4 w-4" />,
@@ -315,7 +317,7 @@ export default function ListingDetailSheet() {
                   {(displayName || displayAddress) && (
                     <Button asChild className="gap-2 w-full" variant="outline">
                       <a
-                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(displayName + ' Dhamtari')}`}
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(displayName + ' ' + CITY_NAME)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                       >

@@ -1,10 +1,17 @@
 /**
  * Business Listing Utilities
- * Handles offline caching, Dhamtari validation, and image management
+ * Handles offline caching, address validation, and image management
+ * Uses environment variables for city-specific configuration
  */
 
 const CACHE_KEY_PREFIX = 'listing_draft_';
 const CACHE_EXPIRY_DAYS = 7;
+
+// City configuration from environment variables
+const CITY_NAME = process.env.NEXT_PUBLIC_CITY_NAME || 'Dhamtari';
+const CITY_PIN_CODE = process.env.NEXT_PUBLIC_CITY_PIN_CODE || '493773';
+const STATE_NAME = process.env.NEXT_PUBLIC_STATE_NAME || 'Chhattisgarh';
+const STATE_CODE = process.env.NEXT_PUBLIC_STATE_CODE || 'CG';
 
 export interface CachedPlaceData {
     placeDetails: any;
@@ -19,52 +26,56 @@ export interface CachedPlaceData {
 }
 
 /**
- * Validates if address is within Dhamtari district with Chhattisgarh fallback
- * Primary: Checks for "Dhamtari" substring or PIN code "493773"
- * Fallback: Allows Chhattisgarh state if Dhamtari not found
+ * Validates if address is within the configured city district with state fallback
+ * Primary: Checks for city name or PIN code from environment variables
+ * Fallback: Allows state if city not found
+ * @deprecated Use for backward compatibility - property names kept as isDhamtari/isChhattisgarh
  */
 export function validateDhamtariAddress(address: string, pinCode?: string, addressComponents?: any[]): {
     isValid: boolean;
-    isDhamtari: boolean;
-    isChhattisgarh: boolean;
+    isDhamtari: boolean; // Actually means "is in configured city" (kept for backward compatibility)
+    isChhattisgarh: boolean; // Actually means "is in configured state" (kept for backward compatibility)
     reason?: string;
 } {
     const addressLower = address.toLowerCase();
+    const cityNameLower = CITY_NAME.toLowerCase();
+    const stateNameLower = STATE_NAME.toLowerCase();
+    const stateCodeLower = STATE_CODE.toLowerCase();
 
-    // PRIMARY CHECK: Dhamtari city name
-    const hasDhamtariInAddress = addressLower.includes('dhamtari');
+    // PRIMARY CHECK: City name
+    const hasCityInAddress = addressLower.includes(cityNameLower);
 
-    // PRIMARY CHECK: PIN code 493773
-    const hasPincode = addressLower.includes('493773') || pinCode === '493773';
+    // PRIMARY CHECK: PIN code
+    const hasPincode = addressLower.includes(CITY_PIN_CODE) || pinCode === CITY_PIN_CODE;
 
-    // Check address components for Dhamtari
-    let hasDhamtariInComponents = false;
+    // Check address components for city name
+    let hasCityInComponents = false;
     if (addressComponents && Array.isArray(addressComponents)) {
-        hasDhamtariInComponents = addressComponents.some((comp: any) => {
+        hasCityInComponents = addressComponents.some((comp: any) => {
             if (!comp.longName && !comp.shortName) return false;
             const longName = (comp.longName || '').toLowerCase();
             const shortName = (comp.shortName || '').toLowerCase();
-            return longName.includes('dhamtari') || shortName.includes('dhamtari');
+            return longName.includes(cityNameLower) || shortName.includes(cityNameLower);
         });
     }
 
-    const isDhamtari = hasDhamtariInAddress || hasPincode || hasDhamtariInComponents;
+    const isDhamtari = hasCityInAddress || hasPincode || hasCityInComponents;
 
-    // FALLBACK CHECK: Chhattisgarh state
-    const hasChhattisgarhInAddress = addressLower.includes('chhattisgarh') || addressLower.includes('chattisgarh');
-    let hasChhattisgarhInComponents = false;
+    // FALLBACK CHECK: State name
+    const hasStateInAddress = addressLower.includes(stateNameLower);
+    let hasStateInComponents = false;
     if (addressComponents && Array.isArray(addressComponents)) {
-        hasChhattisgarhInComponents = addressComponents.some((comp: any) => {
+        hasStateInComponents = addressComponents.some((comp: any) => {
             if (!comp.longName && !comp.shortName) return false;
             const longName = (comp.longName || '').toLowerCase();
             const shortName = (comp.shortName || '').toLowerCase();
             const types = comp.types || [];
             const isStateComponent = types.includes('administrative_area_level_1');
-            return isStateComponent && (longName.includes('chhattisgarh') || longName.includes('chattisgarh') || shortName === 'cg');
+            return isStateComponent && (longName.includes(stateNameLower) || shortName === stateCodeLower);
         });
     }
 
-    const isChhattisgarh = hasChhattisgarhInAddress || hasChhattisgarhInComponents;
+    const isChhattisgarh = hasStateInAddress || hasStateInComponents;
 
     // Determine validity and reason
     if (isDhamtari) {
@@ -76,7 +87,7 @@ export function validateDhamtariAddress(address: string, pinCode?: string, addre
             isValid: false,
             isDhamtari: false,
             isChhattisgarh: true,
-            reason: 'This business is in Chhattisgarh but outside Dhamtari district. Only Dhamtari businesses (PIN: 493773) are allowed.'
+            reason: `This business is in ${STATE_NAME} but outside ${CITY_NAME} district. Only ${CITY_NAME} businesses (PIN: ${CITY_PIN_CODE}) are allowed.`
         };
     }
 
@@ -84,7 +95,7 @@ export function validateDhamtariAddress(address: string, pinCode?: string, addre
         isValid: false,
         isDhamtari: false,
         isChhattisgarh: false,
-        reason: 'Only Dhamtari businesses (PIN: 493773) are allowed. If you believe this is in Dhamtari, verify the place address or try a different location.'
+        reason: `Only ${CITY_NAME} businesses (PIN: ${CITY_PIN_CODE}) are allowed. If you believe this is in ${CITY_NAME}, verify the place address or try a different location.`
     };
 }
 

@@ -8,6 +8,8 @@ import { onAuthChange } from "@/lib/firebase/authService"
 import { useUserPhoto } from "@/hooks/useUserPhoto"
 import Image from "next/image"
 
+const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || "Dial Dhamtari";
+
 const items = [
   { href: "/user/dashboard" as const, label: "Dashboard", icon: LayoutDashboard },
   { href: "/user/my-listing" as const, label: "My Listing", icon: FileText },
@@ -40,7 +42,7 @@ export default function OwnerSidebar() {
           <div className="relative h-10 w-full max-w-[120px] mx-auto">
             <Image
               src="/logo.png"
-              alt="Dial Dhamtari"
+              alt={APP_NAME}
               fill
               sizes="120px"
               className="object-contain"
@@ -49,7 +51,7 @@ export default function OwnerSidebar() {
           </div>
         ) : (
           <div className="h-10 w-10 mx-auto rounded-full bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400 grid place-items-center text-xs font-bold">
-            DD
+            {APP_NAME.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase()}
           </div>
         )}
       </div>

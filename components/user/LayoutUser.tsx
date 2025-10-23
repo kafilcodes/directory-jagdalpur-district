@@ -27,6 +27,8 @@ import {
     SidebarTrigger,
 } from "@/components/ui/sidebar"
 
+const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || "Dial Dhamtari";
+
 interface UserLayoutProps {
     children: React.ReactNode
 }
@@ -126,7 +128,7 @@ function AppSidebar() {
                     <div className="relative h-10 w-10 shrink-0">
                         <Image
                             src="/logo.png"
-                            alt="Dial Dhamtari"
+                            alt={APP_NAME}
                             fill
                             sizes="40px"
                             className="object-contain"
@@ -137,11 +139,11 @@ function AppSidebar() {
                             }}
                         />
                         <div className="hidden h-full w-full rounded-lg bg-red-600 flex items-center justify-center text-white font-bold text-base">
-                            D
+                            {APP_NAME.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase()}
                         </div>
                     </div>
                     <div className="flex flex-col min-w-0">
-                        <span className="font-bold text-gray-900 text-base leading-tight">Dial Dhamtari</span>
+                        <span className="font-bold text-gray-900 text-base leading-tight">{APP_NAME}</span>
                         <span className="font-medium text-gray-600 text-xs">Business Area</span>
                     </div>
                 </Link>
@@ -151,7 +153,7 @@ function AppSidebar() {
                     <div className="relative h-8 w-8">
                         <Image
                             src="/logo.png"
-                            alt="Dial Dhamtari"
+                            alt={APP_NAME}
                             fill
                             sizes="32px"
                             className="object-contain"
@@ -162,7 +164,7 @@ function AppSidebar() {
                             }}
                         />
                         <div className="hidden h-full w-full rounded-lg bg-red-600 flex items-center justify-center text-white font-bold text-sm">
-                            D
+                            {APP_NAME.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase()}
                         </div>
                     </div>
                 </Link>
@@ -349,7 +351,7 @@ export function LayoutUser({ children }: UserLayoutProps) {
                             <div className="relative h-7 w-7 md:hidden">
                                 <Image
                                     src="/logo.png"
-                                    alt="Dial Dhamtari"
+                                    alt={APP_NAME}
                                     fill
                                     sizes="28px"
                                     className="object-contain"
@@ -359,7 +361,7 @@ export function LayoutUser({ children }: UserLayoutProps) {
                                     }}
                                 />
                                 <div className="hidden h-full w-full rounded-lg bg-red-600 flex items-center justify-center text-white font-bold text-sm">
-                                    D
+                                    {APP_NAME.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase()}
                                 </div>
                             </div>
                             <span className="font-semibold text-gray-900 md:hidden">Business Area</span>

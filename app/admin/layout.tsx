@@ -24,6 +24,8 @@ import {
     LogOut
 } from "lucide-react"
 
+const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || "Dial Dhamtari";
+
 interface AdminLayoutProps {
     children: ReactNode
 }
@@ -145,7 +147,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             {/* Mobile header with menu button */}
             <div className="lg:hidden sticky top-0 z-50 bg-white border-b border-gray-200">
                 <div className="flex items-center justify-between px-4 py-3">
-                    <h1 className="text-lg font-bold text-gray-900">Dial Dhamtari</h1>
+                    <h1 className="text-lg font-bold text-gray-900">{APP_NAME}</h1>
                     <Button
                         variant="ghost"
                         size="icon"
@@ -188,7 +190,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                                         <div className="relative h-10 w-full max-w-[120px]">
                                             <Image
                                                 src="/logo.png"
-                                                alt="Dial Dhamtari"
+                                                alt={APP_NAME}
                                                 fill
                                                 sizes="120px"
                                                 className="object-contain"
@@ -199,14 +201,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                                                     target.style.display = 'none';
                                                     const parent = target.parentElement;
                                                     if (parent) {
-                                                        parent.innerHTML = '<div class="h-10 w-10 rounded-full bg-red-100 text-red-600 grid place-items-center text-xs font-bold mx-auto">DD</div>';
+                                                        const initials = APP_NAME.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+                                                        parent.innerHTML = `<div class="h-10 w-10 rounded-full bg-red-100 text-red-600 grid place-items-center text-xs font-bold mx-auto">${initials}</div>`;
                                                     }
                                                 }}
                                             />
                                         </div>
                                         {/* Two-line title */}
                                         <div className="text-center">
-                                            <div className="text-lg font-bold text-gray-900">Dial Dhamtari</div>
+                                            <div className="text-lg font-bold text-gray-900">{APP_NAME}</div>
                                             <div className="text-xs text-gray-500">Admin Panel</div>
                                         </div>
                                     </div>

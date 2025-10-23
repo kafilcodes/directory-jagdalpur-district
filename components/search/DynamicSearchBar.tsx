@@ -9,6 +9,9 @@ import { Badge } from "@/components/ui/badge"
 import { CategoryBadge } from "@/components/common/CategoryBadge"
 import Image from "next/image"
 
+const CITY_NAME = process.env.NEXT_PUBLIC_CITY_NAME || "Dhamtari";
+const STATE_NAME = process.env.NEXT_PUBLIC_STATE_NAME || "Chhattisgarh";
+
 export type DynamicSearchBarProps = {
   placeholder?: string
   size?: "lg" | "md"
@@ -242,11 +245,11 @@ export default function DynamicSearchBar({ placeholder = "Search listings...", s
                     (it.googlePhotos && Array.isArray(it.googlePhotos) && it.googlePhotos.length > 0 ? it.googlePhotos[0] : null) ||
                     it.photoUrl
 
-                  // Clean address - remove Dhamtari, Chhattisgarh, Pincode, India
+                  // Clean address - remove city, state, pincode, India
                   const rawAddress = it.address || it.formattedAddress || (it.address?.formattedAddress) || ""
                   const cleanAddress = (typeof rawAddress === 'string' ? rawAddress : JSON.stringify(rawAddress))
-                    ?.replace(/,?\s*Dhamtari,?\s*/gi, '')
-                    ?.replace(/,?\s*Chhattisgarh,?\s*/gi, '')
+                    ?.replace(new RegExp(`,?\\s*${CITY_NAME},?\\s*`, 'gi'), '')
+                    ?.replace(new RegExp(`,?\\s*${STATE_NAME},?\\s*`, 'gi'), '')
                     ?.replace(/,?\s*India,?\s*/gi, '')
                     ?.replace(/,?\s*\d{6},?\s*/g, '') // Remove 6-digit pincodes
                     ?.trim()

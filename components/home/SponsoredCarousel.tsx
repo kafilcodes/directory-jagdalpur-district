@@ -13,6 +13,8 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { cn } from "@/lib/utils"
 import { CategoryBadge } from "@/components/common/CategoryBadge"
 
+const CITY_NAME = process.env.NEXT_PUBLIC_CITY_NAME || "Dhamtari";
+
 // Server-backed sponsored listings (max 20)
 
 interface SponsoredCarouselProps {
@@ -42,7 +44,7 @@ export default function SponsoredCarousel({ onSelectListing }: SponsoredCarousel
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">Sponsored Listings</h2>
-            <p className="text-gray-600 mt-2 text-base">Premium businesses and services in Dhamtari.</p>
+            <p className="text-gray-600 mt-2 text-base">Premium businesses and services in {CITY_NAME}.</p>
           </div>
           <Link href="/search?filter=sponsored">
             <Button variant="outline" className="hidden sm:flex items-center gap-2 h-11 px-6">

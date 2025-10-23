@@ -4,6 +4,9 @@ import { Building2, MapPin, Star, StarHalf, Phone, Mail } from "lucide-react"
 import Image from "next/image"
 import { CategoryBadge } from "../common/CategoryBadge"
 
+const CITY_NAME = process.env.NEXT_PUBLIC_CITY_NAME || "Dhamtari";
+const STATE_NAME = process.env.NEXT_PUBLIC_STATE_NAME || "Chhattisgarh";
+
 export type ListingCardProps = {
   id: string
   name: string
@@ -38,10 +41,10 @@ export function ListingCard({
   // Prioritize images for thumbnail display
   const displayImage = thumbnail || images?.[0] || googlePhotos?.[0] || photoUrl
 
-  // Clean address - remove Dhamtari, Chhattisgarh, Pincode, India
+  // Clean address - remove city, state, pincode, India
   const cleanAddress = address
-    ?.replace(/,?\s*Dhamtari,?\s*/gi, '')
-    ?.replace(/,?\s*Chhattisgarh,?\s*/gi, '')
+    ?.replace(new RegExp(`,?\\s*${CITY_NAME},?\\s*`, 'gi'), '')
+    ?.replace(new RegExp(`,?\\s*${STATE_NAME},?\\s*`, 'gi'), '')
     ?.replace(/,?\s*India,?\s*/gi, '')
     ?.replace(/,?\s*\d{6},?\s*/g, '') // Remove 6-digit pincodes
     ?.trim()

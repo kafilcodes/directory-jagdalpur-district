@@ -29,6 +29,12 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { PLANS, type PlanId } from "@/lib/plans"
+
+// Dynamic configuration
+const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || "Dial Dhamtari";
+const CITY_NAME = process.env.NEXT_PUBLIC_CITY_NAME || "Dhamtari";
+const STATE_NAME = process.env.NEXT_PUBLIC_STATE_NAME || "Chhattisgarh";
+const CITY_PIN_CODE = process.env.NEXT_PUBLIC_CITY_PIN_CODE || "493773";
 import {
     Loader2,
     Check,
@@ -161,25 +167,25 @@ export function CreateListingFormNew4Step() {
 
             const details = result.placeDetails
 
-            // Validate location - STRICT: must contain 493773 or Dhamtari
+            // Validate location - STRICT: must contain city PIN or city name
             const addressLower = (details.address || "").toLowerCase()
             const formattedAddress = (details.formattedAddress || "").toLowerCase()
             const postalCode = details.addressComponents?.find((c: any) =>
                 c.types.includes('postal_code')
             )?.longName || ""
 
-            const hasValidPostalCode = postalCode.includes('493773')
-            const hasValidCity = addressLower.includes('dhamtari') || formattedAddress.includes('dhamtari')
+            const hasValidPostalCode = postalCode.includes(CITY_PIN_CODE)
+            const hasValidCity = addressLower.includes(CITY_NAME.toLowerCase()) || formattedAddress.includes(CITY_NAME.toLowerCase())
 
             if (!hasValidPostalCode && !hasValidCity) {
-                setError("⚠️ Location Restricted: This directory only accepts businesses in Dhamtari district (postal code 493773). Your business location could not be verified.")
+                setError(`⚠️ Location Restricted: This directory only accepts businesses in ${CITY_NAME} district (postal code ${CITY_PIN_CODE}). Your business location could not be verified.`)
                 store.setSelectedPlace(null)
                 return
             }
 
             // Additional check for API restriction flag
             if (result.locationRestricted) {
-                setError("Only businesses located in Dhamtari district (Chhattisgarh, India) with postcode 493773 are allowed on this platform.")
+                setError(`Only businesses located in ${CITY_NAME} district (${STATE_NAME}, India) with postcode ${CITY_PIN_CODE} are allowed on this platform.`)
                 store.setSelectedPlace(null)
                 return
             }
@@ -302,7 +308,7 @@ export function CreateListingFormNew4Step() {
                 key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
                 amount: plan.pricePaise,
                 currency: "INR",
-                name: "Dial Dhamtari",
+                name: APP_NAME,
                 description: `${plan.label} Plan - ${plan.duration}`,
                 order_id: orderData.orderId,
                 handler: function (response: any) {
@@ -606,7 +612,7 @@ export function CreateListingFormNew4Step() {
                                             Search for Your Business <span className="text-red-500">*</span>
                                         </label>
                                         <p className="text-xs text-gray-600">
-                                            Start typing your business name to search in Dhamtari district
+                                            Start typing your business name to search in {CITY_NAME} district
                                         </p>
                                         <BusinessSearch
                                             onSelect={handleBusinessSelect}

@@ -20,11 +20,11 @@ export default function BrowsePage() {
           {UNIFIED_CATEGORIES.map((category) => (
             <Link key={category.slug} href={`/search?cats=${category.slug}`}>
               <Card className="group border-0 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer">
-                <CardContent className="p-6 text-center">
-                  <div className={`inline-flex items-center justify-center w-16 h-16 ${category.color} rounded-2xl mb-4 group-hover:scale-110 transition-transform`}>
+                <CardContent className="p-6 text-center  transition-colors">
+                  <div className={`inline-flex items-center justify-center w-16 h-16 ${category.color} hover:bg-red-400 rounded-2xl mb-4 group-hover:scale-110 transition-transform`}>
                     <span className="text-2xl" aria-hidden>{category.icon}</span>
                   </div>
-                  <h3 className="font-semibold text-gray-900 mb-1">{category.label}</h3>
+                  <h3 className="font-semibold text-gray-900 hover:text-red-600  text-xl mb-1">{category.label}</h3>
                 </CardContent>
               </Card>
             </Link>

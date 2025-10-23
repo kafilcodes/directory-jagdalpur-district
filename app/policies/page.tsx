@@ -7,6 +7,9 @@ import {
     AccordionTrigger,
 } from "@/components/ui/accordion"
 
+const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || "Dial Dhamtari";
+const CITY_NAME = process.env.NEXT_PUBLIC_CITY_NAME || "Dhamtari";
+
 export default function PoliciesPage() {
     return (
         <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -44,7 +47,7 @@ export default function PoliciesPage() {
                                 <div>
                                     <h3 className="font-semibold text-gray-900 mb-2">1. Platform Usage</h3>
                                     <ul className="list-disc pl-5 space-y-2">
-                                        <li>This platform is exclusively for business listings in Dhamtari District</li>
+                                        <li>This platform is exclusively for business listings in {CITY_NAME} District</li>
                                         <li>Users must provide accurate and up-to-date business information</li>
                                         <li>Only authorized business owners or representatives may create listings</li>
                                         <li>Each business is limited to one listing per account</li>

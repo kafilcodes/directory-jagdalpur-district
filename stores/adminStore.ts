@@ -165,7 +165,12 @@ export const useAdminStore = create<AdminState>()(
                         throw new Error('Firebase app not initialized')
                     }
 
-                    const db = getFirestore(app, 'dhamtaridirectory')
+                    const dbId = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_ID
+                    if (!dbId) {
+                        throw new Error('NEXT_PUBLIC_FIREBASE_DATABASE_ID is not configured')
+                    }
+
+                    const db = getFirestore(app, dbId)
 
                     // Fetch all collections in parallel
                     const [listingsSnap, usersSnap, paymentsSnap] = await Promise.all([
@@ -253,7 +258,13 @@ export const useAdminStore = create<AdminState>()(
                     const app = getFirebaseApp()
                     if (!app) return []
 
-                    const db = getFirestore(app, 'dhamtaridirectory')
+                    const dbId = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_ID
+                    if (!dbId) {
+                        console.error('NEXT_PUBLIC_FIREBASE_DATABASE_ID is not configured')
+                        return []
+                    }
+
+                    const db = getFirestore(app, dbId)
                     const eventsRef = collection(db, `listingEvents/${listingId}/events`)
                     const eventsSnap = await getDocs(eventsRef)
 
@@ -281,7 +292,10 @@ export const useAdminStore = create<AdminState>()(
                     const app = getFirebaseApp()
                     if (!app) throw new Error('Firebase not initialized')
 
-                    const db = getFirestore(app, 'dhamtaridirectory')
+                    const dbId = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_ID
+                    if (!dbId) throw new Error('NEXT_PUBLIC_FIREBASE_DATABASE_ID is not configured')
+
+                    const db = getFirestore(app, dbId)
                     await updateDoc(doc(db, 'listings', listingId), updates)
 
                     // Update local state
@@ -304,7 +318,10 @@ export const useAdminStore = create<AdminState>()(
                     const app = getFirebaseApp()
                     if (!app) throw new Error('Firebase not initialized')
 
-                    const db = getFirestore(app, 'dhamtaridirectory')
+                    const dbId = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_ID
+                    if (!dbId) throw new Error('NEXT_PUBLIC_FIREBASE_DATABASE_ID is not configured')
+
+                    const db = getFirestore(app, dbId)
                     await deleteDoc(doc(db, 'listings', listingId))
 
                     // Update local state

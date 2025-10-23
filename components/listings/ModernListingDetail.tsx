@@ -34,6 +34,9 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
 import { cn } from "@/lib/utils"
 
+// Dynamic configuration
+const CITY_NAME = process.env.NEXT_PUBLIC_CITY_NAME || "Dhamtari";
+
 // Dummy reviews data
 const dummyReviews = [
   {
@@ -370,7 +373,7 @@ export default function ModernListingDetail({ listing, open, onClose }: ModernLi
                       </div>
                       <div className="flex justify-between py-2 border-b">
                         <span className="text-gray-600">Service Area</span>
-                        <span className="font-medium">Dhamtari & Nearby</span>
+                        <span className="font-medium">{CITY_NAME} & Nearby</span>
                       </div>
                     </div>
                   </div>

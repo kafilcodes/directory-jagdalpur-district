@@ -3,13 +3,16 @@ import { validateDhamtariAddress, isBusinessType } from '@/lib/listing-utils';
 
 const GOOGLE_PLACES_API_KEY = process.env.NEXT_GOOGLE_PLACES_API_KEY;
 
-// Dhamtari district boundaries (approximate)
-const DHAMTARI_BOUNDS = {
-    minLat: 20.9,
-    maxLat: 21.9,
-    minLng: 81.0,
-    maxLng: 82.2,
+// City district boundaries (from environment)
+const CITY_BOUNDS = {
+    minLat: parseFloat(process.env.NEXT_PUBLIC_MIN_LAT || '20.9'),
+    maxLat: parseFloat(process.env.NEXT_PUBLIC_MAX_LAT || '21.9'),
+    minLng: parseFloat(process.env.NEXT_PUBLIC_MIN_LNG || '81.0'),
+    maxLng: parseFloat(process.env.NEXT_PUBLIC_MAX_LNG || '82.2'),
 };
+
+// City name for logging (from environment)
+const CITY_NAME = process.env.NEXT_PUBLIC_CITY_NAME || 'Dhamtari';
 
 export async function POST(req: NextRequest) {
     try {
@@ -109,12 +112,12 @@ export async function POST(req: NextRequest) {
         if (!locationValidation.isValid) {
             const isChhattisgarhBusiness = locationValidation.isChhattisgarh;
 
-            console.log(`🚫 BLOCKED: Business outside Dhamtari ${isChhattisgarhBusiness ? '(in Chhattisgarh)' : ''}`);
+            console.log(`🚫 BLOCKED: Business outside ${CITY_NAME} ${isChhattisgarhBusiness ? `(in ${process.env.NEXT_PUBLIC_STATE_NAME || 'state'})` : ''}`);
             console.log(`   Reason: ${locationValidation.reason}`);
 
             return NextResponse.json(
                 {
-                    error: locationValidation.reason || 'Location not in Dhamtari',
+                    error: locationValidation.reason || `Location not in ${CITY_NAME}`,
                     locationRestricted: true,
                     commercialRestricted: false,
                     isDhamtari: locationValidation.isDhamtari,
@@ -126,7 +129,7 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        console.log('✅ ALLOWED: Valid Dhamtari business');
+        console.log(`✅ ALLOWED: Valid ${CITY_NAME} business`);
         console.log(`   Types: ${businessValidation.matchedTypes?.join(', ')}`);
         console.log(`   Address: ${formattedAddress}`);
 

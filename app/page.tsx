@@ -15,6 +15,10 @@ import { useRouter } from "next/navigation"
 import { normalizeCategoryToSlug } from "@/lib/categories"
 import { HERO_MIN_H, SECTION_VSPACE } from "@/lib/ui-home"
 
+// Dynamic configuration from environment variables
+const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || "Dial Dhamtari";
+const CITY_NAME = process.env.NEXT_PUBLIC_CITY_NAME || "Dhamtari";
+
 // Stats data - Updated values per requirements
 const stats = [
   { label: "Active Listings", value: "500+", icon: <TrendingUp className="h-5 w-5" /> },
@@ -59,7 +63,7 @@ export default function HomePage() {
           <div className="text-center max-w-4xl mx-auto">
             <Badge className="mb-4 bg-red-100 text-red-700 border-red-200">
               <MapPin className="h-3 w-3 mr-1" />
-              Dhamtari's #1 Directory
+              {CITY_NAME}'s #1 Directory
             </Badge>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-gray-900 mb-10">
@@ -74,7 +78,7 @@ export default function HomePage() {
             </h1>
 
             <p className="text-sm sm:text-base lg:text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-              Connect with trusted local businesses, services, and professionals in Dhamtari.
+              Connect with trusted local businesses, services, and professionals in {CITY_NAME}.
               Your one-stop destination for everything local.
             </p>
 
@@ -89,7 +93,7 @@ export default function HomePage() {
                     __html: JSON.stringify({
                       "@context": "https://schema.org",
                       "@type": "WebSite",
-                      name: "Dial Dhamtari",
+                      name: APP_NAME,
                       url: (process.env.NEXT_PUBLIC_SITE_URL || "https://example.com"),
                       potentialAction: {
                         "@type": "SearchAction",
@@ -229,7 +233,7 @@ export default function HomePage() {
       <section className="py-20 bg-gradient-to-b from-gray-50 to-white">
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Why Choose Dial Dhamtari?</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Why Choose {APP_NAME}?</h2>
             <p className="text-sm sm:text-base lg:text-lg text-gray-600">Your trusted local business companion</p>
           </div>
 

@@ -7,14 +7,21 @@ import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { CATEGORIES } from "@/lib/categories"
 
+// Dynamic configuration
+const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || "Dial Dhamtari";
+const CITY_NAME = process.env.NEXT_PUBLIC_CITY_NAME || "Dhamtari";
+const COPYRIGHT_HOLDER = process.env.NEXT_PUBLIC_COPYRIGHT_HOLDER || "Dhamtari District Administration";
+
 function LogoSmall() {
   const [ok, setOk] = React.useState(true)
   return (
     <span className="relative inline-flex h-8 w-8 items-center justify-center">
       {ok ? (
-        <Image src="/logo.png" alt="Dial Dhamtari" width={32} height={32} className="h-8 w-8 object-contain" priority unoptimized onError={() => setOk(false)} />
+        <Image src="/logo.png" alt={APP_NAME} width={32} height={32} className="h-8 w-8 object-contain" priority unoptimized onError={() => setOk(false)} />
       ) : (
-        <span className="h-8 w-8 grid place-items-center rounded-full bg-red-100 text-red-600 text-xs font-bold" aria-label="Logo fallback">DD</span>
+        <span className="h-8 w-8 grid place-items-center rounded-full bg-red-100 text-red-600 text-xs font-bold" aria-label="Logo fallback">
+          {APP_NAME.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase()}
+        </span>
       )}
     </span>
   )
@@ -46,14 +53,14 @@ export default function Footer() {
         <div className="py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
           {/* Brand Section */}
           <div className="space-y-4">
-            <Link href="/" aria-label="Dial Dhamtari" className="inline-flex items-center gap-3 group">
+            <Link href="/" aria-label={APP_NAME} className="inline-flex items-center gap-3 group">
               <LogoSmall />
               <div className="flex flex-col leading-tight">
-                <span className="text-xl font-bold text-gray-900 group-hover:text-red-500 transition-colors">Dial Dhamtari</span>
+                <span className="text-xl font-bold text-gray-900 group-hover:text-red-500 transition-colors">{APP_NAME}</span>
               </div>
             </Link>
             <p className="text-sm text-gray-600 leading-relaxed">
-              Your trusted local business directory. Discover, connect, and grow with Dhamtari's finest businesses.
+              Your trusted local business directory. Discover, connect, and grow with {CITY_NAME}'s finest businesses.
             </p>
             <div className="flex items-center gap-3">
               <a
@@ -115,7 +122,7 @@ export default function Footer() {
                 <PlusCircle className="h-4 w-4" />
                 Add Listing
               </Link>
-            
+
               <Link href="/search?filter=sponsored" className="text-sm text-gray-600 hover:text-red-500 transition-colors inline-flex items-center gap-2">
                 <Star className="h-4 w-4" />
                 Sponsored Listings
@@ -158,7 +165,7 @@ export default function Footer() {
         <div className="border-t border-gray-200 py-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-xs text-gray-500 text-center sm:text-left">
-              © 2025 Dial Dhamtari. All rights reserved to Dhamtari District Administration
+              © 2025 {APP_NAME}. All rights reserved to {COPYRIGHT_HOLDER}
             </p>
             <div className="flex items-center gap-3">
               <Link href="/policies" className="text-xs text-gray-500 hover:text-red-500 transition-colors">

@@ -8,24 +8,27 @@ import WordOfMouth from "@/components/icons/WordOfMouth"
 import Growth from "@/components/icons/Growth"
 import Misc from "@/components/icons/Misc"
 
+const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || "Dial Dhamtari";
+const CITY_NAME = process.env.NEXT_PUBLIC_CITY_NAME || "Dhamtari";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://dhamtari.directory";
 
 export const dynamic = "force-static"
 
 export const metadata: Metadata = {
-  title: "About • Dial Dhamtari",
-  description: "Dial Dhamtari connects people with trusted local businesses. Discover, compare and contact verified listings across categories.",
+  title: `About • ${APP_NAME}`,
+  description: `${APP_NAME} connects people with trusted local businesses. Discover, compare and contact verified listings across categories.`,
   openGraph: {
-    title: "About • Dial Dhamtari",
-    description: "Discover how Dial Dhamtari helps businesses grow and people find what they need.",
-    url: "https://dhamtari.directory/about",
-    siteName: "Dial Dhamtari",
+    title: `About • ${APP_NAME}`,
+    description: `Discover how ${APP_NAME} helps businesses grow and people find what they need.`,
+    url: `${SITE_URL}/about`,
+    siteName: APP_NAME,
     images: [{ url: "/logo.png", width: 256, height: 256 }],
     type: "website",
   },
   twitter: {
     card: "summary",
-    title: "About • Dial Dhamtari",
-    description: "Find trusted local businesses in Dhamtari.",
+    title: `About • ${APP_NAME}`,
+    description: `Find trusted local businesses in ${CITY_NAME}.`,
     images: ["/logo.png"],
   },
 }
@@ -67,7 +70,7 @@ export default function AboutPage() {
   return (
     <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
       <header className="text-center max-w-3xl mx-auto">
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900">About Dial Dhamtari</h1>
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900">About {APP_NAME}</h1>
         <p className="mt-3 text-gray-600">We connect people with trusted local businesses and help entrepreneurs grow with modern, searchable profiles.</p>
       </header>
 
@@ -76,7 +79,7 @@ export default function AboutPage() {
         <div className="grid gap-6 sm:gap-10 md:grid-cols-2 items-center">
           <div className="order-2 md:order-1 space-y-3">
             <h3 className="text-xl font-semibold text-gray-900">Built for Local Discovery</h3>
-            <p className="text-gray-600">From restaurants and hotels to healthcare and education, we make it simple to discover, compare and contact businesses across Dhamtari. Listings are structured, easy to read and optimised for search.</p>
+            <p className="text-gray-600">From restaurants and hotels to healthcare and education, we make it simple to discover, compare and contact businesses across {CITY_NAME}. Listings are structured, easy to read and optimised for search.</p>
             <p className="text-gray-600">Owners can manage their presence, update details, and upgrade to Featured placement for top visibility on the homepage and category pages.</p>
           </div>
           <div className="order-1 md:order-2 w-full max-w-md mx-auto">
@@ -141,10 +144,10 @@ export default function AboutPage() {
           __html: JSON.stringify({
             '@context': 'https://schema.org',
             '@type': 'AboutPage',
-            name: 'About • Dial Dhamtari',
-            description: 'Directory for trusted local businesses in Dhamtari',
-            url: 'https://dhamtari.directory/about',
-            publisher: { '@type': 'Organization', name: 'Dial Dhamtari' }
+            name: `About • ${APP_NAME}`,
+            description: `Directory for trusted local businesses in ${CITY_NAME}`,
+            url: `${SITE_URL}/about`,
+            publisher: { '@type': 'Organization', name: APP_NAME }
           })
         }}
       />
