@@ -3,6 +3,7 @@
  * 
  * Processes user messages and determines which action to trigger.
  * In our implementation, all messages are passed to the AI for processing.
+ * Validates messages to prevent empty submissions.
  */
 class MessageParser {
     actionProvider: any
@@ -12,8 +13,14 @@ class MessageParser {
     }
 
     parse(message: string) {
-        // Pass all messages to the AI handler
-        this.actionProvider.handleUserMessage(message)
+        // Validate message is not empty or just whitespace
+        if (!message || message.trim().length === 0) {
+            console.warn('[MessageParser] Empty message ignored')
+            return
+        }
+
+        // Pass all valid messages to the AI handler
+        this.actionProvider.handleUserMessage(message.trim())
     }
 }
 

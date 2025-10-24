@@ -76,11 +76,11 @@ export default function SponsoredCarousel({ onSelectListing }: SponsoredCarousel
             }}
             className="w-full"
           >
-            <CarouselContent className="-ml-6">
+            <CarouselContent className="-ml-6 my-10">
               {items.map((listing) => (
                 <CarouselItem key={listing.id} className="pl-6 basis-full sm:basis-1/2 lg:basis-1/3">
                   <Card
-                    className="group cursor-pointer border-0 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden h-full"
+                    className="group cursor-pointer border-0 shadow-lg hover:shadow-2xl   transition-all duration-300 overflow-hidden h-full "
                     onClick={() => onSelectListing?.(listing)}
                   >
                     {/* Image Section - Bigger */}

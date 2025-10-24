@@ -4,6 +4,7 @@ import { Bot } from "lucide-react"
 import { TypingIndicator } from "./TypingIndicator"
 import { ListingCard } from "./ListingCard"
 import { ErrorMessage } from "./ErrorMessage"
+import FormattedBotMessage from "./FormattedBotMessage.tsx"
 
 const CITY_NAME = process.env.NEXT_PUBLIC_CITY_NAME || "Dhamtari";
 
@@ -44,7 +45,7 @@ const config = {
     // Initial message shown when chat opens
     initialMessages: [
         createChatBotMessage(
-            `Hi! I'm your Directory AI Chatbot. I can help you find local businesses in ${CITY_NAME}. Try asking me about restaurants, hotels, shops, or any service you're looking for!`,
+            `Hey! I'm your AI assistant for this directory. How can I help you find businesses today?`,
             {}
         ),
     ],
@@ -65,7 +66,10 @@ const config = {
     },
 
     // Widget configuration
-    customComponents: {},
+    customComponents: {
+        // Use custom bot message renderer for formatted text
+        botChatMessage: (props: any) => <FormattedBotMessage {...props} />,
+    },
 
     // Widgets for dynamic content
     widgets: [

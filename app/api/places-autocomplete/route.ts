@@ -32,25 +32,32 @@ export async function POST(req: NextRequest) {
             );
         }
 
+        // Get city configuration from environment
+        const cityName = process.env.NEXT_PUBLIC_CITY_NAME || 'Dhamtari';
+        const stateName = process.env.NEXT_PUBLIC_STATE_NAME || 'Chhattisgarh';
+        const cityPinCode = process.env.NEXT_PUBLIC_CITY_PIN_CODE || '493773';
+
+        // Enhance input with location context for better local results
+        // Example: "Raju cold drinks" becomes "Raju cold drinks Dhamtari Chhattisgarh"
+        const enhancedInput = `${input.trim()} ${cityName} ${stateName}`;
+
         console.log('[Places Autocomplete] Query:', input);
+        console.log('[Places Autocomplete] Enhanced Query:', enhancedInput);
+        console.log('[Places Autocomplete] City context:', cityName, stateName, cityPinCode);
 
         // Call Google Places Autocomplete API (New)
-        // Using locationRestriction for STRICT geofencing to Dhamtari/Chhattisgarh only
+        // Using locationRestriction for STRICT geofencing to configured city only
         const url = 'https://places.googleapis.com/v1/places:autocomplete';
 
         const requestBody = {
-            input: input.trim(),
-            // Use locationBias with radius for city + nearby areas
-            // Note: locationRestriction is stricter but can exclude valid results
-            locationBias: {
-                circle: {
-                    center: {
-                        latitude: CITY_CENTER.lat,
-                        longitude: CITY_CENTER.lng,
-                    },
-                    radius: RADIUS_KM * 1000, // Convert km to meters
-                },
-            },
+            // Enhance input with city context for better local results
+            input: enhancedInput,
+            // Restrict to India for better results and cost optimization
+            // No lat/lng restriction - allows all Indian businesses to be found
+            // Note: includedPrimaryTypes filtering available but not used to maximize results
+            includedRegionCodes: ['IN'],
+            // Format response for India
+            regionCode: 'IN',
             languageCode: 'en',
         };
 

@@ -182,85 +182,205 @@ export default function ListingFormClient({ action, initialValues }: { action: (
 
   return (
     <>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="rounded-md border p-3 bg-gray-50">
-          <Label htmlFor="place">Google Places URL or Place ID</Label>
-          <div className="mt-1 flex gap-2">
-            <Input id="place" value={placeInput} onChange={(e) => setPlaceInput(e.target.value)} placeholder="Paste URL or Place ID" />
-            <Button type="button" variant="secondary" onClick={autofillFromGoogle}>Autofill</Button>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 sm:space-y-4 md:space-y-5">
+        <div className="rounded-md border p-2.5 sm:p-3 md:p-4 bg-gray-50">
+          <Label htmlFor="place" className="text-sm sm:text-sm md:text-base font-medium">Google Places URL or Place ID</Label>
+          <div className="mt-1.5 sm:mt-2 flex flex-col sm:flex-row gap-2">
+            <Input
+              id="place"
+              value={placeInput}
+              onChange={(e) => setPlaceInput(e.target.value)}
+              placeholder="Paste URL or Place ID"
+              className="h-10 sm:h-10 md:h-11 text-sm sm:text-base flex-1"
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={autofillFromGoogle}
+              className="h-10 sm:h-10 md:h-11 w-full sm:w-auto px-4 sm:px-6 text-sm sm:text-base whitespace-nowrap"
+            >
+              Autofill
+            </Button>
           </div>
-          <p className="text-xs text-gray-500 mt-1">We only use this to prefill your form. You can edit any field.</p>
+          <p className="text-[10px] sm:text-xs text-gray-500 mt-1.5 sm:mt-2">We only use this to prefill your form. You can edit any field.</p>
         </div>
 
-        <div>
-          <Label htmlFor="name">Name</Label>
-          <Input id="name" {...form.register("name")} aria-invalid={!!form.formState.errors.name} />
+        <div className="space-y-1.5 sm:space-y-2">
+          <Label htmlFor="name" className="text-sm sm:text-sm md:text-base font-medium">Name <span className="text-red-500">*</span></Label>
+          <Input
+            id="name"
+            {...form.register("name")}
+            aria-invalid={!!form.formState.errors.name}
+            className="h-10 sm:h-10 md:h-11 text-sm sm:text-base"
+            placeholder="Business name"
+          />
           {form.formState.errors.name && (
-            <p className="text-xs text-red-600 mt-1">{form.formState.errors.name.message as string}</p>
+            <p className="text-[10px] sm:text-xs text-red-600 mt-1">{form.formState.errors.name.message as string}</p>
           )}
-        </div>
-        <div>
-          <Label htmlFor="category">Category</Label>
-          <Input id="category" {...form.register("category")} aria-invalid={!!form.formState.errors.category} />
-          {form.formState.errors.category && (
-            <p className="text-xs text-red-600 mt-1">{form.formState.errors.category.message as string}</p>
-          )}
-        </div>
-        <div>
-          <Label htmlFor="address">Address</Label>
-          <Input id="address" {...form.register("address")} aria-invalid={!!form.formState.errors.address} />
-          {form.formState.errors.address && (
-            <p className="text-xs text-red-600 mt-1">{form.formState.errors.address.message as string}</p>
-          )}
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="phone">Phone</Label>
-            <Input id="phone" {...form.register("phone")} />
-          </div>
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" {...form.register("email")} />
-          </div>
-        </div>
-        <div>
-          <Label htmlFor="website">Website</Label>
-          <Input id="website" {...form.register("website")} />
-        </div>
-        <div>
-          <Label htmlFor="photo">Photo</Label>
-          <Input id="photo" type="file" accept="image/*" />
-        </div>
-        <div className="rounded-md border p-3">
-          <Label>Package</Label>
-          <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <button type="button" className={`rounded-md border p-3 text-left hover:bg-gray-50 ${selectedPlan === "free" ? "ring-2 ring-red-500" : ""}`} onClick={() => setSelectedPlan("free")}>Free — {PLANS.free.display}</button>
-            <button type="button" disabled={!hasRazorpayKey} aria-disabled={!hasRazorpayKey} title={!hasRazorpayKey ? "Razorpay key missing; contact admin" : undefined} className={`rounded-md border p-3 text-left hover:bg-gray-50 ${selectedPlan === "featured" ? "ring-2 ring-red-500" : ""} ${!hasRazorpayKey ? "opacity-50 cursor-not-allowed" : ""}`} onClick={() => hasRazorpayKey && setSelectedPlan("featured")}>Featured — {PLANS.featured.display}</button>
-          </div>
-          <p className="mt-2 text-xs text-gray-500">Featured includes homepage highlight and priority placement.</p>
         </div>
 
-        <Button type="submit" disabled={loading}>
-          {loading ? "Submitting..." : "Submit listing"}
-        </Button>
+        <div className="space-y-1.5 sm:space-y-2">
+          <Label htmlFor="category" className="text-sm sm:text-sm md:text-base font-medium">Category <span className="text-red-500">*</span></Label>
+          <Input
+            id="category"
+            {...form.register("category")}
+            aria-invalid={!!form.formState.errors.category}
+            className="h-10 sm:h-10 md:h-11 text-sm sm:text-base"
+            placeholder="e.g., Restaurant, Hotel, Healthcare"
+          />
+          {form.formState.errors.category && (
+            <p className="text-[10px] sm:text-xs text-red-600 mt-1">{form.formState.errors.category.message as string}</p>
+          )}
+        </div>
+
+        <div className="space-y-1.5 sm:space-y-2">
+          <Label htmlFor="address" className="text-sm sm:text-sm md:text-base font-medium">Address <span className="text-red-500">*</span></Label>
+          <Input
+            id="address"
+            {...form.register("address")}
+            aria-invalid={!!form.formState.errors.address}
+            className="h-10 sm:h-10 md:h-11 text-sm sm:text-base"
+            placeholder="Full business address"
+          />
+          {form.formState.errors.address && (
+            <p className="text-[10px] sm:text-xs text-red-600 mt-1">{form.formState.errors.address.message as string}</p>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-5">
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label htmlFor="phone" className="text-sm sm:text-sm md:text-base font-medium">Phone</Label>
+            <Input
+              id="phone"
+              {...form.register("phone")}
+              className="h-10 sm:h-10 md:h-11 text-sm sm:text-base"
+              placeholder="Contact number"
+              type="tel"
+            />
+          </div>
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label htmlFor="email" className="text-sm sm:text-sm md:text-base font-medium">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              {...form.register("email")}
+              className="h-10 sm:h-10 md:h-11 text-sm sm:text-base"
+              placeholder="Email address"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-1.5 sm:space-y-2">
+          <Label htmlFor="website" className="text-sm sm:text-sm md:text-base font-medium">Website</Label>
+          <Input
+            id="website"
+            {...form.register("website")}
+            className="h-10 sm:h-10 md:h-11 text-sm sm:text-base"
+            placeholder="https://example.com"
+            type="url"
+          />
+        </div>
+
+        <div className="space-y-1.5 sm:space-y-2">
+          <Label htmlFor="photo" className="text-sm sm:text-sm md:text-base font-medium">Photo</Label>
+          <Input
+            id="photo"
+            type="file"
+            accept="image/*"
+            className="h-10 sm:h-10 md:h-11 text-sm sm:text-base file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100 cursor-pointer"
+          />
+          <p className="text-[10px] sm:text-xs text-gray-500">Upload business photo (optional)</p>
+        </div>
+
+        <div className="rounded-md border p-2.5 sm:p-3 md:p-4 bg-gray-50">
+          <Label className="text-sm sm:text-base md:text-base font-medium">Choose Your Package</Label>
+          <div className="mt-2 sm:mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 md:gap-4">
+            <button
+              type="button"
+              className={`rounded-md border p-3 sm:p-3.5 md:p-4 text-left transition-all duration-200 hover:bg-gray-50 hover:shadow-md ${selectedPlan === "free" ? "ring-2 ring-red-500 bg-white shadow-md" : "bg-white"}`}
+              onClick={() => setSelectedPlan("free")}
+            >
+              <div className="flex items-start justify-between mb-1">
+                <span className="font-semibold text-sm sm:text-base text-gray-900">Free</span>
+                {selectedPlan === "free" && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                    Selected
+                  </span>
+                )}
+              </div>
+              <p className="text-xs sm:text-sm text-gray-600">{PLANS.free.display}</p>
+              <p className="text-[10px] sm:text-xs text-gray-500 mt-1.5">Basic visibility</p>
+            </button>
+
+            <button
+              type="button"
+              disabled={!hasRazorpayKey}
+              aria-disabled={!hasRazorpayKey}
+              title={!hasRazorpayKey ? "Razorpay key missing; contact admin" : undefined}
+              className={`rounded-md border p-3 sm:p-3.5 md:p-4 text-left transition-all duration-200 hover:bg-gray-50 hover:shadow-md ${selectedPlan === "featured" ? "ring-2 ring-red-500 bg-white shadow-md" : "bg-white"} ${!hasRazorpayKey ? "opacity-50 cursor-not-allowed" : ""}`}
+              onClick={() => hasRazorpayKey && setSelectedPlan("featured")}
+            >
+              <div className="flex items-start justify-between mb-1">
+                <span className="font-semibold text-sm sm:text-base text-gray-900">Featured</span>
+                {selectedPlan === "featured" && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                    Selected
+                  </span>
+                )}
+              </div>
+              <p className="text-xs sm:text-sm text-gray-600">{PLANS.featured.display}</p>
+              <p className="text-[10px] sm:text-xs text-gray-500 mt-1.5">Priority placement</p>
+            </button>
+          </div>
+          <p className="mt-2 sm:mt-3 text-[10px] sm:text-xs text-gray-500 leading-relaxed">Featured includes homepage highlight and priority placement in search results.</p>
+        </div>
+
+        <div className="pt-2 sm:pt-3 md:pt-4">
+          <Button
+            type="submit"
+            disabled={loading}
+            className="w-full h-11 sm:h-11 md:h-12 text-sm sm:text-base font-medium"
+          >
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Submitting...
+              </span>
+            ) : (
+              "Submit Listing"
+            )}
+          </Button>
+        </div>
       </form>
 
       <Dialog open={successOpen} onOpenChange={setSuccessOpen}>
-        <DialogContent showCloseButton>
+        <DialogContent showCloseButton className="sm:max-w-md max-w-[calc(100%-2rem)] mx-4">
           <DialogHeader>
-            <DialogTitle>Listing submitted</DialogTitle>
-            <DialogDescription>
-              Thanks! We received your submission. You will be redirected to My Listings in {countdown}s.
+            <DialogTitle className="text-lg sm:text-xl">Listing Submitted Successfully!</DialogTitle>
+            <DialogDescription className="text-sm sm:text-base">
+              Thanks! We received your submission. You will be redirected to My Listings in <span className="font-semibold text-red-600">{countdown}s</span>.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-3">
             {createdId && (
-              <Button type="button" variant="secondary" onClick={() => { setSuccessOpen(false); router.push(`/listing/${createdId}`) }}>
-                View listing
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => { setSuccessOpen(false); router.push(`/listing/${createdId}`) }}
+                className="w-full sm:w-auto h-10 sm:h-10 text-sm sm:text-base"
+              >
+                View Listing
               </Button>
             )}
-            <Button type="button" onClick={() => { setSuccessOpen(false); router.push("/dashboard/my-listings") }}>
-              Go now
+            <Button
+              type="button"
+              onClick={() => { setSuccessOpen(false); router.push("/dashboard/my-listings") }}
+              className="w-full sm:w-auto h-10 sm:h-10 text-sm sm:text-base"
+            >
+              Go to My Listings
             </Button>
           </DialogFooter>
         </DialogContent>

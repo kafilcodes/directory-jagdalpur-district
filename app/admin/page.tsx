@@ -252,20 +252,20 @@ export default function AdminDashboard() {
         subtitle?: string
     }) => (
         <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">{title}</CardTitle>
-                <Icon className="h-5 w-5 text-gray-400" />
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                <CardTitle className="text-xs sm:text-sm font-medium text-gray-600 truncate pr-2">{title}</CardTitle>
+                <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 flex-shrink-0" />
             </CardHeader>
-            <CardContent>
-                <div className="text-2xl font-bold text-gray-900">{value}</div>
+            <CardContent className="pt-2">
+                <div className="text-xl sm:text-2xl font-bold text-gray-900">{value}</div>
                 {subtitle && (
-                    <p className="text-xs text-gray-500 mt-1">{subtitle}</p>
+                    <p className="text-[10px] sm:text-xs text-gray-500 mt-1 truncate">{subtitle}</p>
                 )}
                 {trend && trendValue && (
-                    <div className={`flex items-center gap-1 mt-2 text-xs ${trend === "up" ? "text-emerald-600" : trend === "down" ? "text-red-600" : "text-gray-600"
+                    <div className={`flex items-center gap-1 mt-1.5 sm:mt-2 text-[10px] sm:text-xs ${trend === "up" ? "text-emerald-600" : trend === "down" ? "text-red-600" : "text-gray-600"
                         }`}>
                         {trend === "up" ? <ArrowUpIcon className="h-3 w-3" /> : <ArrowDownIcon className="h-3 w-3" />}
-                        <span>{trendValue}</span>
+                        <span className="truncate">{trendValue}</span>
                     </div>
                 )}
             </CardContent>
@@ -274,38 +274,38 @@ export default function AdminDashboard() {
 
     if (loading) {
         return (
-            <div className="space-y-6 animate-pulse">
+            <div className="space-y-4 sm:space-y-5 md:space-y-6 animate-pulse">
                 {/* Header Skeleton */}
                 <div>
-                    <Skeleton className="h-9 w-64 mb-3" />
-                    <Skeleton className="h-5 w-96" />
+                    <Skeleton className="h-6 sm:h-7 md:h-9 w-48 sm:w-56 md:w-64 mb-2 sm:mb-2.5 md:mb-3" />
+                    <Skeleton className="h-4 sm:h-4.5 md:h-5 w-64 sm:w-80 md:w-96" />
                 </div>
 
                 {/* Stats Cards Skeleton */}
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 sm:gap-4 md:gap-5 lg:gap-6 lg:grid-cols-4">
                     {[...Array(8)].map((_, i) => (
                         <Card key={i} className="border-0 shadow-md">
-                            <CardHeader className="pb-3">
-                                <Skeleton className="h-4 w-32 mb-1" />
+                            <CardHeader className="pb-2 sm:pb-2.5 md:pb-3">
+                                <Skeleton className="h-3 sm:h-3.5 md:h-4 w-24 sm:w-28 md:w-32 mb-1" />
                             </CardHeader>
                             <CardContent>
-                                <Skeleton className="h-10 w-28 mb-2" />
-                                <Skeleton className="h-4 w-20" />
+                                <Skeleton className="h-7 sm:h-8 md:h-10 w-20 sm:w-24 md:w-28 mb-1.5 sm:mb-2" />
+                                <Skeleton className="h-3 sm:h-3.5 md:h-4 w-16 sm:w-18 md:w-20" />
                             </CardContent>
                         </Card>
                     ))}
                 </div>
 
                 {/* Charts Skeleton */}
-                <div className="grid gap-6 md:grid-cols-2">
+                <div className="grid gap-4 sm:gap-5 md:gap-6 md:grid-cols-2">
                     {[...Array(4)].map((_, i) => (
                         <Card key={i}>
                             <CardHeader>
-                                <Skeleton className="h-6 w-48 mb-2" />
-                                <Skeleton className="h-4 w-64" />
+                                <Skeleton className="h-4 sm:h-5 md:h-6 w-40 sm:w-44 md:w-48 mb-1.5 sm:mb-2" />
+                                <Skeleton className="h-3 sm:h-3.5 md:h-4 w-48 sm:w-56 md:w-64" />
                             </CardHeader>
                             <CardContent>
-                                <Skeleton className="h-[300px] w-full" />
+                                <Skeleton className="h-48 sm:h-56 md:h-64 lg:h-72 xl:h-[300px] w-full" />
                             </CardContent>
                         </Card>
                     ))}
@@ -314,14 +314,14 @@ export default function AdminDashboard() {
                 {/* Quick Info Skeleton */}
                 <Card>
                     <CardHeader>
-                        <Skeleton className="h-6 w-32" />
+                        <Skeleton className="h-5 sm:h-5.5 md:h-6 w-28 sm:w-30 md:w-32" />
                     </CardHeader>
                     <CardContent>
-                        <div className="space-y-3">
+                        <div className="space-y-2.5 sm:space-y-3">
                             {[...Array(3)].map((_, i) => (
-                                <div key={i} className="flex justify-between items-center py-2">
-                                    <Skeleton className="h-4 w-40" />
-                                    <Skeleton className="h-4 w-20" />
+                                <div key={i} className="flex justify-between items-center py-1.5 sm:py-2">
+                                    <Skeleton className="h-3.5 sm:h-4 w-32 sm:w-36 md:w-40" />
+                                    <Skeleton className="h-3.5 sm:h-4 w-16 sm:w-18 md:w-20" />
                                 </div>
                             ))}
                         </div>
@@ -333,10 +333,10 @@ export default function AdminDashboard() {
 
     if (error) {
         return (
-            <div className="text-center py-12">
-                <div className="mb-4 text-red-500 text-lg font-semibold">Error Loading Dashboard</div>
-                <p className="text-gray-600 mb-4">{error}</p>
-                <Button onClick={refreshData} variant="outline">
+            <div className="text-center py-8 sm:py-10 md:py-12 px-4">
+                <div className="mb-3 sm:mb-4 text-red-500 text-base sm:text-lg font-semibold">Error Loading Dashboard</div>
+                <p className="text-gray-600 text-sm sm:text-base mb-3 sm:mb-4 max-w-md mx-auto">{error}</p>
+                <Button onClick={refreshData} variant="outline" className="h-10 sm:h-10 md:h-11 text-sm sm:text-base px-4 sm:px-5 md:px-6">
                     Try Again
                 </Button>
             </div>
@@ -345,9 +345,9 @@ export default function AdminDashboard() {
 
     if (!stats) {
         return (
-            <div className="text-center py-12">
-                <p className="text-gray-600 mb-4">Unable to load dashboard data. Please try refreshing.</p>
-                <Button onClick={refreshData} variant="outline">
+            <div className="text-center py-8 sm:py-10 md:py-12 px-4">
+                <p className="text-gray-600 text-sm sm:text-base mb-3 sm:mb-4 max-w-md mx-auto">Unable to load dashboard data. Please try refreshing.</p>
+                <Button onClick={refreshData} variant="outline" className="h-10 sm:h-10 md:h-11 text-sm sm:text-base px-4 sm:px-5 md:px-6">
                     Reload Dashboard
                 </Button>
             </div>
@@ -355,26 +355,27 @@ export default function AdminDashboard() {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-5 md:space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-                    <p className="text-gray-600 mt-2">Overview of your directory platform</p>
+                    <h1 className="text-2xl sm:text-2xl md:text-3xl font-bold text-gray-900">Dashboard</h1>
+                    <p className="text-gray-600 text-xs sm:text-sm md:text-base mt-1 sm:mt-1.5 md:mt-2">Overview of your directory platform</p>
                 </div>
                 <Button
                     onClick={refreshData}
                     disabled={loading}
                     variant="outline"
                     size="sm"
+                    className="h-9 sm:h-9 md:h-10 text-xs sm:text-sm w-full sm:w-auto"
                 >
-                    <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                    <RefreshCw className={`mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4 ${loading ? 'animate-spin' : ''}`} />
                     Refresh
                 </Button>
             </div>
 
             {/* Stats Grid */}
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 sm:gap-4 md:gap-5 lg:gap-6 lg:grid-cols-4">
                 <StatCard
                     title="Total Listings"
                     value={stats.totalListings}
@@ -434,15 +435,15 @@ export default function AdminDashboard() {
 
             {/* Charts Grid */}
             {localChartData && (
-                <div className="grid gap-6 md:grid-cols-2">
+                <div className="grid gap-4 sm:gap-5 md:gap-6 md:grid-cols-2">
                     {/* Plan Distribution - Pie Chart */}
                     <Card className="border-0 shadow-md">
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Target className="h-5 w-5 text-red-500" />
-                                Plan Distribution
+                            <CardTitle className="flex items-center gap-1.5 sm:gap-2 text-base sm:text-lg md:text-xl">
+                                <Target className="h-4 w-4 sm:h-5 sm:w-5 text-red-500 flex-shrink-0" />
+                                <span className="truncate">Plan Distribution</span>
                             </CardTitle>
-                            <CardDescription>Breakdown by listing type</CardDescription>
+                            <CardDescription className="text-xs sm:text-sm">Breakdown by listing type</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <ChartContainer
@@ -451,7 +452,7 @@ export default function AdminDashboard() {
                                     sponsored: { label: "Sponsored", color: "#EF4444" },
                                     featured: { label: "Featured", color: "#F59E0B" },
                                 }}
-                                className="h-[300px]"
+                                className="h-48 sm:h-56 md:h-64 lg:h-72 xl:h-[300px]"
                             >
                                 <ResponsiveContainer width="100%" height="100%">
                                     <PieChart>
@@ -489,11 +490,11 @@ export default function AdminDashboard() {
                     {/* Status Breakdown - Pie Chart */}
                     <Card className="border-0 shadow-md">
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Activity className="h-5 w-5 text-emerald-500" />
-                                Status Overview
+                            <CardTitle className="flex items-center gap-1.5 sm:gap-2 text-base sm:text-lg md:text-xl">
+                                <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-500 flex-shrink-0" />
+                                <span className="truncate">Status Overview</span>
                             </CardTitle>
-                            <CardDescription>Listings by approval status</CardDescription>
+                            <CardDescription className="text-xs sm:text-sm">Listings by approval status</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <ChartContainer
@@ -502,7 +503,7 @@ export default function AdminDashboard() {
                                     pending: { label: "Pending", color: "#F59E0B" },
                                     draft: { label: "Draft", color: "#6B7280" },
                                 }}
-                                className="h-[300px]"
+                                className="h-48 sm:h-56 md:h-64 lg:h-72 xl:h-[300px]"
                             >
                                 <ResponsiveContainer width="100%" height="100%">
                                     <PieChart>
@@ -540,11 +541,11 @@ export default function AdminDashboard() {
                     {/* Weekly Growth - Area Chart */}
                     <Card className="border-0 shadow-md">
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <TrendingUp className="h-5 w-5 text-blue-500" />
-                                Weekly Growth
+                            <CardTitle className="flex items-center gap-1.5 sm:gap-2 text-base sm:text-lg md:text-xl">
+                                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 flex-shrink-0" />
+                                <span className="truncate">Weekly Growth</span>
                             </CardTitle>
-                            <CardDescription>New listings and users (last 7 days)</CardDescription>
+                            <CardDescription className="text-xs sm:text-sm">New listings and users (last 7 days)</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <ChartContainer
@@ -552,7 +553,7 @@ export default function AdminDashboard() {
                                     listings: { label: "Listings", color: "#EF4444" },
                                     users: { label: "Users", color: "#3B82F6" },
                                 }}
-                                className="h-[300px]"
+                                className="h-48 sm:h-56 md:h-64 lg:h-72 xl:h-[300px]"
                             >
                                 <ResponsiveContainer width="100%" height="100%">
                                     <AreaChart data={localChartData.weeklyGrowth}>
@@ -614,18 +615,18 @@ export default function AdminDashboard() {
                     {/* Monthly Revenue - Bar Chart */}
                     <Card className="border-0 shadow-md">
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <IndianRupee className="h-5 w-5 text-emerald-500" />
-                                Revenue Trend
+                            <CardTitle className="flex items-center gap-1.5 sm:gap-2 text-base sm:text-lg md:text-xl">
+                                <IndianRupee className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-500 flex-shrink-0" />
+                                <span className="truncate">Revenue Trend</span>
                             </CardTitle>
-                            <CardDescription>Last 6 months revenue (₹)</CardDescription>
+                            <CardDescription className="text-xs sm:text-sm">Last 6 months revenue (₹)</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <ChartContainer
                                 config={{
                                     revenue: { label: "Revenue", color: "#10B981" },
                                 }}
-                                className="h-[300px]"
+                                className="h-48 sm:h-56 md:h-64 lg:h-72 xl:h-[300px]"
                             >
                                 <ResponsiveContainer width="100%" height="100%">
                                     <BarChart data={localChartData.monthlyRevenue}>
@@ -666,24 +667,24 @@ export default function AdminDashboard() {
             {/* Quick Info */}
             <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300">
                 <CardHeader>
-                    <CardTitle>Quick Info</CardTitle>
+                    <CardTitle className="text-base sm:text-lg md:text-xl">Quick Info</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2">
-                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                        <span className="text-sm text-gray-600">Active Listings</span>
-                        <span className="font-medium text-gray-900">{stats.activeListings}</span>
+                <CardContent className="space-y-1.5 sm:space-y-2">
+                    <div className="flex justify-between items-center py-1.5 sm:py-2 border-b border-gray-100">
+                        <span className="text-xs sm:text-sm text-gray-600">Active Listings</span>
+                        <span className="font-medium text-gray-900 text-xs sm:text-sm">{stats.activeListings}</span>
                     </div>
-                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                        <span className="text-sm text-gray-600">Conversion Rate (Free → Paid)</span>
-                        <span className="font-medium text-gray-900">
+                    <div className="flex justify-between items-center py-1.5 sm:py-2 border-b border-gray-100">
+                        <span className="text-xs sm:text-sm text-gray-600">Conversion Rate (Free → Paid)</span>
+                        <span className="font-medium text-gray-900 text-xs sm:text-sm">
                             {stats.totalListings > 0
                                 ? Math.round(((stats.sponsoredListings + stats.featuredListings) / stats.totalListings) * 100)
                                 : 0}%
                         </span>
                     </div>
-                    <div className="flex justify-between items-center py-2">
-                        <span className="text-sm text-gray-600">Average Revenue per Paid Listing</span>
-                        <span className="font-medium text-gray-900">
+                    <div className="flex justify-between items-center py-1.5 sm:py-2">
+                        <span className="text-xs sm:text-sm text-gray-600 pr-2">Average Revenue per Paid Listing</span>
+                        <span className="font-medium text-gray-900 text-xs sm:text-sm whitespace-nowrap">
                             {(stats.sponsoredListings + stats.featuredListings) > 0
                                 ? `₹${Math.round(stats.totalRevenue / (stats.sponsoredListings + stats.featuredListings)).toLocaleString('en-IN')}`
                                 : '₹0'}

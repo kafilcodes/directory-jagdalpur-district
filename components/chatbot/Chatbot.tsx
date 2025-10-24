@@ -9,7 +9,7 @@ import config from "./config"
 import MessageParser from "./MessageParser"
 import ActionProvider from "./ActionProvider"
 import { ChevronDown } from "lucide-react"
-import { saveChatHistory, loadChatHistory, isStorageAvailable } from "@/lib/chatStorage"
+// localStorage history removed - chatbot now starts fresh each session
 
 /**
  * Main Chatbot Container Component
@@ -32,42 +32,11 @@ interface ChatbotContainerProps {
 
 export function Chatbot({ onClose }: ChatbotContainerProps) {
     const [isVisible, setIsVisible] = useState(false)
-    const [chatState, setChatState] = useState<any>(null)
     const messageContainerRef = useRef<HTMLDivElement>(null)
-    const saveTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
     const chatbotRef = useRef<HTMLDivElement>(null)
 
-    // Load chat history on mount
-    useEffect(() => {
-        if (isStorageAvailable()) {
-            const savedMessages = loadChatHistory()
-            if (savedMessages && savedMessages.length > 0) {
-                console.log('[Chatbot] Restoring chat history:', savedMessages.length, 'messages')
-                setChatState({ messages: savedMessages })
-            }
-        }
-    }, [])
-
-    // Save chat history when state changes (debounced)
-    useEffect(() => {
-        if (chatState?.messages) {
-            // Clear existing timeout
-            if (saveTimeoutRef.current) {
-                clearTimeout(saveTimeoutRef.current)
-            }
-
-            // Debounce save to avoid excessive writes
-            saveTimeoutRef.current = setTimeout(() => {
-                saveChatHistory(chatState.messages)
-            }, 500)
-        }
-
-        return () => {
-            if (saveTimeoutRef.current) {
-                clearTimeout(saveTimeoutRef.current)
-            }
-        }
-    }, [chatState])
+    // localStorage history functionality removed - chatbot starts fresh each session
+    // This prevents storage bugs and unnecessary data persistence
 
     // Trigger animation after mount
     useEffect(() => {
@@ -111,6 +80,43 @@ export function Chatbot({ onClose }: ChatbotContainerProps) {
         }
     }, [onClose])
 
+    // Add input validation and send button disable logic
+    useEffect(() => {
+        const inputField = document.querySelector('.react-chatbot-kit-chat-input') as HTMLInputElement
+        const sendButton = document.querySelector('.react-chatbot-kit-chat-btn-send') as HTMLButtonElement
+
+        if (!inputField || !sendButton) return
+
+        // Set max length
+        inputField.setAttribute('maxLength', '100')
+
+        // Function to update button state
+        const updateButtonState = () => {
+            const value = inputField.value.trim()
+            if (value.length === 0) {
+                sendButton.disabled = true
+                sendButton.style.opacity = '0.4'
+                sendButton.style.cursor = 'not-allowed'
+            } else {
+                sendButton.disabled = false
+                sendButton.style.opacity = '1'
+                sendButton.style.cursor = 'pointer'
+            }
+        }
+
+        // Initial state (disabled)
+        updateButtonState()
+
+        // Listen to input changes
+        inputField.addEventListener('input', updateButtonState)
+        inputField.addEventListener('keyup', updateButtonState)
+
+        return () => {
+            inputField.removeEventListener('input', updateButtonState)
+            inputField.removeEventListener('keyup', updateButtonState)
+        }
+    }, [])
+
     // Handle click outside to close chatbot
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -137,19 +143,19 @@ export function Chatbot({ onClose }: ChatbotContainerProps) {
         <div
             ref={chatbotRef}
             className={`fixed z-40 transition-all duration-300 
-                bottom-16 right-2 left-2 sm:bottom-20 sm:right-4 sm:left-auto sm:w-full sm:max-w-[340px]
-                md:bottom-24 md:right-6 md:max-w-[420px] lg:max-w-md
+                bottom-14 right-1 left-1 sm:bottom-16 sm:right-3 sm:left-auto sm:w-full sm:max-w-[280px]
+                md:bottom-20 md:right-4 md:max-w-[360px] lg:max-w-[400px]
                 ${isVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"}`}
         >
             {/* Chat Container - Mobile First Design */}
             <div className="flex flex-col overflow-hidden rounded-lg sm:rounded-xl border border-gray-200 bg-white shadow-2xl">
                 {/* Custom Header */}
-                <div className="flex items-center justify-between bg-red-500 px-3 py-2.5 sm:px-4 sm:py-3 text-white">
-                    <div className="flex items-center gap-2 sm:gap-3">
-                        <BotMessageSquare className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7" />
+                <div className="flex items-center justify-between bg-red-500 px-2 py-1.5 sm:px-3 sm:py-2 text-white">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                        <BotMessageSquare className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
                         <div className="flex flex-col">
-                            <span className="text-xs sm:text-sm font-semibold">Directory AI Chatbot</span>
-                            <div className="flex items-center gap-1 sm:gap-1.5">
+                            <span className="text-xs sm:text-sm font-semibold">Directory AI</span>
+                            <div className="flex items-center gap-0.5 sm:gap-1">
                                 <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-green-400 animate-pulse" />
                                 <span className="text-[10px] sm:text-xs opacity-90">Online</span>
                             </div>
@@ -157,30 +163,22 @@ export function Chatbot({ onClose }: ChatbotContainerProps) {
                     </div>
                     <button
                         onClick={onClose}
-                        className="rounded-full p-1 transition-colors hover:bg-red-600 active:scale-95"
+                        className="rounded-full p-0.5 sm:p-1 transition-colors hover:bg-red-600 active:scale-95"
                         aria-label="Minimize chat"
                     >
-                        <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5" />
+                        <ChevronDown className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                     </button>
                 </div>
 
-                {/* Chatbot Interface with Responsive Height - Optimized for Mobile */}
-                <div className="h-[350px] sm:h-[400px] md:h-[450px] lg:h-[500px] w-full flex flex-col overflow-hidden [&_.react-chatbot-kit-chat-container]:w-full [&_.react-chatbot-kit-chat-container]:h-full [&_.react-chatbot-kit-chat-container]:flex [&_.react-chatbot-kit-chat-container]:flex-col ">
+                {/* Chatbot Interface with Responsive Height - Mobile First, Desktop Larger */}
+                <div className="h-[280px] sm:h-[340px] md:h-[420px] lg:h-[480px] w-full flex flex-col overflow-hidden [&_.react-chatbot-kit-chat-container]:w-full [&_.react-chatbot-kit-chat-container]:h-full [&_.react-chatbot-kit-chat-container]:flex [&_.react-chatbot-kit-chat-container]:flex-col ">
                     <ReactChatbot
                         config={config}
                         messageParser={MessageParser}
                         actionProvider={ActionProvider}
                         headerText=""
                         placeholderText="Type your message..."
-                        {...(chatState ? {
-                            messageHistory: chatState.messages.filter((msg: any) => !msg.loading && msg.message !== ''),
-                            runInitialMessagesWithHistory: false
-                        } : {})}
-                        saveMessages={(messages: any) => {
-                            // Filter out loading and empty messages before saving
-                            const validMessages = messages.filter((msg: any) => !msg.loading && msg.message !== '')
-                            setChatState((prev: any) => ({ ...prev, messages: validMessages }))
-                        }}
+                    // No message history persistence - fresh session each time
                     />
                 </div>
             </div>
@@ -206,8 +204,8 @@ export function Chatbot({ onClose }: ChatbotContainerProps) {
                 .react-chatbot-kit-chat-message-container {
                     flex: 1 !important;
                     width: 100% !important;
-                    padding: 0.75rem !important;
-                    padding-bottom: 0.5rem !important;
+                    padding: 0.375rem !important;
+                    padding-bottom: 0.25rem !important;
                     overflow-y: auto !important;
                     background-color: #ffffff !important;
                     margin-bottom: 0 !important;
@@ -217,7 +215,8 @@ export function Chatbot({ onClose }: ChatbotContainerProps) {
 
                 @media (min-width: 640px) {
                     .react-chatbot-kit-chat-message-container {
-                        padding: 1rem !important;
+                        padding: 0.5rem !important;
+                        padding-bottom: 0.375rem !important;
                     }
                 }
 
@@ -244,7 +243,7 @@ export function Chatbot({ onClose }: ChatbotContainerProps) {
                     flex-shrink: 0 !important;
                     width: 100% !important;
                     position: relative !important;
-                    padding: 0.75rem !important;
+                    padding: 0.375rem !important;
                     background-color: white !important;
                     border-top: none !important;
                     z-index: 10 !important;
@@ -253,26 +252,27 @@ export function Chatbot({ onClose }: ChatbotContainerProps) {
 
                 @media (min-width: 640px) {
                     .react-chatbot-kit-chat-input-container {
-                        padding: 0.875rem !important;
+                        padding: 0.5rem !important;
                     }
                 }
 
                 /* Input Field - With floating send button */
                 .react-chatbot-kit-chat-input {
                     width: 100% !important;
-                    padding: 0.625rem 3rem 0.625rem 0.75rem !important;
-                    font-size: 0.8125rem !important;
+                    padding: 0.375rem 2.5rem 0.375rem 0.5rem !important;
+                    font-size: 0.6875rem !important;
                     border: 1px solid #d1d5db !important;
                     border-radius: 9999px !important;
                     background-color: white !important;
                     transition: all 0.2s !important;
-                    min-height: 44px !important;
+                    min-height: 34px !important;
                 }
 
                 @media (min-width: 640px) {
                     .react-chatbot-kit-chat-input {
-                        padding-right: 3.5rem !important;
-                        font-size: 0.875rem !important;
+                        padding: 0.5rem 2.75rem 0.5rem 0.625rem !important;
+                        font-size: 0.75rem !important;
+                        min-height: 40px !important;
                     }
                 }
 
@@ -289,11 +289,11 @@ export function Chatbot({ onClose }: ChatbotContainerProps) {
                 /* Send Button - Icon Only with Disabled State */
                 .react-chatbot-kit-chat-btn-send {
                     position: absolute !important;
-                    right: 1.125rem !important;
+                    right: 0.75rem !important;
                     top: 50% !important;
                     transform: translateY(-50%) !important;
-                    width: 2.25rem !important;
-                    height: 2.25rem !important;
+                    width: 2rem !important;
+                    height: 2rem !important;
                     display: flex !important;
                     align-items: center !important;
                     justify-content: center !important;
@@ -307,9 +307,9 @@ export function Chatbot({ onClose }: ChatbotContainerProps) {
 
                 @media (min-width: 640px) {
                     .react-chatbot-kit-chat-btn-send {
-                        right: 1.25rem !important;
-                        width: 2.5rem !important;
-                        height: 2.5rem !important;
+                        right: 1rem !important;
+                        width: 2.25rem !important;
+                        height: 2.25rem !important;
                     }
                 }
 
@@ -332,14 +332,14 @@ export function Chatbot({ onClose }: ChatbotContainerProps) {
 
                 .react-chatbot-kit-chat-btn-send-icon {
                     fill: currentColor !important;
-                    width: 1.25rem !important;
-                    height: 1.25rem !important;
+                    width: 1.125rem !important;
+                    height: 1.125rem !important;
                 }
 
                 @media (min-width: 640px) {
                     .react-chatbot-kit-chat-btn-send-icon {
-                        width: 1.375rem !important;
-                        height: 1.375rem !important;
+                        width: 1.25rem !important;
+                        height: 1.25rem !important;
                     }
                 }
 
@@ -349,7 +349,7 @@ export function Chatbot({ onClose }: ChatbotContainerProps) {
                     display: flex !important;
                     align-items: flex-end !important;
                     justify-content: flex-start !important;
-                    margin-bottom: 0.625rem !important;
+                    margin-bottom: 0.375rem !important;
                     animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
                 }
 
@@ -359,14 +359,14 @@ export function Chatbot({ onClose }: ChatbotContainerProps) {
                     display: flex !important;
                     align-items: flex-end !important;
                     justify-content: flex-end !important;
-                    margin-bottom: 0.625rem !important;
+                    margin-bottom: 0.375rem !important;
                     animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                 }
 
                 @media (min-width: 640px) {
                     .react-chatbot-kit-chat-bot-message-container,
                     .react-chatbot-kit-user-chat-message-container {
-                        margin-bottom: 0.75rem !important;
+                        margin-bottom: 0.5rem !important;
                     }
                 }
 
@@ -379,17 +379,17 @@ export function Chatbot({ onClose }: ChatbotContainerProps) {
                 /* Bot Message - RED Gradient with White Text - FORCE OVERRIDE */
                 .react-chatbot-kit-chat-bot-message {
                     max-width: 85% !important;
-                    padding: 0.625rem 0.875rem !important;
+                    padding: 0.375rem 0.625rem !important;
                     margin-left: 0 !important;
                     margin-right: auto !important;
-                    font-size: 0.8125rem !important;
+                    font-size: 0.6875rem !important;
                     color: #ffffff !important;
                     background: linear-gradient(to right, #ef4444, #dc2626) !important;
                     background-color: #ef4444 !important;
-                    border-radius: 1.125rem !important;
+                    border-radius: 0.875rem !important;
                     border-bottom-left-radius: 0.25rem !important;
                     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.1) !important;
-                    line-height: 1.5 !important;
+                    line-height: 1.4 !important;
                     word-wrap: break-word !important;
                     overflow-wrap: break-word !important;
                 }
@@ -397,8 +397,10 @@ export function Chatbot({ onClose }: ChatbotContainerProps) {
                 @media (min-width: 640px) {
                     .react-chatbot-kit-chat-bot-message {
                         max-width: 80% !important;
-                        padding: 0.75rem 1rem !important;
-                        font-size: 0.875rem !important;
+                        padding: 0.5rem 0.75rem !important;
+                        font-size: 0.75rem !important;
+                        border-radius: 1rem !important;
+                        line-height: 1.5 !important;
                         box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.1) !important;
                     }
                 }
@@ -420,20 +422,35 @@ export function Chatbot({ onClose }: ChatbotContainerProps) {
                     color: #ffffff !important;
                 }
 
+                /* Thinking indicator - smaller blinking text */
+                .react-chatbot-kit-chat-bot-message:has-text("thinking..."),
+                .react-chatbot-kit-chat-bot-message {
+                    &:is(:has-text("thinking")) {
+                        font-size: 0.625rem !important;
+                        opacity: 0.9 !important;
+                        animation: blink 1.4s ease-in-out infinite !important;
+                    }
+                }
+
+                @keyframes blink {
+                    0%, 100% { opacity: 0.4; }
+                    50% { opacity: 1; }
+                }
+
                 /* User Message - White with Border */
                 .react-chatbot-kit-user-chat-message {
                     max-width: 85% !important;
-                    padding: 0.625rem 0.875rem !important;
+                    padding: 0.375rem 0.625rem !important;
                     margin-right: 0 !important;
                     margin-left: auto !important;
-                    font-size: 0.8125rem !important;
+                    font-size: 0.6875rem !important;
                     color: #1f2937 !important;
                     background-color: #ffffff !important;
                     border: 1px solid #e5e7eb !important;
-                    border-radius: 1.125rem !important;
+                    border-radius: 0.875rem !important;
                     border-bottom-right-radius: 0.25rem !important;
                     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
-                    line-height: 1.5 !important;
+                    line-height: 1.4 !important;
                     word-wrap: break-word !important;
                     overflow-wrap: break-word !important;
                 }
@@ -441,8 +458,10 @@ export function Chatbot({ onClose }: ChatbotContainerProps) {
                 @media (min-width: 640px) {
                     .react-chatbot-kit-user-chat-message {
                         max-width: 80% !important;
-                        padding: 0.75rem 1rem !important;
-                        font-size: 0.875rem !important;
+                        padding: 0.5rem 0.75rem !important;
+                        font-size: 0.75rem !important;
+                        border-radius: 1rem !important;
+                        line-height: 1.5 !important;
                     }
                 }
 

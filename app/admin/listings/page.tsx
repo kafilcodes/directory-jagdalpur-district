@@ -245,45 +245,45 @@ export default function ListingsPage() {
 
     if (loading) {
         return (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-5 md:space-y-6">
                 {/* Header Skeleton */}
                 <div>
-                    <Skeleton className="h-9 w-48 mb-2" />
-                    <Skeleton className="h-5 w-80" />
+                    <Skeleton className="h-6 sm:h-7 md:h-9 w-36 sm:w-40 md:w-48 mb-1.5 sm:mb-2" />
+                    <Skeleton className="h-4 sm:h-4.5 md:h-5 w-56 sm:w-68 md:w-80" />
                 </div>
 
                 {/* Filters Skeleton */}
                 <Card>
-                    <CardContent className="pt-6">
-                        <div className="grid gap-4 md:grid-cols-4">
-                            <div className="md:col-span-2">
-                                <Skeleton className="h-10 w-full" />
+                    <CardContent className="pt-4 sm:pt-5 md:pt-6">
+                        <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
+                            <div className="sm:col-span-2">
+                                <Skeleton className="h-10 sm:h-10 md:h-11 w-full" />
                             </div>
-                            <Skeleton className="h-10 w-full" />
-                            <Skeleton className="h-10 w-full" />
+                            <Skeleton className="h-10 sm:h-10 md:h-11 w-full" />
+                            <Skeleton className="h-10 sm:h-10 md:h-11 w-full" />
                         </div>
                     </CardContent>
                 </Card>
 
                 {/* Listings Skeleton */}
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                     {[...Array(6)].map((_, i) => (
                         <Card key={i}>
-                            <CardContent className="p-4">
-                                <div className="flex gap-4">
-                                    <Skeleton className="w-24 h-24 rounded-lg flex-shrink-0" />
-                                    <div className="flex-1 space-y-3">
+                            <CardContent className="p-3 sm:p-4">
+                                <div className="flex gap-3 sm:gap-4">
+                                    <Skeleton className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg flex-shrink-0" />
+                                    <div className="flex-1 space-y-2 sm:space-y-3">
                                         <div className="flex items-start justify-between">
-                                            <div className="flex-1 space-y-2">
-                                                <Skeleton className="h-6 w-3/4" />
-                                                <div className="flex gap-2">
-                                                    <Skeleton className="h-5 w-20" />
-                                                    <Skeleton className="h-5 w-20" />
+                                            <div className="flex-1 space-y-1.5 sm:space-y-2">
+                                                <Skeleton className="h-5 sm:h-6 w-3/4" />
+                                                <div className="flex gap-1.5 sm:gap-2">
+                                                    <Skeleton className="h-4 sm:h-5 w-16 sm:w-20" />
+                                                    <Skeleton className="h-4 sm:h-5 w-16 sm:w-20" />
                                                 </div>
-                                                <Skeleton className="h-4 w-full" />
-                                                <Skeleton className="h-4 w-2/3" />
+                                                <Skeleton className="h-3.5 sm:h-4 w-full" />
+                                                <Skeleton className="h-3.5 sm:h-4 w-2/3" />
                                             </div>
-                                            <Skeleton className="h-9 w-24" />
+                                            <Skeleton className="h-8 w-8 sm:h-9 sm:w-24 ml-2" />
                                         </div>
                                     </div>
                                 </div>
@@ -296,12 +296,12 @@ export default function ListingsPage() {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-5 md:space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Listings</h1>
-                    <p className="text-gray-600 mt-2">
+                    <h1 className="text-2xl sm:text-2xl md:text-3xl font-bold text-gray-900">Listings</h1>
+                    <p className="text-gray-600 text-xs sm:text-sm md:text-base mt-1 sm:mt-1.5 md:mt-2">
                         Manage all business listings ({filteredListings.length} total)
                     </p>
                 </div>
@@ -313,25 +313,25 @@ export default function ListingsPage() {
 
             {/* Filters */}
             <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300">
-                <CardContent className="pt-6">
-                    <div className="grid gap-4 md:grid-cols-4">
+                <CardContent className="pt-4 sm:pt-5 md:pt-6">
+                    <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
                         {/* Search */}
-                        <div className="md:col-span-2">
+                        <div className="sm:col-span-2">
                             <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
                                 <Input
                                     type="text"
                                     placeholder="Search listings..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="pl-10"
+                                    className="pl-9 sm:pl-10 h-10 sm:h-10 md:h-11 text-sm sm:text-base"
                                 />
                             </div>
                         </div>
 
                         {/* Status Filter */}
                         <Select value={statusFilter} onValueChange={setStatusFilter}>
-                            <SelectTrigger>
+                            <SelectTrigger className="h-10 sm:h-10 md:h-11 text-sm sm:text-base">
                                 <SelectValue placeholder="Status" />
                             </SelectTrigger>
                             <SelectContent className="bg-white">
@@ -364,7 +364,7 @@ export default function ListingsPage() {
 
                         {/* Plan Filter */}
                         <Select value={planFilter} onValueChange={setPlanFilter}>
-                            <SelectTrigger>
+                            <SelectTrigger className="h-10 sm:h-10 md:h-11 text-sm sm:text-base">
                                 <SelectValue placeholder="Plan" />
                             </SelectTrigger>
                             <SelectContent className="bg-white">
@@ -399,21 +399,21 @@ export default function ListingsPage() {
             </Card>
 
             {/* Listings Table */}
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
                 {currentListings.length === 0 ? (
                     <Card>
-                        <CardContent className="py-12 text-center">
-                            <p className="text-gray-500">No listings found matching your filters.</p>
+                        <CardContent className="py-8 sm:py-10 md:py-12 text-center px-4">
+                            <p className="text-gray-500 text-sm sm:text-base">No listings found matching your filters.</p>
                         </CardContent>
                     </Card>
                 ) : (
                     currentListings.map((listing) => (
                         <Card key={listing.id} className="border-0 shadow-md hover:shadow-lg transition-shadow">
-                            <CardContent className="p-4">
-                                <div className="flex gap-4">
+                            <CardContent className="p-3 sm:p-4">
+                                <div className="flex gap-3 sm:gap-4">
                                     {/* Image */}
                                     <div className="flex-shrink-0">
-                                        <div className="relative w-24 h-24 rounded-lg overflow-hidden bg-gray-100">
+                                        <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden bg-gray-100">
                                             <Image
                                                 src={getImageUrl(listing)}
                                                 alt={getListingName(listing)}
@@ -426,58 +426,60 @@ export default function ListingsPage() {
 
                                     {/* Content */}
                                     <div className="flex-1 min-w-0">
-                                        <div className="flex items-start justify-between gap-4">
+                                        <div className="flex items-start justify-between gap-2 sm:gap-4">
                                             <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <h3 className="text-lg font-semibold text-gray-900 truncate">
+                                                <div className="flex flex-col xs:flex-row xs:items-center gap-1.5 xs:gap-2 mb-1 sm:mb-1.5">
+                                                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
                                                         {getListingName(listing)}
                                                     </h3>
-                                                    {getPlanBadge(listing)}
-                                                    {getStatusBadge(listing.status)}
+                                                    <div className="flex gap-1.5 xs:gap-2">
+                                                        {getPlanBadge(listing)}
+                                                        {getStatusBadge(listing.status)}
+                                                    </div>
                                                 </div>
 
                                                 {listing.description && (
-                                                    <p className="text-sm text-gray-600 line-clamp-2 mb-2">
+                                                    <p className="text-xs sm:text-sm text-gray-600 line-clamp-2 mb-1.5 sm:mb-2">
                                                         {listing.description}
                                                     </p>
                                                 )}
 
-                                                <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500">
+                                                <div className="flex flex-wrap items-center gap-2 sm:gap-3 md:gap-4 text-[10px] xs:text-xs text-gray-500">
                                                     {getAddress(listing) && (
                                                         <div className="flex items-center gap-1">
-                                                            <MapPin className="h-3 w-3" />
-                                                            <span className="truncate max-w-[200px]">
+                                                            <MapPin className="h-3 w-3 flex-shrink-0" />
+                                                            <span className="truncate max-w-[120px] sm:max-w-[200px]">
                                                                 {getAddress(listing)}
                                                             </span>
                                                         </div>
                                                     )}
                                                     {listing.phone && (
                                                         <div className="flex items-center gap-1">
-                                                            <Phone className="h-3 w-3" />
-                                                            <span>{listing.phone}</span>
+                                                            <Phone className="h-3 w-3 flex-shrink-0" />
+                                                            <span className="truncate">{listing.phone}</span>
                                                         </div>
                                                     )}
                                                     {listing.rating && listing.rating > 0 && (
                                                         <div className="flex items-center gap-1">
-                                                            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                                                            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 flex-shrink-0" />
                                                             <span>{listing.rating.toFixed(1)}</span>
                                                         </div>
                                                     )}
                                                 </div>
 
-                                                <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                                                <div className="flex flex-wrap items-center gap-2 sm:gap-3 md:gap-4 mt-1.5 sm:mt-2 text-[10px] xs:text-xs text-gray-500">
                                                     <div className="flex items-center gap-1">
-                                                        <Eye className="h-3 w-3" />
+                                                        <Eye className="h-3 w-3 flex-shrink-0" />
                                                         <span>{listing.views || 0} views</span>
                                                     </div>
                                                     <div className="flex items-center gap-1">
-                                                        <TrendingUp className="h-3 w-3" />
+                                                        <TrendingUp className="h-3 w-3 flex-shrink-0" />
                                                         <span>{listing.clicks || 0} clicks</span>
                                                     </div>
                                                     {listing.createdAt && (
                                                         <div className="flex items-center gap-1">
-                                                            <Calendar className="h-3 w-3" />
-                                                            <span>
+                                                            <Calendar className="h-3 w-3 flex-shrink-0" />
+                                                            <span className="truncate">
                                                                 {listing.createdAt.toDate?.().toLocaleDateString()}
                                                             </span>
                                                         </div>
@@ -486,31 +488,33 @@ export default function ListingsPage() {
                                             </div>
 
                                             {/* Actions */}
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex sm:flex-row flex-col items-center gap-1.5 sm:gap-2">
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
                                                     onClick={() => handleViewListing(listing)}
                                                     title="View Details"
+                                                    className="h-8 w-8 sm:h-9 sm:w-9 p-0"
                                                 >
-                                                    <Eye className="h-4 w-4" />
+                                                    <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                                 </Button>
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
                                                     onClick={() => handleEditListing(listing)}
                                                     title="Edit Listing"
+                                                    className="h-8 w-8 sm:h-9 sm:w-9 p-0"
                                                 >
-                                                    <Edit className="h-4 w-4" />
+                                                    <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                                 </Button>
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
                                                     onClick={() => handleDeleteClick(listing.id)}
-                                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                    className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 w-8 sm:h-9 sm:w-9 p-0"
                                                     title="Delete Listing"
                                                 >
-                                                    <Trash2 className="h-4 w-4" />
+                                                    <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                                 </Button>
                                             </div>
                                         </div>
@@ -524,8 +528,8 @@ export default function ListingsPage() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-                <div className="flex items-center justify-between">
-                    <p className="text-sm text-gray-600">
+                <div className="flex flex-col xs:flex-row items-center justify-between gap-3 xs:gap-0">
+                    <p className="text-xs sm:text-sm text-gray-600 text-center xs:text-left">
                         Showing {startIndex + 1} to {Math.min(endIndex, filteredListings.length)} of{" "}
                         {filteredListings.length} listings
                     </p>
@@ -535,10 +539,11 @@ export default function ListingsPage() {
                             size="sm"
                             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                             disabled={currentPage === 1}
+                            className="h-9 sm:h-9 text-xs sm:text-sm px-3 sm:px-4"
                         >
                             Previous
                         </Button>
-                        <span className="text-sm text-gray-600">
+                        <span className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">
                             Page {currentPage} of {totalPages}
                         </span>
                         <Button
@@ -546,6 +551,7 @@ export default function ListingsPage() {
                             size="sm"
                             onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                             disabled={currentPage === totalPages}
+                            className="h-9 sm:h-9 text-xs sm:text-sm px-3 sm:px-4"
                         >
                             Next
                         </Button>

@@ -87,11 +87,46 @@ const typoCorrections: { [key: string]: string } = {
     'coffe': 'coffee',
     'cofee': 'coffee',
 
+    // Electronics variations
+    'eletronics': 'electronics',
+    'eletronic': 'electronic',
+    'elektronics': 'electronics',
+    'elektronic': 'electronic',
+
     // General typos
     'servic': 'service',
     'servies': 'services',
     'shoping': 'shopping',
     'shoppng': 'shopping',
+}
+
+/**
+ * Detect explicit, sexual, or unethical content
+ * Returns true if message contains inappropriate content
+ */
+function isInappropriateContent(message: string): boolean {
+    const messageLower = message.toLowerCase().trim()
+
+    // Explicit/sexual keywords
+    const explicitKeywords = [
+        'sex', 'porn', 'xxx', 'nude', 'naked', 'adult content',
+        'erotic', 'nsfw', 'explicit', 'sexual', 'prostitute',
+        'escort', 'strip club', 'adult entertainment'
+    ]
+
+    // Unethical/harmful keywords
+    const unethicalKeywords = [
+        'drug', 'drugs', 'weed', 'cocaine', 'marijuana',
+        'weapon', 'gun', 'bomb', 'explosive', 'illegal',
+        'hack', 'crack', 'pirate', 'steal', 'scam',
+        'fraud', 'fake id', 'counterfeit'
+    ]
+
+    const allInappropriateKeywords = [...explicitKeywords, ...unethicalKeywords]
+
+    return allInappropriateKeywords.some(keyword =>
+        messageLower.includes(keyword)
+    )
 }
 
 /**
@@ -166,8 +201,19 @@ function isRequestingMultipleResults(message: string): boolean {
  * Detect if message is conversational (greeting/casual chat)
  * Returns true if message is NOT a search query
  */
-function isConversationalMessage(message: string): boolean {
+function isConversationalMessage(message: string, conversationHistory: Array<{ role: 'user' | 'bot', message: string }> = []): boolean {
     const messageLower = message.toLowerCase().trim()
+
+    // Check conversation context - if user previously searched, this might be a follow-up
+    const hasRecentSearchContext = conversationHistory.slice(-4).some(msg =>
+        msg.role === 'bot' && (
+            msg.message.includes('found') ||
+            msg.message.includes('located at') ||
+            msg.message.includes('restaurant') ||
+            msg.message.includes('hotel') ||
+            msg.message.includes('shop')
+        )
+    )
 
     // Greeting patterns
     const greetings = [
@@ -217,7 +263,8 @@ function isConversationalMessage(message: string): boolean {
         'shop', 'store', 'restaurant', 'hotel', 'hospital',
         'school', 'pharmacy', 'clinic', 'service', 'food',
         'eat', 'buy', 'purchase', 'book', 'reserve',
-        'near', 'close', 'around', 'best', 'good', 'top'
+        'near', 'close', 'around', 'best', 'good', 'top',
+        'electronics', 'grocery', 'medical', 'show me', 'give me'
     ]
 
     const hasBusinessKeyword = businessKeywords.some(keyword =>
@@ -229,11 +276,25 @@ function isConversationalMessage(message: string): boolean {
         return false
     }
 
+    // If user has recent search context and asks follow-up, treat as search
+    if (hasRecentSearchContext && (messageLower.includes('more') || messageLower.includes('other') || messageLower.includes('another'))) {
+        return false
+    }
+
+    // If message contains potential business name patterns (capitalized words, specific terms)
+    // Examples: "Deepak Electronics", "Gupta Medical", "Ram Hotel"
+    const hasCapitalizedWords = /[A-Z][a-z]+/.test(message) // Has capitalized words
+    const wordCount = messageLower.split(' ').length
+
+    // If it's 2-4 words with capitalized letters and no casual patterns, likely a business name
+    if (hasCapitalizedWords && wordCount >= 2 && wordCount <= 4) {
+        // Not a greeting, likely a business name search
+        return false
+    }
+
     // Default: treat short messages without business context as conversational
     return messageLower.length < 30
-}
-
-/**
+}/**
  * Stage 1: Query Breakdown
  * 
  * Breaks down user query into multiple searchable terms with category understanding.
@@ -263,47 +324,39 @@ function extractSearchTerms(message: string): string[] {
     const doc = nlp(correctedMessage)
     const terms: Set<string> = new Set()
 
+    // Detect if user is being specific (e.g., "electronics shops" = specific category)
+    const specificCategories = ['electronics', 'electronic', 'grocery', 'medical', 'pharmacy', 'clinic', 'hospital', 'school', 'hotel', 'restaurant', 'salon', 'gym', 'fitness', 'bakery', 'cafe', 'coffee']
+    const hasSpecificCategory = specificCategories.some(cat => correctedMessage.includes(cat))
+
     // Category synonym mapping for better search
     const categoryMap: { [key: string]: string[] } = {
-        // Shopping related
-        'shop': ['shop', 'store', 'shopping', 'retail', 'market', 'mart'],
-        'shops': ['shop', 'store', 'shopping', 'retail', 'market', 'mart'],
-        'store': ['store', 'shop', 'retail', 'shopping'],
-        'stores': ['store', 'shop', 'retail', 'shopping'],
-        'shopping': ['shopping', 'shop', 'store', 'retail', 'market'],
-        'market': ['market', 'shopping', 'store', 'shop', 'bazaar'],
-        'retail': ['retail', 'store', 'shop', 'shopping'],
+        // Electronics - SPECIFIC CATEGORY (only electronics terms)
+        'electronics': ['electronics', 'electronic'],
+        'electronic': ['electronic', 'electronics'],
 
-        // Food related
-        'restaurant': ['restaurant', 'dining', 'food', 'eatery', 'cafe'],
-        'restaurants': ['restaurant', 'dining', 'food', 'eatery', 'cafe'],
-        'food': ['food', 'restaurant', 'dining', 'eatery', 'cafe'],
-        'eat': ['restaurant', 'food', 'dining', 'eatery'],
-        'dining': ['dining', 'restaurant', 'food', 'eatery'],
-        'cafe': ['cafe', 'coffee', 'restaurant', 'food'],
-        'pizza': ['pizza', 'restaurant', 'food', 'italian'],
+        // Grocery - SPECIFIC CATEGORY
+        'grocery': ['grocery', 'groceries', 'supermarket'],
+        'groceries': ['grocery', 'groceries', 'supermarket'],
 
-        // Accommodation
-        'hotel': ['hotel', 'lodging', 'accommodation', 'stay', 'resort'],
-        'hotels': ['hotel', 'lodging', 'accommodation', 'stay', 'resort'],
-        'stay': ['hotel', 'lodging', 'accommodation', 'resort'],
-        'lodging': ['lodging', 'hotel', 'accommodation', 'stay'],
+        // Medical - SPECIFIC CATEGORY
+        'medical': ['medical', 'clinic', 'hospital', 'pharmacy', 'health'],
+        'pharmacy': ['pharmacy', 'medical', 'chemist', 'drugstore'],
+        'clinic': ['clinic', 'medical', 'health', 'doctor'],
+        'hospital': ['hospital', 'medical', 'health', 'clinic'],
 
-        // Services
-        'service': ['service', 'services', 'repair', 'maintenance'],
-        'services': ['service', 'repair', 'maintenance', 'professional'],
-        'repair': ['repair', 'service', 'fix', 'maintenance'],
+        // Restaurant - SPECIFIC CATEGORY
+        'restaurant': ['restaurant', 'dining', 'food', 'eatery'],
+        'restaurants': ['restaurant', 'dining', 'food', 'eatery'],
 
-        // Healthcare
-        'health': ['health', 'medical', 'clinic', 'hospital', 'doctor'],
-        'medical': ['medical', 'health', 'clinic', 'hospital', 'healthcare'],
-        'doctor': ['doctor', 'medical', 'clinic', 'health', 'physician'],
-        'hospital': ['hospital', 'medical', 'health', 'clinic', 'healthcare'],
+        // Hotel - SPECIFIC CATEGORY
+        'hotel': ['hotel', 'lodging', 'accommodation', 'resort'],
+        'hotels': ['hotel', 'lodging', 'accommodation', 'resort'],
 
-        // Education
-        'school': ['school', 'education', 'learning', 'institute', 'academy'],
-        'education': ['education', 'school', 'learning', 'training', 'institute'],
-        'college': ['college', 'education', 'university', 'institute'],
+        // Generic terms (only used when NO specific category)
+        'shop': ['shop', 'store'],
+        'shops': ['shop', 'store'],
+        'store': ['store', 'shop'],
+        'stores': ['store', 'shop'],
     }
 
     // Extract nouns (from corrected message)
@@ -313,6 +366,11 @@ function extractSearchTerms(message: string): string[] {
 
         // Check if noun has category synonyms
         if (categoryMap[nounLower]) {
+            // If user specified a specific category, SKIP all generic terms
+            if (hasSpecificCategory && ['shop', 'shops', 'store', 'stores', 'shopping', 'market', 'retail'].includes(nounLower)) {
+                // Skip completely - don't add generic terms when specific category present
+                return
+            }
             categoryMap[nounLower].forEach(synonym => terms.add(synonym))
         } else {
             // Only add meaningful nouns (not too short)
@@ -331,35 +389,44 @@ function extractSearchTerms(message: string): string[] {
         // Also add individual words from phrase
         phraseLower.split(' ').forEach(word => {
             if (categoryMap[word]) {
+                // If user specified a specific category, SKIP all generic terms
+                if (hasSpecificCategory && ['shop', 'shops', 'store', 'stores', 'shopping', 'market', 'retail'].includes(word)) {
+                    // Skip completely
+                    return
+                }
                 categoryMap[word].forEach(synonym => terms.add(synonym))
             }
         })
     })
 
-    // Extract verbs related to actions
-    const verbs = doc.verbs().out('array') as string[]
-    verbs.forEach((verb: string) => {
-        const v = verb.toLowerCase()
-        if (v.includes('eat') || v.includes('dine')) {
-            terms.add('restaurant')
-            terms.add('food')
-            terms.add('dining')
-        }
-        if (v.includes('stay') || v.includes('sleep')) {
-            terms.add('hotel')
-            terms.add('lodging')
-        }
-        if (v.includes('shop') || v.includes('buy')) {
-            terms.add('shop')
-            terms.add('store')
-            terms.add('shopping')
-        }
-    })
+    // Extract verbs related to actions - ONLY if no specific category
+    if (!hasSpecificCategory) {
+        const verbs = doc.verbs().out('array') as string[]
+        verbs.forEach((verb: string) => {
+            const v = verb.toLowerCase()
+            if (v.includes('eat') || v.includes('dine')) {
+                terms.add('restaurant')
+                terms.add('food')
+            }
+            if (v.includes('stay') || v.includes('sleep')) {
+                terms.add('hotel')
+            }
+            if (v.includes('shop') || v.includes('buy')) {
+                terms.add('shop')
+                terms.add('store')
+            }
+        })
+    }
 
     // Check full message for category keywords
     const messageLower = message.toLowerCase()
     Object.keys(categoryMap).forEach(keyword => {
         if (messageLower.includes(keyword)) {
+            // If user specified a specific category, SKIP all generic terms
+            if (hasSpecificCategory && ['shop', 'shops', 'store', 'stores', 'shopping', 'market', 'retail'].includes(keyword)) {
+                // Skip completely
+                return
+            }
             categoryMap[keyword].forEach(synonym => terms.add(synonym))
         }
     })
@@ -386,7 +453,97 @@ async function searchListingsComprehensive(searchTerms: string[], limit: number 
     try {
         const db = getAdminDb()
         const allMatches = new Map<string, any>() // Use Map to deduplicate by listing ID
+        const exactNameMatches = new Map<string, any>() // Separate map for exact name matches
+        const exactCategoryMatches = new Map<string, any>() // Separate map for exact category matches
 
+        // Known category keywords - these should NEVER be treated as business names
+        const knownCategories = [
+            'restaurant', 'restaurants', 'hotel', 'hotels', 'shop', 'shops', 'store', 'stores',
+            'electronics', 'electronic', 'grocery', 'groceries', 'medical', 'pharmacy', 'clinic',
+            'hospital', 'school', 'cafe', 'coffee', 'bakery', 'salon', 'gym', 'fitness',
+            'service', 'services', 'food', 'dining', 'eatery', 'retail', 'market'
+        ]
+
+        // First, check for exact category matches (high priority for single-word category queries)
+        for (const term of searchTerms) {
+            const termLower = term.toLowerCase().trim()
+
+            // Skip if this is a known category (don't treat as business name)
+            if (knownCategories.includes(termLower)) {
+                // Get all active listings
+                const listingsSnapshot = await db
+                    .collection('listings')
+                    .where('status', '==', 'active')
+                    .where('approved', '==', true)
+                    .get()
+
+                for (const doc of listingsSnapshot.docs) {
+                    const data = doc.data()
+                    const listing: any = { id: doc.id, ...data }
+                    const listingCategory = (listing.category || '').toLowerCase()
+                    const listingCategorySlug = (listing.categorySlug || '').toLowerCase()
+
+                    // Check for exact category match
+                    if (listingCategory === termLower ||
+                        listingCategorySlug === termLower ||
+                        listingCategory.includes(termLower) ||
+                        listingCategorySlug.includes(termLower)) {
+                        exactCategoryMatches.set(listing.id, { ...listing, matchScore: 90 })
+                    }
+                }
+            }
+        }
+
+        // If we found exact category matches, prioritize them
+        if (exactCategoryMatches.size > 0) {
+            console.log(`[Chatbot] Found ${exactCategoryMatches.size} exact category matches, prioritizing these`)
+            const results = Array.from(exactCategoryMatches.values())
+                .sort((a, b) => (b.views || 0) - (a.views || 0))
+                .slice(0, limit)
+            return results
+        }
+
+        // Second, check for exact name matches (for multi-word business names)
+        for (const term of searchTerms) {
+            const termLower = term.toLowerCase().trim()
+
+            // Skip known categories
+            if (knownCategories.includes(termLower)) {
+                continue
+            }
+
+            // Get all active listings
+            const listingsSnapshot = await db
+                .collection('listings')
+                .where('status', '==', 'active')
+                .where('approved', '==', true)
+                .get()
+
+            for (const doc of listingsSnapshot.docs) {
+                const data = doc.data()
+                const listing: any = { id: doc.id, ...data }
+                const listingName = (listing.name || '').toLowerCase()
+
+                // Check for exact or very close name match
+                if (listingName === termLower || listingName.includes(termLower) || termLower.includes(listingName)) {
+                    // If searching term has multiple words (likely a business name), prioritize exact matches
+                    if (termLower.split(' ').length >= 2) {
+                        exactNameMatches.set(listing.id, { ...listing, matchScore: 100 })
+                    }
+                }
+            }
+        }
+
+        // If we found exact name matches, return those ONLY (user searched for specific business)
+        if (exactNameMatches.size > 0) {
+            console.log(`[Chatbot] Found ${exactNameMatches.size} exact name matches, prioritizing these`)
+            const results = Array.from(exactNameMatches.values())
+                .sort((a, b) => (b.views || 0) - (a.views || 0))
+                .slice(0, limit)
+            return results
+        }
+
+        // Otherwise, do broader search across all fields with smart scoring
         // Search in listings collection
         for (const term of searchTerms) {
             const termLower = term.toLowerCase()
@@ -402,26 +559,42 @@ async function searchListingsComprehensive(searchTerms: string[], limit: number 
                 const data = doc.data()
                 const listing: any = { id: doc.id, ...data }
 
-                // Multi-field matching
-                const matchFields = [
-                    listing.name?.toLowerCase() || '',
-                    listing.category?.toLowerCase() || '',
-                    listing.categorySlug?.toLowerCase() || '',
-                    listing.description?.toLowerCase() || '',
-                    listing.website?.toLowerCase() || '',
-                    listing.phone?.toLowerCase() || '',
-                    listing.email?.toLowerCase() || '',
-                    ...(Array.isArray(listing.tags) ? listing.tags.map((t: string) => t.toLowerCase()) : [])
-                ]
+                // Prioritized matching with scores
+                let matchScore = 0
+                const listingName = (listing.name || '').toLowerCase()
+                const listingCategory = (listing.category || '').toLowerCase()
+                const listingCategorySlug = (listing.categorySlug || '').toLowerCase()
+                const listingDescription = (listing.description || '').toLowerCase()
+                const listingTags = Array.isArray(listing.tags) ? listing.tags.map((t: string) => t.toLowerCase()) : []
 
-                // Check if any field contains the search term
-                const hasMatch = matchFields.some((field: string) => field.includes(termLower))
+                // Exact category match = highest priority (score: 100)
+                if (listingCategory === termLower || listingCategorySlug === termLower) {
+                    matchScore = 100
+                }
+                // Partial category match = high priority (score: 80)
+                else if (listingCategory.includes(termLower) || listingCategorySlug.includes(termLower)) {
+                    matchScore = 80
+                }
+                // Name match = medium-high priority (score: 70)
+                else if (listingName.includes(termLower)) {
+                    matchScore = 70
+                }
+                // Tags match = medium priority (score: 50)
+                else if (listingTags.some((tag: string) => tag.includes(termLower))) {
+                    matchScore = 50
+                }
+                // Description match = low priority (score: 20)
+                else if (listingDescription.includes(termLower)) {
+                    matchScore = 20
+                }
 
-                if (hasMatch) {
-                    // Store or update with higher views if duplicate
+                if (matchScore > 0) {
+                    // Store with match score, update if higher score or higher views
                     const existingListing = allMatches.get(listing.id)
-                    if (!existingListing || (existingListing.views || 0) < (listing.views || 0)) {
-                        allMatches.set(listing.id, listing)
+                    if (!existingListing || matchScore > (existingListing.matchScore || 0)) {
+                        allMatches.set(listing.id, { ...listing, matchScore })
+                    } else if (matchScore === (existingListing.matchScore || 0) && (listing.views || 0) > (existingListing.views || 0)) {
+                        allMatches.set(listing.id, { ...listing, matchScore })
                     }
                 }
             }
@@ -462,9 +635,18 @@ async function searchListingsComprehensive(searchTerms: string[], limit: number 
             }
         }
 
-        // Convert Map to array and sort by views (popularity)
+        // Convert Map to array and sort by match score first, then by views (popularity)
         const results = Array.from(allMatches.values())
-            .sort((a, b) => (b.views || 0) - (a.views || 0))
+            .sort((a, b) => {
+                // Sort by match score first (higher is better)
+                const scoreA = a.matchScore || 0
+                const scoreB = b.matchScore || 0
+                if (scoreB !== scoreA) {
+                    return scoreB - scoreA
+                }
+                // If same score, sort by popularity (views)
+                return (b.views || 0) - (a.views || 0)
+            })
             .slice(0, limit) // Dynamic limit based on query type
 
         console.log(`[Chatbot] Found ${allMatches.size} total matches, returning top ${results.length} (limit: ${limit})`)
@@ -543,21 +725,31 @@ Need help? Feel free to ask me any questions!`
  * Generate conversational response (greetings, help, etc.)
  * WITHOUT searching listings
  */
-async function generateConversationalResponse(userMessage: string) {
+async function generateConversationalResponse(userMessage: string, conversationHistory: Array<{ role: 'user' | 'bot', message: string }> = []) {
     try {
         const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" })
 
+        // Build conversation context
+        const historyContext = conversationHistory.length > 0
+            ? conversationHistory.map(msg => `${msg.role === 'user' ? 'User' : 'Bot'}: ${msg.message}`).join('\n')
+            : 'No previous conversation'
+
         const prompt = `You are the Directory AI Chatbot for ${CITY_NAME} district business directory website.
 
-User Query: "${userMessage}"
+Previous Conversation:
+${historyContext}
+
+Current User Query: "${userMessage}"
 
 Context:
 - This is a business directory website for ${CITY_NAME} district, ${STATE_NAME}, India
 - Users can search for local businesses, shops, restaurants, hotels, services
 - The user is having a casual conversation or greeting (NOT searching for a business)
+- You have context of previous messages to provide better responses
 
 Instructions:
 - Provide a SHORT, FORMAL, and FRIENDLY response (1-2 sentences maximum)
+- Use previous conversation context if relevant
 - For greetings: Greet back and briefly mention you can help find businesses
 - For questions about the chatbot: Briefly explain you help find local businesses in ${CITY_NAME}
 - For "thank you": Acknowledge politely
@@ -573,9 +765,15 @@ Your Response:`
         const response = result.response
         const text = response.text()
 
-        return text
-    } catch (error) {
+        return text || `Hello! I'm here to help you find businesses in ${CITY_NAME} district. What are you looking for?`
+    } catch (error: any) {
         console.error("Conversational generation error:", error)
+
+        // Return context-aware fallback based on error type
+        if (error.message && error.message.includes('fetch failed')) {
+            console.error("[Chatbot] Network error - returning fallback response")
+        }
+
         return `Hello! I'm here to help you find businesses in ${CITY_NAME} district. What are you looking for?`
     }
 }
@@ -589,11 +787,17 @@ Your Response:`
  * @param userMessage - Original user query
  * @param searchTerms - Extracted search terms
  * @param listings - Retrieved results from database (top 3 by views)
+ * @param conversationHistory - Previous messages for context
  * @returns AI-generated conversational response with details
  */
-async function generateResponse(userMessage: string, searchTerms: string[], listings: any[]) {
+async function generateResponse(userMessage: string, searchTerms: string[], listings: any[], conversationHistory: Array<{ role: 'user' | 'bot', message: string }> = []) {
     try {
         const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" })
+
+        // Build conversation context
+        const historyContext = conversationHistory.length > 0
+            ? conversationHistory.slice(-6).map(msg => `${msg.role === 'user' ? 'User' : 'Bot'}: ${msg.message}`).join('\n')
+            : 'No previous conversation'
 
         // Craft detailed context from search results
         const context = listings.length > 0
@@ -614,20 +818,26 @@ async function generateResponse(userMessage: string, searchTerms: string[], list
         // Engineer the prompt for detailed responses
         const prompt = `You are the Directory AI Chatbot for ${CITY_NAME} district, ${STATE_NAME}, India.
 
-User Query: "${userMessage}"
+Previous Conversation:
+${historyContext}
+
+Current User Query: "${userMessage}"
 Search Terms Used: ${searchTerms.join(', ')}
 
 Top Businesses Found (sorted by popularity/views):
 ${context}
 
 Instructions:
+- Use previous conversation context to provide better, contextual responses
 - Provide a friendly, helpful response based ONLY on the listings above
 - If listings found, mention the top 2-3 with their NAME, LOCATION, and CONTACT details
-- Format like: "I found [Business Name] located at [Address]. You can reach them at [Phone]."
+- Format properly with line breaks and bullet points for readability
+- Use proper formatting like **bold** for names, line breaks for clarity
 - Be conversational and warm in tone
 - If no listings found, suggest trying different keywords or browsing categories
-- Keep response 3-4 sentences maximum
+- Keep response 3-5 sentences maximum
 - Do NOT use external knowledge or web search
+- Reference previous conversation if user asked follow-up question
 
 Your Response:`
 
@@ -666,7 +876,7 @@ export async function POST(request: NextRequest) {
     try {
         // Parse request body
         const body = await request.json()
-        const { message } = body
+        const { message, conversationHistory = [] } = body
 
         if (!message || typeof message !== 'string') {
             return NextResponse.json(
@@ -684,7 +894,23 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        console.log(`[Chatbot] Processing query: "${message}"`)
+        console.log(`[Chatbot] Processing query: "${message}" with ${conversationHistory.length} history messages`)
+
+        // **Priority 0: Block inappropriate content**
+        if (isInappropriateContent(message)) {
+            console.log(`[Chatbot] Blocked inappropriate content`)
+            return NextResponse.json({
+                reply: "I can't help with that. I'm designed to help you find businesses and services in our directory. Please ask about restaurants, shops, hotels, or other local businesses.",
+                results: [],
+                searchTerms: [],
+                totalFound: 0,
+                isContactQuery: false,
+                isListingGuideQuery: false,
+                conversational: false,
+                blocked: true,
+                success: true
+            })
+        }
 
         // **Priority 1: Check if asking for contact information**
         if (isContactQuery(message)) {
@@ -721,10 +947,10 @@ export async function POST(request: NextRequest) {
         }
 
         // **Priority 3: Check if conversational message (greeting/casual chat)**
-        if (isConversationalMessage(message)) {
+        if (isConversationalMessage(message, conversationHistory)) {
             console.log(`[Chatbot] Detected conversational message (no search needed)`)
 
-            const reply = await generateConversationalResponse(message)
+            const reply = await generateConversationalResponse(message, conversationHistory)
             console.log(`[Chatbot] Conversational response: ${reply}`)
 
             return NextResponse.json({
@@ -755,8 +981,8 @@ export async function POST(request: NextRequest) {
         const listings = await searchListingsComprehensive(searchTerms, resultLimit)
         console.log(`[Chatbot] Found ${listings.length} listings (limit: ${resultLimit})`)
 
-        // **Stage 3: AI Response Generation**
-        const reply = await generateResponse(message, searchTerms, listings)
+        // **Stage 3: AI Response Generation with conversation history**
+        const reply = await generateResponse(message, searchTerms, listings, conversationHistory)
         console.log(`[Chatbot] Generated response: ${reply.substring(0, 100)}...`)
 
         // Return comprehensive response
@@ -773,13 +999,37 @@ export async function POST(request: NextRequest) {
             success: true
         })
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("[Chatbot API] Error:", error)
+
+        // Detailed error logging for debugging
+        if (error.message) {
+            console.error("[Chatbot API] Error message:", error.message)
+        }
+        if (error.stack) {
+            console.error("[Chatbot API] Error stack:", error.stack)
+        }
+
+        // Determine user-friendly error message based on error type
+        let userMessage = "I'm having trouble processing your request right now. Please try again in a moment."
+
+        if (error.message && error.message.includes('fetch failed')) {
+            userMessage = "I'm experiencing network connectivity issues. Please check your internet connection and try again."
+        } else if (error.message && error.message.includes('timeout')) {
+            userMessage = "The request took too long to process. Please try again with a simpler query."
+        } else if (error.message && error.message.includes('Gemini') || error.message && error.message.includes('API')) {
+            userMessage = "Our AI service is temporarily unavailable. Please try again in a few moments."
+        }
+
         return NextResponse.json(
             {
                 error: "Internal server error",
-                reply: "I'm sorry, something went wrong. Please try again in a moment.",
-                success: false
+                message: userMessage,
+                success: false,
+                reply: userMessage,
+                results: [],
+                searchTerms: [],
+                totalFound: 0
             },
             { status: 500 }
         )

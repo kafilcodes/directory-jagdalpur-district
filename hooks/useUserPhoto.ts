@@ -35,6 +35,22 @@ const photoURLCache = new Map<string, string | null>()
 const STORAGE_KEY = "user_photo_cache"
 
 /**
+ * Proxy Google profile photos through our API to avoid CORS issues
+ */
+function proxyGooglePhoto(photoURL: string | null): string | null {
+    if (!photoURL) return null
+
+    // Check if it's a Google photo that needs proxying
+    if (photoURL.includes('googleusercontent.com') ||
+        photoURL.includes('graph.facebook.com') ||
+        photoURL.includes('avatars.githubusercontent.com')) {
+        return `/api/proxy-image?url=${encodeURIComponent(photoURL)}`
+    }
+
+    return photoURL
+}
+
+/**
  * Get cached photoURL from session storage
  */
 function getCachedPhotoURL(uid: string): string | null {
@@ -94,7 +110,8 @@ export function useUserPhoto(user: User | null): UseUserPhotoResult {
 
         // Check in-memory cache first
         if (photoURLCache.has(user.uid)) {
-            setPhotoURL(photoURLCache.get(user.uid) || null)
+            const cachedURL = photoURLCache.get(user.uid) || null
+            setPhotoURL(proxyGooglePhoto(cachedURL))
             setLoading(false)
             return
         }
@@ -102,8 +119,9 @@ export function useUserPhoto(user: User | null): UseUserPhotoResult {
         // Check session storage cache
         const cachedURL = getCachedPhotoURL(user.uid)
         if (cachedURL !== null) {
-            setPhotoURL(cachedURL)
-            photoURLCache.set(user.uid, cachedURL)
+            const proxiedURL = proxyGooglePhoto(cachedURL)
+            setPhotoURL(proxiedURL)
+            photoURLCache.set(user.uid, cachedURL) // Cache original URL
             setLoading(false)
             return
         }
@@ -117,8 +135,9 @@ export function useUserPhoto(user: User | null): UseUserPhotoResult {
                 if (!db) {
                     // Firestore not available, fallback to Firebase Auth photoURL
                     const fallbackURL = user.photoURL || null
-                    setPhotoURL(fallbackURL)
-                    photoURLCache.set(user.uid, fallbackURL)
+                    const proxiedURL = proxyGooglePhoto(fallbackURL)
+                    setPhotoURL(proxiedURL)
+                    photoURLCache.set(user.uid, fallbackURL) // Cache original
                     setCachedPhotoURL(user.uid, fallbackURL)
                     setLoading(false)
                     return
@@ -137,9 +156,10 @@ export function useUserPhoto(user: User | null): UseUserPhotoResult {
                     resolvedURL = user.photoURL || null
                 }
 
-                // Update all caches
-                setPhotoURL(resolvedURL)
-                photoURLCache.set(user.uid, resolvedURL)
+                // Update all caches with original URL, but set proxied URL for display
+                const proxiedURL = proxyGooglePhoto(resolvedURL)
+                setPhotoURL(proxiedURL)
+                photoURLCache.set(user.uid, resolvedURL) // Cache original
                 setCachedPhotoURL(user.uid, resolvedURL)
                 setLoading(false)
             } catch (err) {
@@ -155,8 +175,9 @@ export function useUserPhoto(user: User | null): UseUserPhotoResult {
 
                 // Fallback to Firebase Auth photoURL on error
                 const fallbackURL = user.photoURL || null
-                setPhotoURL(fallbackURL)
-                photoURLCache.set(user.uid, fallbackURL)
+                const proxiedURL = proxyGooglePhoto(fallbackURL)
+                setPhotoURL(proxiedURL)
+                photoURLCache.set(user.uid, fallbackURL) // Cache original
                 setCachedPhotoURL(user.uid, fallbackURL)
 
                 // Don't set error state for offline errors (they're expected)

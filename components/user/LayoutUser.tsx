@@ -68,12 +68,40 @@ function AppSidebar() {
     // Use consolidated photoURL hook with shared cache
     const { photoURL } = useUserPhoto(user)
 
-    // Subscribe to auth state
+    // Subscribe to auth state with session validation
     React.useEffect(() => {
         const auth = getFirebaseAuth()
         if (!auth) return
 
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                try {
+                    // Verify session is valid with backend
+                    const token = await user.getIdToken(true) // force refresh
+                    const response = await fetch('/api/auth/session', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ idToken: token })
+                    })
+
+                    if (!response.ok) {
+                        // Session invalid - sign out and show toast
+                        const { toastAuthError } = await import('@/lib/toastUtils')
+                        toastAuthError()
+                        await signOut()
+                        setUser(null)
+                        return
+                    }
+                } catch (error) {
+                    // Token refresh failed - likely stale session
+                    console.error('[Auth] Session verification failed:', error)
+                    const { toastAuthError } = await import('@/lib/toastUtils')
+                    toastAuthError()
+                    await signOut()
+                    setUser(null)
+                    return
+                }
+            }
             setUser(user)
         })
 

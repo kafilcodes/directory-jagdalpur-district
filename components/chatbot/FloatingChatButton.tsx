@@ -32,18 +32,19 @@ export function FloatingChatButton() {
             {/* Floating Action Button - Mobile First Responsive */}
             <button
                 onClick={toggleChat}
-                className="fixed z-50 rounded-full bg-gradient-to-br from-red-500 to-red-600 text-white shadow-lg transition-all duration-300 
-                    bottom-4 right-4 h-12 w-12
-                    sm:bottom-5 sm:right-5 sm:h-14 sm:w-14
-                    md:bottom-6 md:right-6 md:h-[3.75rem] md:w-[3.75rem]
-                    hover:scale-110 hover:shadow-xl 
-                    active:scale-95
+                className={`fixed z-50 rounded-full bg-gradient-to-br from-red-500 to-red-600 text-white shadow-lg transition-all duration-300 
                     focus:outline-none focus:ring-4 focus:ring-red-500/50
-                    flex items-center justify-center"
+                    flex items-center justify-center
+                    hover:scale-110 hover:shadow-xl 
+                    active:scale-95 
+                    ${isOpen
+                        ? 'bottom-4 right-4 h-10 w-10 sm:bottom-5 sm:right-5 sm:h-11 sm:w-11 md:bottom-6 md:right-6 md:h-12 md:w-12 '
+                        : 'bottom-4 right-4 h-12 w-12 sm:bottom-5 sm:right-5 sm:h-14 sm:w-14 md:bottom-6 md:right-6 md:h-[3.75rem] md:w-[3.75rem]'
+                    }`}
                 aria-label={isOpen ? "Close chatbot" : "Open chatbot"}
             >
                 {isOpen ? (
-                    <X className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7" />
+                    <X className="h-4 w-4 sm:h-5 sm:w-5 md:h-5 md:w-5" />
                 ) : (
                     <BotMessageSquare className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7" />
                 )}

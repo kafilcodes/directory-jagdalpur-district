@@ -38,27 +38,44 @@ const ChartContainer = React.forwardRef<
     HTMLDivElement,
     React.ComponentProps<"div"> & {
         config: ChartConfig
+        /**
+         * Optional minimal height override (CSS value or number in px)
+         * Example: 'h-48' or '300px' or 200
+         */
+        minHeight?: string | number
         children: React.ComponentProps<
             typeof RechartsPrimitive.ResponsiveContainer
         >["children"]
     }
->(({ id, className, children, config, ...props }, ref) => {
+>(({ id, className, children, config, minHeight, ...props }, ref) => {
     const uniqueId = React.useId()
     const chartId = `chart-${id || uniqueId.replace(/:/g, "")}`
 
+    // Compute inline style if numeric minHeight provided
+    const inlineStyle: React.CSSProperties | undefined =
+        typeof minHeight === "number"
+            ? { minHeight: `${minHeight}px` }
+            : typeof minHeight === "string" && /\d+px$/.test(minHeight)
+                ? { minHeight }
+                : undefined
+
+    // Use a flexible container that centers charts and respects provided className height
     return (
         <ChartContext.Provider value={{ config }}>
             <div
                 data-chart={chartId}
                 ref={ref}
+                style={inlineStyle}
                 className={cn(
-                    "flex aspect-video justify-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-none [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:stroke-border [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-sector]:outline-none [&_.recharts-surface]:outline-none",
+                    // Remove forced aspect ratio; allow callers to control height via className
+                    "flex w-full justify-center items-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-none [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:stroke-border [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-sector]:outline-none [&_.recharts-surface]:outline-none",
                     className
                 )}
                 {...props}
             >
                 <ChartStyle id={chartId} config={config} />
-                <RechartsPrimitive.ResponsiveContainer>
+                {/* Pass height as percentage so ResponsiveContainer can fill available space */}
+                <RechartsPrimitive.ResponsiveContainer width="100%" height="100%">
                     {children}
                 </RechartsPrimitive.ResponsiveContainer>
             </div>

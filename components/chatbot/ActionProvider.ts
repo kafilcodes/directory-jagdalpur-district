@@ -12,6 +12,7 @@
  * - Animated typing indicator
  * - Formatted listing cards with images
  * - Retry functionality
+ * - Rate limiting (10 requests per session)
  * 
  * Architecture:
  * - Calls /api/chatbot (our bespoke RAG implementation)
@@ -22,6 +23,9 @@ class ActionProvider {
     createChatBotMessage: any
     setState: any
     createClientMessage: any
+    private requestCount: number = 0
+    private readonly MAX_REQUESTS: number = 10
+    private conversationHistory: Array<{ role: 'user' | 'bot', message: string }> = []
 
     constructor(
         createChatBotMessage: any,
@@ -41,14 +45,82 @@ class ActionProvider {
     }
 
     /**
+     * Play response sound for better UX feedback
+     */
+    private playResponseSound() {
+        try {
+            if (typeof window !== 'undefined') {
+                const audio = new Audio('/response.mp3')
+                audio.volume = 0.7 // Increased volume to 70% for better audibility
+                audio.play().catch(error => {
+                    // Silently fail if audio can't play (browser restrictions, missing file, etc.)
+                    console.warn('[ActionProvider] Could not play response sound:', error)
+                })
+            }
+        } catch (error) {
+            // Silently fail - don't disrupt user experience
+            console.warn('[ActionProvider] Audio playback error:', error)
+        }
+    }
+
+    /**
      * Handles user messages with comprehensive error handling and listing display
      */
     async handleUserMessage(message: string) {
+        // Validate message
+        if (!message || message.trim().length === 0) {
+            console.warn('[ActionProvider] Empty message ignored')
+            return
+        }
+
+        // Check rate limit
+        if (this.requestCount >= this.MAX_REQUESTS) {
+            const { toastRateLimit } = await import('@/lib/toastUtils')
+            toastRateLimit('chatbot')
+            const errorMessage = this.createChatBotMessage(
+                "You've reached the request limit for this session. Please refresh the page to continue chatting.",
+                { delay: 300 }
+            )
+            this.setState((prev: any) => ({
+                ...prev,
+                messages: [...prev.messages, errorMessage]
+            }))
+            return
+        }
+
         // Check if offline
         if (!this.isOnline()) {
             this.showOfflineError()
             return
         }
+
+        // Increment request count
+        this.requestCount++
+
+        // Add user message to history
+        this.conversationHistory.push({
+            role: 'user',
+            message: message.trim()
+        })
+
+        // Keep only last 10 messages (5 exchanges) for context
+        if (this.conversationHistory.length > 10) {
+            this.conversationHistory = this.conversationHistory.slice(-10)
+        }
+
+        // Show "thinking..." indicator
+        const thinkingMessage = this.createChatBotMessage(
+            "thinking...",
+            {
+                delay: 100,
+                withAvatar: true
+            }
+        )
+
+        this.setState((prev: any) => ({
+            ...prev,
+            messages: [...prev.messages, thinkingMessage]
+        }))
 
         try {
             // Call our custom RAG API with timeout
@@ -60,14 +132,19 @@ class ActionProvider {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ message }),
+                body: JSON.stringify({
+                    message: message.trim(),
+                    conversationHistory: this.conversationHistory.slice(0, -1) // Send history without current message
+                }),
                 signal: controller.signal
             })
 
             clearTimeout(timeoutId)
 
             if (!response.ok) {
-                throw new Error(`API error: ${response.status}`)
+                const errorData = await response.json().catch(() => ({}))
+                console.error('[Chatbot] API error:', response.status, errorData)
+                throw new Error(errorData.error || `API error: ${response.status}`)
             }
 
             const data = await response.json()
@@ -84,22 +161,38 @@ class ActionProvider {
 
             console.log(`[Chatbot] Received ${listings.length} results, contact=${isContactQuery}, guide=${isListingGuideQuery}`)
 
-            // Add responses (text response always, listing cards only if listings > 0)
-            this.setState((prev: any) => {
-                const messages = [...prev.messages]
+            // Add bot response to history
+            this.conversationHistory.push({
+                role: 'bot',
+                message: aiResponse
+            })
 
-                // Add text response (this will show built-in "..." while rendering)
-                const textMessage = this.createChatBotMessage(aiResponse, {})
+            // Play response sound for feedback
+            this.playResponseSound()
+
+            // Remove "thinking..." and add responses
+            this.setState((prev: any) => {
+                // Remove the thinking message
+                const messagesWithoutThinking = prev.messages.filter(
+                    (msg: any) => msg.message !== "thinking..."
+                )
+
+                const messages = [...messagesWithoutThinking]
+
+                // Add formatted text response directly in the message (NOT as widget)
+                // This ensures it gets the red bubble styling
+                const textMessage = this.createChatBotMessage(aiResponse, {
+                    delay: 0
+                })
                 messages.push(textMessage)
 
                 // Add listing cards ONLY if listings found (and not contact/guide query)
                 if (listings.length > 0 && !isContactQuery && !isListingGuideQuery) {
-                    // Add listing cards without built-in loading indicator
                     const listingsMessage = this.createChatBotMessage("", {
                         widget: "listingCards",
                         payload: { listings },
-                        loading: false,  // Disable built-in loading for listing widget
-                        delay: 0         // Show immediately with text response
+                        loading: false,
+                        delay: 0
                     })
                     messages.push(listingsMessage)
                 }
@@ -111,37 +204,40 @@ class ActionProvider {
             })
 
         } catch (error: any) {
-            console.error("Chatbot error:", error)
+            console.error("[Chatbot] Error:", error)
 
-            // Determine error type
-            let errorType = "general"
-            let errorMessage = "I'm having trouble right now. Please try again."
-
-            if (error.name === 'AbortError') {
-                errorType = "timeout"
-                errorMessage = "Request timed out. Please try again."
-            } else if (error.message.includes('fetch') || error.message.includes('network')) {
-                errorType = "network"
-                errorMessage = "Network error. Check your connection and try again."
-            } else if (!this.isOnline()) {
-                errorType = "offline"
-                errorMessage = "You're offline. Please check your internet connection."
-            }
-
-            // Show error
+            // Remove "thinking..." message
             this.setState((prev: any) => {
-                // Show error widget with retry option
+                const messagesWithoutThinking = prev.messages.filter(
+                    (msg: any) => msg.message !== "thinking..."
+                )
+
+                // Determine error type
+                let errorMessage = "I'm having trouble right now. Please try again."
+
+                if (error.name === 'AbortError') {
+                    errorMessage = "Request timed out. Please try again."
+                } else if (error.message.includes('fetch') || error.message.includes('network')) {
+                    errorMessage = "Network error. Check your connection and try again."
+                } else if (!this.isOnline()) {
+                    errorMessage = "You're offline. Please check your internet connection."
+                } else if (error.message) {
+                    // Use the actual error message from API
+                    errorMessage = `Error: ${error.message}`
+                }
+
+                // Show error
                 const errorWidget = this.createChatBotMessage("", {
                     widget: "errorMessage",
                     payload: {
                         message: errorMessage,
-                        onRetry: () => this.handleUserMessage(message) // Retry with same message
+                        onRetry: () => this.handleUserMessage(message)
                     }
                 })
 
                 return {
                     ...prev,
-                    messages: [...prev.messages, errorWidget],
+                    messages: [...messagesWithoutThinking, errorWidget],
                 }
             })
         }
