@@ -99,6 +99,7 @@ export function BusinessSearch({ onSelect, placeholder = "Search for your busine
     // New state for enhanced features
     const [placeDetails, setPlaceDetails] = React.useState<PlaceDetails | null>(null)
     const [loadingDetails, setLoadingDetails] = React.useState(false)
+    const [confirmingBusiness, setConfirmingBusiness] = React.useState(false) // Loading state for confirm button
     const [validationError, setValidationError] = React.useState<string | null>(null)
     const [activeTab, setActiveTab] = React.useState("images")
     const [lightboxImage, setLightboxImage] = React.useState<string | null>(null)
@@ -252,6 +253,9 @@ export function BusinessSearch({ onSelect, placeholder = "Search for your busine
     const handleConfirm = async () => {
         if (!selectedBusiness || !placeDetails) return
 
+        // Set confirming state to show loading indicator
+        setConfirmingBusiness(true)
+
         // Check if business is already listed (duplicate detection)
         try {
             const db = getFirestoreClient()
@@ -271,6 +275,7 @@ export function BusinessSearch({ onSelect, placeholder = "Search for your busine
                     setValidationError(
                         `This business is already listed on our platform${existingListing.name ? ` as "${existingListing.name}"` : ''}. Please contact support if you are the owner.`
                     )
+                    setConfirmingBusiness(false)
                     return
                 }
 
@@ -286,6 +291,7 @@ export function BusinessSearch({ onSelect, placeholder = "Search for your busine
                     setValidationError(
                         `A business with this name and address is already listed. Please verify or contact support.`
                     )
+                    setConfirmingBusiness(false)
                     return
                 }
             }
@@ -302,6 +308,7 @@ export function BusinessSearch({ onSelect, placeholder = "Search for your busine
         setSelectedBusiness(null)
         setPlaceDetails(null)
         setValidationError(null)
+        setConfirmingBusiness(false)
     }
 
     const handleCancel = () => {
@@ -309,6 +316,7 @@ export function BusinessSearch({ onSelect, placeholder = "Search for your busine
         setSelectedBusiness(null)
         setPlaceDetails(null)
         setValidationError(null)
+        setConfirmingBusiness(false) // Reset confirming state
     }
 
     return (
@@ -537,7 +545,7 @@ export function BusinessSearch({ onSelect, placeholder = "Search for your busine
                                                 >
                                                     <button
                                                         onClick={() => setLightboxImage(photo.name)}
-                                                        className="w-full h-full"
+                                                        className="w-full h-full relative"
                                                     >
                                                         <Image
                                                             src={`/api/google-places/photo?name=${encodeURIComponent(photo.name)}&maxWidth=400&maxHeight=400`}
@@ -694,10 +702,16 @@ export function BusinessSearch({ onSelect, placeholder = "Search for your busine
                             </button>
                             <button
                                 onClick={handleConfirm}
-                                disabled={!!validationError || loadingDetails}
+                                disabled={!!validationError || loadingDetails || confirmingBusiness}
                                 className="px-5 sm:px-6 py-2.5 sm:py-2.5 text-sm sm:text-base bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
                             >
-                                {loadingDetails ? (
+                                {confirmingBusiness ? (
+                                    <>
+                                        <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                                        <span className="hidden sm:inline">Confirming...</span>
+                                        <span className="sm:hidden">Wait...</span>
+                                    </>
+                                ) : loadingDetails ? (
                                     <>
                                         <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
                                         <span className="hidden sm:inline">Loading...</span>
@@ -715,42 +729,6 @@ export function BusinessSearch({ onSelect, placeholder = "Search for your busine
                     </div>
                 </DialogContent>
             </Dialog>
-
-            {/* Lightbox for image preview and download */}
-            {lightboxImage && (
-                <Dialog open={!!lightboxImage} onOpenChange={(open) => !open && setLightboxImage(null)}>
-                    <DialogContent className="max-w-3xl w-full max-h-[90vh] p-0 bg-transparent shadow-none">
-                        <div className="relative bg-black/90 p-4 rounded-md flex flex-col items-center justify-center">
-                            <button
-                                onClick={() => setLightboxImage(null)}
-                                className="absolute top-2 right-2 text-white bg-black/40 rounded-full p-1"
-                                aria-label="Close preview"
-                            >
-                                <X className="h-4 w-4 text-white" />
-                            </button>
-                            <div className="w-full max-h-[80vh] overflow-auto">
-                                <img src={lightboxImage} alt="Preview" className="mx-auto max-h-[80vh] w-auto" />
-                            </div>
-                            <div className="mt-3">
-                                <button
-                                    onClick={() => {
-                                        // Trigger direct download
-                                        const a = document.createElement('a')
-                                        a.href = lightboxImage
-                                        a.download = lightboxImage.split('/').pop() || 'image.jpg'
-                                        document.body.appendChild(a)
-                                        a.click()
-                                        a.remove()
-                                    }}
-                                    className="bg-white text-gray-900 px-3 py-1 rounded-md"
-                                >
-                                    Download
-                                </button>
-                            </div>
-                        </div>
-                    </DialogContent>
-                </Dialog>
-            )}
 
             {/* Lightbox for Full Image View */}
             {lightboxImage && (

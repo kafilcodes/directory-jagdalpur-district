@@ -114,9 +114,21 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "lh5.googleusercontent.com" },
       { protocol: "https", hostname: "lh6.googleusercontent.com" },
     ],
-    // Removed localPatterns - they're not needed for public folder images
-    // Next.js automatically allows all images from /public
-    // For API routes with query strings, use unoptimized or loader
+    // Local patterns for API routes and public folder (Next.js 15+)
+    localPatterns: [
+      {
+        pathname: "/api/google-places/photo**",
+        search: "",
+      },
+      {
+        pathname: "/api/proxy-image**",
+        search: "",
+      },
+      {
+        pathname: "/**",
+        search: "",
+      },
+    ],
   },
   webpack: (config) => {
     config.module?.rules?.push({

@@ -14,6 +14,7 @@ let firestoreInstance: Firestore | null = null
 /**
  * Get Firestore instance with offline persistence
  * Initializes once and returns cached instance
+ * Supports multi-database setup via NEXT_PUBLIC_FIREBASE_DATABASE_ID
  */
 export function getFirestoreClient(): Firestore | null {
     try {
@@ -25,17 +26,25 @@ export function getFirestoreClient(): Firestore | null {
             return firestoreInstance
         }
 
-        // Try to get existing Firestore instance
+        // Get database ID from environment (defaults to '(default)')
+        const databaseId = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_ID || '(default)'
+
+        // Log database connection info in development
+        if (process.env.NODE_ENV === 'development') {
+            console.log(`🔥 [Firestore Client] Connecting to database: "${databaseId}"`)
+        }
+
+        // Try to get existing Firestore instance with database ID
         try {
-            firestoreInstance = getFirestore(app)
+            firestoreInstance = getFirestore(app, databaseId)
             return firestoreInstance
         } catch {
-            // If not initialized, initialize with persistence settings
+            // If not initialized, initialize with persistence settings and database ID
             firestoreInstance = initializeFirestore(app, {
                 localCache: persistentLocalCache({
                     tabManager: persistentMultipleTabManager()
-                })
-            })
+                }),
+            }, databaseId) // Pass database ID as third parameter
             return firestoreInstance
         }
     } catch (error) {
