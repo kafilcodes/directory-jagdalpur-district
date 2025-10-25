@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🏛️ Dhamtari Business Directory
+# 🏛️ Jagdalpur Business Directory
 
 ### *The Digital Gateway to Local Businesses*
 
@@ -10,7 +10,7 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.1.9-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![License](https://img.shields.io/badge/License-Private-red?style=for-the-badge&logo=shield&logoColor=white)](LICENSE)
 
-*A modern, high-performance business directory platform owned and operated by the **Dhamtari District Administration***
+*A modern, high-performance business directory platform owned and operated by the **Jagdalpur District Administration***
 
 [📸 View Demo](#-features) • [🚀 Quick Start](#-quick-start) • [📖 Documentation](#-documentation) • [🏗️ Architecture](#-architecture)
 
@@ -46,7 +46,7 @@
 
 ## 🌟 Overview
 
-**Dhamtari Business Directory** is a cutting-edge digital platform designed to bridge the gap between local businesses and residents in Dhamtari, Chhattisgarh. Built with modern web technologies and best practices, this platform serves as the **official business directory** for the district administration.
+**Jagdalpur Business Directory** is a cutting-edge digital platform designed to bridge the gap between local businesses and residents in Jagdalpur, Chhattisgarh. Built with modern web technologies and best practices, this platform serves as the **official business directory** for the district administration.
 
 ### 🎯 Mission
 
@@ -54,7 +54,7 @@
 
 ### 🏛️ Ownership
 
-This platform is **privately owned** and operated by the **Dhamtari District Administration** as a public utility service.
+This platform is **privately owned** and operated by the **Jagdalpur District Administration** as a public utility service.
 
 ---
 
@@ -357,8 +357,8 @@ NEXT_PUBLIC_FIREBASE_DATABASE_ID=dhamtaridirectory
 # ============================================
 # CITY CONFIGURATION
 # ============================================
-NEXT_PUBLIC_APP_NAME=Dial Dhamtari
-NEXT_PUBLIC_CITY_NAME=Dhamtari
+NEXT_PUBLIC_APP_NAME=Dial Jagdalpur
+NEXT_PUBLIC_CITY_NAME=Jagdalpur
 NEXT_PUBLIC_STATE_NAME=Chhattisgarh
 NEXT_PUBLIC_CITY_PIN_CODE=493773
 
@@ -428,7 +428,7 @@ This platform is designed to support **multiple cities** using a **single Fireba
 
 ```
 Single Firebase Project
-├── Firestore Database: dhamtaridirectory (Dhamtari)
+├── Firestore Database: dhamtaridirectory (Jagdalpur)
 ├── Firestore Database: raipurdirectory (Raipur)
 ├── Firestore Database: bilaspurdirectory (Bilaspur)
 └── Shared: Auth, Storage, Functions
@@ -706,11 +706,11 @@ The platform features a state-of-the-art AI chatbot powered by **Google Gemini 2
 
 ```
 User: "hey there"
-Bot: Hello! I'm here to help you find businesses in Dhamtari. How can I assist you today?
+Bot: Hello! I'm here to help you find businesses in Jagdalpur. How can I assist you today?
 
 User: "deepak electronics"
 Bot: Hello! I found one business matching your search:
-     • Deepak Electronics - Market Square, Dhamtari
+     • Deepak Electronics - Market Square, Jagdalpur
      📞 +91 9876543212
 
 User: "give me list of restaurants"
@@ -1113,7 +1113,7 @@ SEO: 100/100 🔍
 
 ## 🤝 Contributing
 
-This is a **private project** owned by the **Dhamtari District Administration**. Contributions are not accepted from external developers.
+This is a **private project** owned by the **Jagdalpur District Administration**. Contributions are not accepted from external developers.
 
 ### **For Internal Team Members**
 
@@ -1151,9 +1151,9 @@ This is a **private project** owned by the **Dhamtari District Administration**.
 
 **Private & Proprietary**
 
-© 2025 **Dhamtari District Administration**. All rights reserved.
+© 2025 **Jagdalpur District Administration**. All rights reserved.
 
-This software is the exclusive property of the Dhamtari District Administration. 
+This software is the exclusive property of the Jagdalpur District Administration. 
 Unauthorized copying, distribution, or use is strictly prohibited.
 
 ---
@@ -1164,13 +1164,13 @@ For technical support or inquiries:
 
 - 📧 **Email**: odhamtari@gmail.com
 - 📱 **Phone**: +91-9340897799
-- 🏛️ **Office**: Near Civil Court, Rudri District, Dhamtari, C.G. 493776
+- 🏛️ **Office**: Near Civil Court, Rudri District, Jagdalpur, C.G. 493776
 
 ---
 
 <div align="center">
 
-### 🌟 **Built with ❤️ for the people of Dhamtari**
+### 🌟 **Built with ❤️ for the people of Jagdalpur**
 
 **Empowering Local Businesses • Connecting Communities • Driving Growth**
 
