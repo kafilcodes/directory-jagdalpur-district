@@ -94,8 +94,17 @@ const nextConfig: NextConfig = {
   },
 
   typedRoutes: true,
-  eslint: { ignoreDuringBuilds: false },
   typescript: { ignoreBuildErrors: false },
+  // Turbopack configuration (Next.js 16+ default)
+  turbopack: {
+    rules: {
+      // SVG handling for Turbopack
+      '*.svg': {
+        loaders: ['@svgr/webpack'],
+        as: '*.js',
+      },
+    },
+  },
   images: {
     // Image optimization settings for better performance
     formats: ["image/webp"], // Use WebP for smaller file sizes
@@ -130,25 +139,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  webpack: (config) => {
-    config.module?.rules?.push({
-      test: /\.svg$/i,
-      issuer: { and: [/\.[jt]sx?$/] },
-      use: [
-        {
-          loader: "@svgr/webpack",
-          options: {
-            icon: true,
-            // Use currentColor so icons can be tinted via text-* classes if desired
-            svgoConfig: {
-              plugins: [{ name: "preset-default", params: { overrides: { removeViewBox: false } } }],
-            },
-          },
-        },
-      ],
-    })
-    return config
-  }
 }
 
 export default withBundleAnalyzer(nextConfig)
