@@ -21,7 +21,8 @@ import {
     X,
     ChevronLeft,
     ChevronRight,
-    LogOut
+    LogOut,
+    Briefcase
 } from "lucide-react"
 
 const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || "Dial Dhamtari";
@@ -78,6 +79,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     const navItems = [
         { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
         { href: "/admin/listings", icon: ListIcon, label: "Listings" },
+        { href: "/admin/services", icon: Briefcase, label: "Services" },
         { href: "/admin/users", icon: Users, label: "Users" },
         { href: "/admin/analytics", icon: BarChart3, label: "Analytics" },
     ]

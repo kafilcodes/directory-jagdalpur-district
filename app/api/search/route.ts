@@ -4,6 +4,78 @@ import { getCachedSearch, setCachedSearch } from "@/lib/cache/listingsCache"
 
 export const dynamic = "force-dynamic"
 
+/**
+ * Search services from Firestore
+ */
+async function searchServices(query: string, options: {
+  limit?: number
+  offset?: number
+  serviceType?: string
+}) {
+  const { limit = 12, offset = 0, serviceType } = options
+  const db = (await import("@/lib/firebase/admin")).getAdminDb()
+
+  let firestoreQuery: FirebaseFirestore.Query = db.collection("services")
+    .where("status", "==", "live")
+
+  // Filter by service type if specified
+  if (serviceType) {
+    firestoreQuery = firestoreQuery.where("serviceSlug", "==", serviceType)
+  }
+
+  firestoreQuery = firestoreQuery.orderBy("createdAt", "desc")
+
+  // If there's a search query, we'll do client-side filtering
+  // since Firestore doesn't support full-text search
+  if (query) {
+    // Get more results to filter from
+    firestoreQuery = firestoreQuery.limit(100)
+  } else {
+    firestoreQuery = firestoreQuery.offset(offset).limit(limit)
+  }
+
+  const snap = await firestoreQuery.get()
+
+  let services = snap.docs.map(doc => {
+    const data = doc.data()
+    return {
+      id: doc.id,
+      type: 'service' as const,
+      name: data.name || '',
+      service: data.service || '',
+      serviceSlug: data.serviceSlug || '',
+      serviceLabel: data.serviceLabel || '',
+      address: data.address || '',
+      qualityRating: data.qualityRating || 0,
+      chargesPerHour: data.chargesPerHour || 0,
+      isNegotiable: data.isNegotiable || false,
+      profilePhoto: data.profilePhoto || null,
+      workingHours: data.workingHours || '',
+      contactNumber: data.contactNumber || '',
+      whatsappNumber: data.whatsappNumber || '',
+      experienceYears: data.experienceYears || null,
+      tags: data.tags || [],
+      createdAt: data.createdAt || 0,
+    }
+  })
+
+  // Client-side search filtering
+  if (query) {
+    const queryLower = query.toLowerCase()
+    services = services.filter(s =>
+      s.name.toLowerCase().includes(queryLower) ||
+      s.service.toLowerCase().includes(queryLower) ||
+      s.serviceLabel?.toLowerCase().includes(queryLower) ||
+      s.address.toLowerCase().includes(queryLower) ||
+      s.tags?.some((tag: string) => tag.toLowerCase().includes(queryLower))
+    )
+    // Apply pagination after filtering
+    services = services.slice(offset, offset + limit)
+  }
+
+  return services
+}
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const q = String(searchParams.get("q") || "")
@@ -13,8 +85,39 @@ export async function GET(req: NextRequest) {
   const filter = String(searchParams.get("filter") || "")
   const offset = Number(searchParams.get("offset") || 0)
   const cats = catsParam ? catsParam.split(",").filter(Boolean) : []
+  const type = String(searchParams.get("type") || "all") as 'all' | 'business' | 'service'
+  const serviceType = searchParams.get("serviceType") || ""
 
   try {
+    // If searching for services only
+    if (type === 'service') {
+      const services = await searchServices(q, {
+        limit,
+        offset,
+        serviceType: serviceType || undefined
+      })
+
+      // Get count for pagination
+      const db = (await import("@/lib/firebase/admin")).getAdminDb()
+      let countQuery: FirebaseFirestore.Query = db.collection("services")
+        .where("status", "==", "live")
+      if (serviceType) {
+        countQuery = countQuery.where("serviceSlug", "==", serviceType)
+      }
+      const countSnap = await countQuery.count().get()
+      const totalServices = countSnap.data().count
+
+      return NextResponse.json({
+        ok: true,
+        data: services,
+        type: 'service',
+        offset,
+        limit,
+        hasMore: offset + services.length < totalServices,
+        totalAvailable: totalServices
+      })
+    }
+
     // Browse mode: no query or query too short
     // Default behavior shows all listings with pagination
     if (!q || q.trim().length < 2) {

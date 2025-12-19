@@ -3,6 +3,7 @@ import { createChatBotMessage } from "react-chatbot-kit"
 import { Bot } from "lucide-react"
 import { TypingIndicator } from "./TypingIndicator"
 import { ListingCard } from "./ListingCard"
+import { ServiceCardWidget } from "./ServiceCardWidget"
 import { ErrorMessage } from "./ErrorMessage"
 import FormattedBotMessage from "./FormattedBotMessage.tsx"
 
@@ -83,6 +84,20 @@ const config = {
                 <div className="flex flex-col gap-2 items-start">
                     {props.payload.listings.map((listing: any) => (
                         <ListingCard key={listing.id} listing={listing} />
+                    ))}
+                </div>
+            ),
+        },
+        {
+            widgetName: "serviceCard",
+            widgetFunc: (props: any) => <ServiceCardWidget service={props.payload.service} />,
+        },
+        {
+            widgetName: "serviceCards",
+            widgetFunc: (props: any) => (
+                <div className="flex flex-col gap-2 items-start">
+                    {props.payload.services.map((service: any) => (
+                        <ServiceCardWidget key={service.id} service={service} />
                     ))}
                 </div>
             ),

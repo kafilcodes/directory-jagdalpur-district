@@ -1,13 +1,16 @@
 "use client"
 
 import { Skeleton } from "@/components/ui/skeleton"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import SearchControls from "@/components/search/SearchControls"
 import EmptySearch from "@/components/icons/EmptySearch"
 import { Button } from "@/components/ui/button"
-import { useSearchParams } from "next/navigation"
-import { useEffect, useState, Suspense, useRef, useCallback } from "react"
+import { useSearchParams, useRouter } from "next/navigation"
+import { useEffect, useState, Suspense, useRef, useCallback, useMemo } from "react"
 import { toast } from "sonner"
-import { WifiOff, AlertCircle } from "lucide-react"
+import { WifiOff, AlertCircle, Building2, Briefcase } from "lucide-react"
+import { ServiceCard } from "@/components/services/ServiceCard"
+import ServiceDetailSheet from "@/components/services/ServiceDetailSheet"
 
 // Client-side cache for search results (5 minute TTL)
 const searchCache = new Map<string, { data: any[], timestamp: number }>()
@@ -15,12 +18,20 @@ const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
 
 function SearchPageContent() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const q = searchParams.get("q") || ""
   const catsParam = searchParams.get("cats") || searchParams.get("category") || ""
-  const cats = catsParam.split(",").filter(Boolean)
+  // CRITICAL: Memoize cats array to prevent infinite re-render loop
+  // Without this, cats is recreated every render → new buildCacheKey → new getCachedData → useEffect fires → state change → re-render → loop
+  const cats = useMemo(() => catsParam.split(",").filter(Boolean), [catsParam])
   const sort = searchParams.get("sort") || "relevance"
   const premiumFilter = searchParams.get("filter") || "" // "sponsored" | "featured" | ""
 
+  // CRITICAL FIX: Use URL param directly as single source of truth for activeTab
+  // Previously we had `activeTab` state that got out of sync with URL causing infinite loops
+  const activeTab = (searchParams.get("type") || "business") as 'business' | 'service'
+
+  // Business results
   const [results, setResults] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
@@ -30,20 +41,38 @@ function SearchPageContent() {
   const [totalAvailable, setTotalAvailable] = useState(0) // Total listings available in DB
   const [isOffline, setIsOffline] = useState(false)
 
+  // Service results
+  const [serviceResults, setServiceResults] = useState<any[]>([])
+  const [serviceLoading, setServiceLoading] = useState(false)
+  const [serviceLoadingMore, setServiceLoadingMore] = useState(false)
+  const [serviceTotalAvailable, setServiceTotalAvailable] = useState(0)
+
   // Simple ref to prevent duplicate requests
   const isLoadingRef = useRef(false)
   const totalFetchedRef = useRef(0) // Track with ref to get current value in loadMore
   const offlineToastShownRef = useRef(false) // Track if offline toast was shown
+  const lastFetchedCacheKeyRef = useRef<string>("") // Track last fetched cache key to prevent duplicate fetches
+  const lastServiceFetchKeyRef = useRef<string>("") // Track last service fetch to prevent duplicate requests
 
-  // Build cache key
-  const buildCacheKey = useCallback(() => {
+  // Handle tab change - only updates URL, no local state
+  const handleTabChange = useCallback((tab: string) => {
+    const newTab = tab as 'business' | 'service'
+    // Only navigate if tab actually changed to prevent loops
+    if (newTab === activeTab) return
+
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('type', newTab)
+    router.push(`/search?${params.toString()}`, { scroll: false })
+  }, [searchParams, router, activeTab])
+
+  // Build cache key - memoized to prevent unnecessary recalculations
+  const cacheKey = useMemo(() => {
     const parts = [q, sort, cats.join(","), premiumFilter].filter(Boolean)
     return parts.join("|")
   }, [q, sort, cats, premiumFilter])
 
   // Get cached data if available and not expired
   const getCachedData = useCallback(() => {
-    const cacheKey = buildCacheKey()
     const cached = searchCache.get(cacheKey)
 
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
@@ -56,11 +85,10 @@ function SearchPageContent() {
     }
 
     return null
-  }, [buildCacheKey])
+  }, [cacheKey])
 
   // Set cache data
   const setCachedData = useCallback((data: any[]) => {
-    const cacheKey = buildCacheKey()
     searchCache.set(cacheKey, { data, timestamp: Date.now() })
 
     // Limit cache size to prevent memory issues
@@ -70,7 +98,7 @@ function SearchPageContent() {
         searchCache.delete(firstKey)
       }
     }
-  }, [buildCacheKey])
+  }, [cacheKey])
 
   // Monitor online/offline status
   useEffect(() => {
@@ -102,6 +130,13 @@ function SearchPageContent() {
   // Fetch results
   // Initial fetch on mount or when search params change
   useEffect(() => {
+    // CRITICAL: Prevent duplicate fetches for the same cache key
+    // This prevents the infinite loop when navigating to /search?type=business
+    if (lastFetchedCacheKeyRef.current === cacheKey && results.length > 0) {
+      console.log(`[Initial Fetch] Skipping - already fetched for cacheKey: ${cacheKey}`)
+      return
+    }
+
     const fetchResults = async () => {
       setLoading(true)
       setHasReachedMax(false)
@@ -113,6 +148,8 @@ function SearchPageContent() {
       // Check cache first
       const cachedData = getCachedData()
       if (cachedData) {
+        console.log(`[Initial Fetch] Using cached data for cacheKey: ${cacheKey}`)
+        lastFetchedCacheKeyRef.current = cacheKey // Mark as fetched
         setResults(cachedData)
         setTotalFetched(cachedData.length)
         totalFetchedRef.current = cachedData.length // Sync ref
@@ -150,7 +187,7 @@ function SearchPageContent() {
         params.append("limit", limit.toString())
         params.append("offset", "0")
 
-        console.log(`[Initial Fetch] q="${q}", cats="${cats.join(",")}", sort="${sort}", limit=${limit}"`)
+        console.log(`[Initial Fetch] q="${q}", cats="${cats.join(",")}", sort="${sort}", limit=${limit}, cacheKey="${cacheKey}"`)
 
         const response = await fetch(`/api/search?${params.toString()}`)
         if (!response.ok) throw new Error("Search failed")
@@ -161,6 +198,10 @@ function SearchPageContent() {
           const data = json.data || []
           const apiTotalAvailable = json.totalAvailable || data.length
           console.log(`[Initial Fetch] Received ${data.length} listings, Total available: ${apiTotalAvailable}`)
+
+          // Mark as fetched BEFORE setting state to prevent re-fetches
+          lastFetchedCacheKeyRef.current = cacheKey
+
           setResults(data)
           setTotalFetched(data.length)
           setTotalAvailable(apiTotalAvailable)
@@ -175,6 +216,7 @@ function SearchPageContent() {
             setHasReachedMax(true)
           }
         } else {
+          lastFetchedCacheKeyRef.current = cacheKey // Mark as fetched even on empty results
           setResults([])
           setTotalFetched(0)
           setTotalAvailable(0)
@@ -187,6 +229,7 @@ function SearchPageContent() {
           // Try to use cached data as fallback
           const cachedData = getCachedData()
           if (cachedData && cachedData.length > 0) {
+            lastFetchedCacheKeyRef.current = cacheKey
             setResults(cachedData)
             setTotalFetched(cachedData.length)
             totalFetchedRef.current = cachedData.length
@@ -224,7 +267,91 @@ function SearchPageContent() {
     }
 
     fetchResults()
-  }, [q, sort, cats.join(","), premiumFilter, getCachedData, setCachedData])
+    // CRITICAL: Use cacheKey as the ONLY dependency - it encapsulates q, sort, cats, premiumFilter
+    // Do NOT include getCachedData/setCachedData as they're stable callbacks
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cacheKey])
+
+  // Fetch services when tab is "service"
+  useEffect(() => {
+    if (activeTab !== 'service') return
+
+    // Create a cache key for service fetches to prevent duplicates
+    const serviceCacheKey = `service:${q}`
+
+    // Skip if we already fetched with same params
+    if (lastServiceFetchKeyRef.current === serviceCacheKey) {
+      return
+    }
+
+    const fetchServices = async () => {
+      lastServiceFetchKeyRef.current = serviceCacheKey
+      setServiceLoading(true)
+
+      if (!navigator.onLine) {
+        setServiceResults([])
+        setServiceLoading(false)
+        return
+      }
+
+      try {
+        const params = new URLSearchParams()
+        if (q) params.append("q", q)
+        params.append("type", "service")
+        params.append("limit", "12")
+        params.append("offset", "0")
+
+        const response = await fetch(`/api/search?${params.toString()}`)
+        if (!response.ok) throw new Error("Search failed")
+
+        const json = await response.json()
+
+        if (json.ok) {
+          setServiceResults(json.data || [])
+          setServiceTotalAvailable(json.totalAvailable || json.data?.length || 0)
+        } else {
+          setServiceResults([])
+        }
+      } catch (error) {
+        console.error("Service search error:", error)
+        setServiceResults([])
+      } finally {
+        setServiceLoading(false)
+      }
+    }
+
+    fetchServices()
+    // CRITICAL: Only depend on activeTab and q - these are the only values that should trigger refetch
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, q])
+
+  // Load more services
+  const loadMoreServices = useCallback(async () => {
+    if (serviceLoadingMore) return
+
+    setServiceLoadingMore(true)
+
+    try {
+      const params = new URLSearchParams()
+      if (q) params.append("q", q)
+      params.append("type", "service")
+      params.append("limit", "12")
+      params.append("offset", serviceResults.length.toString())
+
+      const response = await fetch(`/api/search?${params.toString()}`)
+      if (!response.ok) throw new Error("Load more failed")
+
+      const json = await response.json()
+
+      if (json.ok && json.data?.length > 0) {
+        setServiceResults([...serviceResults, ...json.data])
+      }
+    } catch (error) {
+      console.error("Load more services error:", error)
+    } finally {
+      setServiceLoadingMore(false)
+    }
+  }, [serviceLoadingMore, serviceResults, q])
 
   // Manual "Load More" function - only triggered by button click
   const loadMore = useCallback(async () => {
@@ -339,12 +466,7 @@ function SearchPageContent() {
     ? displayCount < total // For search, show if displaying less than fetched
     : (totalAvailable > 0 && totalFetched < totalAvailable && !hasReachedMax) // For browse, check against DB total
 
-  // Internal logging for debugging (not shown to users)
-  if (!loading && !loadingMore) {
-    console.log(`[Show More Logic] Mode: ${q ? 'search' : 'browse'}, TotalAvailable: ${totalAvailable}, TotalFetched: ${totalFetched}, DisplayCount: ${displayCount}, HasMore: ${hasMore}`)
-  }
-
-  if (loading) {
+  if (loading && activeTab === 'business') {
     return (
       <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         <div className="flex flex-col gap-4">
@@ -361,6 +483,207 @@ function SearchPageContent() {
     )
   }
 
+  // Render tabs content helper
+  const renderTabContent = () => {
+    if (activeTab === 'service') {
+      // Service tab
+      if (serviceLoading) {
+        return (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-64 rounded-lg" />
+            ))}
+          </div>
+        )
+      }
+
+      if (serviceResults.length === 0) {
+        return (
+          <div className="flex flex-col items-center justify-center py-16 space-y-6">
+            <div className="relative w-48 h-36">
+              <EmptySearch width={192} height={144} />
+            </div>
+            <div className="text-center space-y-2 max-w-md">
+              <p className="text-sm mt-10 text-gray-600">
+                {q ? (
+                  <>No services found for &quot;<span className="font-medium text-gray-900">{q}</span>&quot;.</>
+                ) : (
+                  <>No services available yet. Check back soon!</>
+                )}
+              </p>
+            </div>
+          </div>
+        )
+      }
+
+      return (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {serviceResults.map((service: any, index: number) => (
+              <div
+                key={service.id}
+                className="animate-fade-in-up cursor-pointer"
+                style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'both' }}
+                onClick={() => router.push(`/search?${searchParams.toString()}&service_id=${service.id}`, { scroll: false })}
+              >
+                <ServiceCard
+                  id={service.id}
+                  name={service.name}
+                  service={service.service}
+                  serviceSlug={service.serviceSlug}
+                  address={service.address}
+                  qualityRating={service.qualityRating}
+                  chargesPerHour={service.chargesPerHour}
+                  isNegotiable={service.isNegotiable}
+                  profilePhoto={service.profilePhoto}
+                  workingHours={service.workingHours}
+                  experienceYears={service.experienceYears}
+                />
+              </div>
+            ))}
+          </div>
+          {serviceResults.length < serviceTotalAvailable && (
+            <div className="flex items-center justify-center py-8">
+              <Button
+                onClick={loadMoreServices}
+                variant="ghost"
+                size="lg"
+                className="px-8 shadow-md hover:shadow-lg transition-shadow border-0"
+                disabled={serviceLoadingMore}
+              >
+                {serviceLoadingMore ? (
+                  <span className="flex items-center gap-2">
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-red-500" />
+                    Loading...
+                  </span>
+                ) : (
+                  "Show More Services"
+                )}
+              </Button>
+            </div>
+          )}
+          {/* Service Detail Sheet */}
+          <ServiceDetailSheet />
+        </>
+      )
+    }
+
+    // Business tab (default)
+    return (
+      <>
+        {total === 0 && !loading ? (
+          <div className="flex flex-col items-center justify-center py-16 space-y-6">
+            <div className="relative w-48 h-36">
+              <EmptySearch width={192} height={144} />
+            </div>
+            <div className="text-center space-y-2 max-w-md">
+              <p className="text-sm mt-10 text-gray-600">
+                {q ? (
+                  <>We couldn&apos;t find any results for &quot;<span className="font-medium text-gray-900">{q}</span>&quot;. Try different keywords or browse all listings.</>
+                ) : (
+                  <>No listings found. Try searching for businesses, services, or categories.</>
+                )}
+              </p>
+            </div>
+          </div>
+        ) : null}
+
+        {/* Results Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {displayedResults.map((it: any, index: number) => {
+            const imageUrl = it.thumbnail ||
+              (it.images && Array.isArray(it.images) && it.images.length > 0
+                ? (typeof it.images[0] === 'string' ? it.images[0] : it.images[0]?.url)
+                : null) ||
+              (it.photos && Array.isArray(it.photos) && it.photos.length > 0 ? it.photos[0] : null) ||
+              (it.googlePhotos && Array.isArray(it.googlePhotos) && it.googlePhotos.length > 0 ? it.googlePhotos[0] : null) ||
+              it.photoUrl
+
+            const address = it.address?.formattedAddress || it.formattedAddress || it.address || ""
+            const planType = it.plan || it.planType || it.activePlan?.type || it.monetization?.type
+
+            const cardElement = require("react").createElement(require("@/components/listings/ListingCardClient").default, {
+              key: it.id,
+              id: it.id,
+              name: it.name || it.businessName || it.listingName || "Unnamed",
+              category: it.category || it.categorySlug || it.listingType || "General",
+              address: typeof address === 'string' ? address : JSON.stringify(address),
+              rating: typeof it.rating === "number" ? it.rating : undefined,
+              planType: planType,
+              photoUrl: imageUrl,
+              thumbnail: imageUrl,
+              images: it.images,
+              googlePhotos: it.googlePhotos || it.photos,
+              phone: it.phone,
+              email: it.email,
+            })
+
+            return require("react").createElement("div", {
+              key: it.id,
+              className: "animate-fade-in-up",
+              style: { animationDelay: `${index * 50}ms`, animationFillMode: 'both' }
+            }, cardElement)
+          })}
+        </div>
+
+        {/* Manual Load More Button */}
+        {hasMore && (
+          <div className="flex items-center justify-center py-8">
+            <Button
+              onClick={loadMore}
+              variant="ghost"
+              size="lg"
+              className="px-8 shadow-md hover:shadow-lg transition-shadow border-0"
+              disabled={loadingMore}
+            >
+              {loadingMore ? (
+                <span className="flex items-center gap-2">
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-red-500" />
+                  Loading...
+                </span>
+              ) : (
+                "Show More"
+              )}
+            </Button>
+          </div>
+        )}
+
+        {/* Max reached message */}
+        {!hasMore && total > 0 && hasReachedMax && (
+          <div className="text-center py-8 text-gray-500">
+            <p>You've reached the end of the results</p>
+          </div>
+        )}
+
+        {/* Max browse limit reached message */}
+        {!q && hasReachedMax && total >= 27 && (
+          <div className="flex flex-col items-center justify-center py-12 space-y-4">
+            <div className="text-center space-y-2 max-w-md">
+              <p className="text-lg font-semibold text-gray-900">Browse Limit Reached</p>
+              <p className="text-sm text-gray-600">
+                You've browsed 27 listings. Please use the search feature to find specific businesses.
+              </p>
+            </div>
+            <Button
+              onClick={() => {
+                const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement
+                if (searchInput) searchInput.focus()
+              }}
+              variant="default"
+              size="lg"
+              className="mt-4"
+            >
+              Search Instead
+            </Button>
+          </div>
+        )}
+
+        {/* Listing Detail Sheet */}
+        {require("react").createElement(require("@/components/listings/ListingDetailSheet").default)}
+      </>
+    )
+  }
+
   return (
     <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       <div className="flex flex-col gap-4">
@@ -368,8 +691,24 @@ function SearchPageContent() {
         {/* Standalone search bar (no inline suggestions) - full width */}
         {require("react").createElement(require("@/components/search/SearchPageBar").default)}
       </div>
-      {/* Filters */}
-      <SearchControls />
+
+      {/* Tabs for Businesses and Services */}
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+        <TabsList className="grid w-full max-w-md grid-cols-2 mb-4">
+          <TabsTrigger value="business" className="gap-2">
+            <Building2 className="h-4 w-4" />
+            Businesses
+          </TabsTrigger>
+          <TabsTrigger value="service" className="gap-2">
+            <Briefcase className="h-4 w-4" />
+            Services
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+
+      {/* Filters - only show for business tab */}
+      {activeTab === 'business' && <SearchControls />}
+
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -382,120 +721,8 @@ function SearchPageContent() {
         }}
       />
 
-      {total === 0 && !loading ? (
-        <div className="flex flex-col items-center justify-center py-16 space-y-6">
-          <div className="relative w-48 h-36">
-            <EmptySearch width={192} height={144} />
-          </div>
-          <div className="text-center space-y-2 max-w-md">
-            <p className="text-sm mt-10 text-gray-600">
-              {q ? (
-                <>We couldn&apos;t find any results for &quot;<span className="font-medium text-gray-900">{q}</span>&quot;. Try different keywords or browse all listings.</>
-              ) : (
-                <>No listings found. Try searching for businesses, services, or categories.</>
-              )}
-            </p>
-          </div>
-        </div>
-      ) : null}
-
-      {/* Results Grid - Responsive: 2 cols mobile, 3 cols tablet, 3 cols desktop */}
-      {/* When filtering by category on mobile, show 4 items then "Show More" */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        {displayedResults.map((it: any, index: number) => {
-          // Extract images properly from Firestore data structure
-          const imageUrl = it.thumbnail ||
-            (it.images && Array.isArray(it.images) && it.images.length > 0
-              ? (typeof it.images[0] === 'string' ? it.images[0] : it.images[0]?.url)
-              : null) ||
-            (it.photos && Array.isArray(it.photos) && it.photos.length > 0 ? it.photos[0] : null) ||
-            (it.googlePhotos && Array.isArray(it.googlePhotos) && it.googlePhotos.length > 0 ? it.googlePhotos[0] : null) ||
-            it.photoUrl
-
-          // Extract formatted address
-          const address = it.address?.formattedAddress || it.formattedAddress || it.address || ""
-
-          // Extract plan type - check 'plan' field first (DB stores as 'plan'), then fallback
-          const planType = it.plan || it.planType || it.activePlan?.type || it.monetization?.type
-
-          const cardElement = require("react").createElement(require("@/components/listings/ListingCardClient").default, {
-            key: it.id,
-            id: it.id,
-            name: it.name || it.businessName || it.listingName || "Unnamed",
-            category: it.category || it.categorySlug || it.listingType || "General",
-            address: typeof address === 'string' ? address : JSON.stringify(address),
-            rating: typeof it.rating === "number" ? it.rating : undefined,
-            planType: planType,
-            photoUrl: imageUrl,
-            thumbnail: imageUrl,
-            images: it.images,
-            googlePhotos: it.googlePhotos || it.photos,
-            phone: it.phone,
-            email: it.email,
-          })
-
-          return require("react").createElement("div", {
-            key: it.id,
-            className: "animate-fade-in-up",
-            style: { animationDelay: `${index * 50}ms`, animationFillMode: 'both' }
-          }, cardElement)
-        })}
-      </div>
-
-      {/* Manual Load More Button - Only show if there are actually more results */}
-      {hasMore && (
-        <div className="flex items-center justify-center py-8">
-          <Button
-            onClick={loadMore}
-            variant="ghost"
-            size="lg"
-            className="px-8 shadow-md hover:shadow-lg transition-shadow border-0"
-            disabled={loadingMore}
-          >
-            {loadingMore ? (
-              <span className="flex items-center gap-2">
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-red-500" />
-                Loading...
-              </span>
-            ) : (
-              "Show More"
-            )}
-          </Button>
-        </div>
-      )}
-
-      {/* Max reached message - Only show if we have results and reached max */}
-      {!hasMore && total > 0 && hasReachedMax && (
-        <div className="text-center py-8 text-gray-500">
-          <p>You've reached the end of the results</p>
-        </div>
-      )}
-
-      {/* Max browse limit reached message */}
-      {!q && hasReachedMax && total >= 27 && (
-        <div className="flex flex-col items-center justify-center py-12 space-y-4">
-          <div className="text-center space-y-2 max-w-md">
-            <p className="text-lg font-semibold text-gray-900">Browse Limit Reached</p>
-            <p className="text-sm text-gray-600">
-              You've browsed 27 listings. Please use the search feature to find specific businesses.
-            </p>
-          </div>
-          <Button
-            onClick={() => {
-              const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement
-              if (searchInput) searchInput.focus()
-            }}
-            variant="default"
-            size="lg"
-            className="mt-4"
-          >
-            Search Instead
-          </Button>
-        </div>
-      )}
-
-      {/* Listing Detail Sheet - Opens when ?id= param is present */}
-      {require("react").createElement(require("@/components/listings/ListingDetailSheet").default)}
+      {/* Tab Content */}
+      {renderTabContent()}
     </main>
   )
 }

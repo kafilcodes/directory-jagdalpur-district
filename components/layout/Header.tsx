@@ -42,11 +42,19 @@ import {
   TrendingUp,
   Compass,
   Info,
-  Mail
+  Mail,
+  Wrench
 } from "lucide-react"
 import Image from "next/image"
 import { Facebook as FacebookSvg, X as XSvg, Instagram as InstagramSvg } from "@/components/icons/SocialSvgr"
 import { signInWithGoogle, onAuthChange } from "@/lib/firebase/authService"
+import dynamic from "next/dynamic"
+
+// Dynamically import AddServiceDialog for code splitting
+const AddServiceDialog = dynamic(() =>
+  import("@/components/services/AddServiceDialog").then(mod => mod.AddServiceDialog),
+  { ssr: false }
+)
 
 const categories: Category[] = [
   {
@@ -88,6 +96,7 @@ export default function Header({ canShowProfileIcon: _canShowProfileIcon = false
   const [signInOpen, setSignInOpen] = useState(false)
   const [signInError, setSignInError] = useState<string | null>(null)
   const [signingIn, setSigningIn] = useState(false)
+  const [serviceDialogOpen, setServiceDialogOpen] = useState(false)
 
   // Subscribe to Firebase auth state changes
   useEffect(() => {
@@ -226,7 +235,11 @@ export default function Header({ canShowProfileIcon: _canShowProfileIcon = false
           </div>
 
           {/* Desktop Actions */}
-          <div className="hidden lg:flex items-center gap-4">
+          <div className="hidden lg:flex items-center gap-3">
+            <Button onClick={() => setServiceDialogOpen(true)} variant="outline" className="gap-2 border-red-400 text-red-500 hover:bg-red-500 hover:text-white transition-colors group">
+              <Wrench className="h-4 w-4 text-red-500 group-hover:text-white" />
+              <span className="hidden lg:inline">Add Service</span>
+            </Button>
             {!isSignedIn && (
               <Button onClick={onAddListing} variant="outline" className="gap-2 border-red-500 text-red-600 hover:bg-red-600 hover:text-white transition-colors group">
                 <PlusCircle className="h-4 w-4 text-red-600 group-hover:text-white" />
@@ -323,6 +336,10 @@ export default function Header({ canShowProfileIcon: _canShowProfileIcon = false
                 </div>
 
                 <div className="border-t pt-4 space-y-3">
+                  <Button onClick={() => { setMobileMenuOpen(false); setServiceDialogOpen(true); }} variant="outline" className="w-full gap-2 border-red-400 text-red-500 hover:bg-red-50">
+                    <Wrench className="h-4 w-4 text-red-500" />
+                    Add Service
+                  </Button>
                   {!isSignedIn && (
                     <Button onClick={() => { setMobileMenuOpen(false); onAddListing(); }} variant="outline" className="w-full gap-2 border-red-500 text-red-600 hover:bg-red-50">
                       <PlusCircle className="h-4 w-4 text-red-500" />
@@ -373,6 +390,13 @@ export default function Header({ canShowProfileIcon: _canShowProfileIcon = false
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Add Service Dialog */}
+        <AddServiceDialog
+          open={serviceDialogOpen}
+          onClose={() => setServiceDialogOpen(false)}
+          onSuccess={() => setServiceDialogOpen(false)}
+        />
 
       </div>
     </header >

@@ -659,6 +659,176 @@ async function searchListingsComprehensive(searchTerms: string[], limit: number 
 }
 
 /**
+ * Service-related keywords for detection
+ */
+const serviceKeywords = [
+    // Direct service names
+    'electrician', 'plumber', 'carpenter', 'painter', 'mechanic', 'driver',
+    'photographer', 'beautician', 'cook', 'chef', 'babysitter', 'gardener',
+    'tailor', 'cleaner', 'security', 'guard', 'caregiver', 'tutor', 'teacher',
+    'musician', 'dj', 'trainer', 'nurse', 'lawyer', 'advocate', 'accountant',
+    // Service keywords
+    'ac technician', 'ac repair', 'computer technician', 'mobile repair',
+    'pet care', 'pet sitter', 'fitness trainer', 'home tutor', 'house cleaner',
+    // Generic service terms
+    'gig', 'worker', 'service provider', 'freelancer', 'handyman', 'helper',
+    'repair', 'fix', 'install', 'maintenance', 'home service', 'local worker',
+    // Hindi/local terms
+    'mistri', 'karigar', 'beldaar', 'rajmistri', 'electrician wala', 'plumber wala'
+]
+
+/**
+ * Check if query is asking for services (gig workers)
+ */
+function isServiceQuery(message: string): boolean {
+    const messageLower = message.toLowerCase()
+
+    // Check for direct service keywords
+    for (const keyword of serviceKeywords) {
+        if (messageLower.includes(keyword)) {
+            return true
+        }
+    }
+
+    // Check for patterns like "need a plumber", "find electrician", "looking for carpenter"
+    const servicePatterns = [
+        /need\s+(?:a|an)?\s*(electrician|plumber|carpenter|painter|mechanic|driver)/i,
+        /find\s+(?:a|an)?\s*(electrician|plumber|carpenter|painter|mechanic|driver)/i,
+        /looking\s+for\s+(?:a|an)?\s*(electrician|plumber|carpenter|painter|mechanic|driver)/i,
+        /(?:ac|air\s*conditioner)\s*(repair|service|technician)/i,
+        /(?:home|house)\s*(cleaning|repair|service)/i,
+        /(?:mobile|phone)\s*repair/i,
+        /(?:computer|laptop)\s*repair/i,
+    ]
+
+    for (const pattern of servicePatterns) {
+        if (pattern.test(messageLower)) {
+            return true
+        }
+    }
+
+    return false
+}
+
+/**
+ * Comprehensive search for services in Firestore
+ * Similar to searchListingsComprehensive but for gig workers/services
+ */
+async function searchServicesComprehensive(searchTerms: string[], limit: number = 3) {
+    try {
+        const db = getAdminDb()
+        const allMatches = new Map<string, any>()
+
+        // Service category keywords for matching
+        const serviceCategoryKeywords: Record<string, string[]> = {
+            'electrician': ['electric', 'wiring', 'voltage', 'power', 'switch', 'fan', 'light'],
+            'plumber': ['pipe', 'water', 'tap', 'bathroom', 'toilet', 'leak', 'drainage'],
+            'carpenter': ['wood', 'furniture', 'door', 'window', 'cabinet', 'repair'],
+            'painter': ['paint', 'wall', 'color', 'polish', 'texture', 'whitewash'],
+            'ac-technician': ['ac', 'air conditioner', 'cooling', 'refrigerator', 'fridge', 'cooler'],
+            'mechanic': ['car', 'bike', 'vehicle', 'engine', 'motor', 'service'],
+            'driver': ['drive', 'transport', 'taxi', 'delivery', 'pickup', 'drop'],
+            'computer-technician': ['computer', 'laptop', 'software', 'hardware', 'network', 'printer'],
+            'mobile-repair': ['mobile', 'phone', 'screen', 'battery', 'smartphone'],
+            'photographer': ['photo', 'video', 'camera', 'wedding', 'event', 'shoot'],
+            'beautician': ['hair', 'makeup', 'facial', 'beauty', 'parlor', 'salon', 'bridal'],
+            'cook': ['cook', 'chef', 'food', 'catering', 'party', 'tiffin', 'meal'],
+            'babysitter': ['baby', 'child', 'nanny', 'care', 'daycare', 'sitter'],
+            'pet-care': ['pet', 'dog', 'cat', 'grooming', 'walking', 'sitting'],
+            'gardener': ['garden', 'plant', 'lawn', 'landscape', 'tree', 'flower'],
+            'tailor': ['stitch', 'tailor', 'cloth', 'dress', 'alteration', 'fitting'],
+            'cleaner': ['clean', 'maid', 'housekeeping', 'sweep', 'mop', 'wash', 'domestic'],
+            'security': ['security', 'guard', 'watchman', 'protection', 'safety'],
+            'caregiver': ['care', 'elderly', 'patient', 'nurse', 'health', 'medical'],
+            'tutor': ['tuition', 'teach', 'coaching', 'study', 'exam', 'class'],
+            'musician': ['music', 'dj', 'band', 'singer', 'wedding', 'party'],
+            'fitness-trainer': ['gym', 'fitness', 'trainer', 'yoga', 'exercise', 'workout'],
+            'nurse': ['nurse', 'medical', 'injection', 'dressing', 'patient', 'healthcare'],
+            'lawyer': ['lawyer', 'advocate', 'legal', 'court', 'case', 'documentation'],
+            'accountant': ['account', 'tax', 'gst', 'itr', 'ca', 'finance', 'audit']
+        }
+
+        // Get all live services
+        const servicesSnapshot = await db
+            .collection('services')
+            .where('status', '==', 'live')
+            .get()
+
+        for (const doc of servicesSnapshot.docs) {
+            const data = doc.data()
+            const service: any = { id: doc.id, ...data }
+
+            // Match against search terms
+            let matchScore = 0
+            const serviceCategory = (service.service || service.category || '').toLowerCase()
+            const serviceName = (service.name || '').toLowerCase()
+            const serviceTags = Array.isArray(service.tags) ? service.tags.map((t: string) => t.toLowerCase()) : []
+            const serviceAddress = (service.address || '').toLowerCase()
+
+            for (const term of searchTerms) {
+                const termLower = term.toLowerCase()
+
+                // Check for category match (highest priority)
+                if (serviceCategory.includes(termLower) || termLower.includes(serviceCategory)) {
+                    matchScore = Math.max(matchScore, 100)
+                }
+
+                // Check category keywords
+                for (const [category, keywords] of Object.entries(serviceCategoryKeywords)) {
+                    if (keywords.some(kw => termLower.includes(kw) || kw.includes(termLower))) {
+                        if (serviceCategory.includes(category) || category.includes(serviceCategory.replace(' ', '-'))) {
+                            matchScore = Math.max(matchScore, 90)
+                        }
+                    }
+                }
+
+                // Check name match
+                if (serviceName.includes(termLower)) {
+                    matchScore = Math.max(matchScore, 70)
+                }
+
+                // Check tags match
+                if (serviceTags.some((tag: string) => tag.includes(termLower))) {
+                    matchScore = Math.max(matchScore, 50)
+                }
+
+                // Check address match (for location-based search)
+                if (serviceAddress.includes(termLower)) {
+                    matchScore = Math.max(matchScore, 30)
+                }
+            }
+
+            if (matchScore > 0) {
+                const existingService = allMatches.get(service.id)
+                if (!existingService || matchScore > (existingService.matchScore || 0)) {
+                    allMatches.set(service.id, { ...service, matchScore })
+                }
+            }
+        }
+
+        // Convert Map to array and sort by match score, then by quality rating
+        const results = Array.from(allMatches.values())
+            .sort((a, b) => {
+                const scoreA = a.matchScore || 0
+                const scoreB = b.matchScore || 0
+                if (scoreB !== scoreA) {
+                    return scoreB - scoreA
+                }
+                // If same score, sort by quality rating
+                return (b.qualityRating || 0) - (a.qualityRating || 0)
+            })
+            .slice(0, limit)
+
+        console.log(`[Chatbot] Found ${allMatches.size} service matches, returning top ${results.length} (limit: ${limit})`)
+        return results
+
+    } catch (error) {
+        console.error("Service search error:", error)
+        return []
+    }
+}
+
+/**
  * Generate contact information response
  */
 async function generateContactResponse() {
@@ -787,10 +957,17 @@ Your Response:`
  * @param userMessage - Original user query
  * @param searchTerms - Extracted search terms
  * @param listings - Retrieved results from database (top 3 by views)
+ * @param services - Retrieved services from database (optional)
  * @param conversationHistory - Previous messages for context
  * @returns AI-generated conversational response with details
  */
-async function generateResponse(userMessage: string, searchTerms: string[], listings: any[], conversationHistory: Array<{ role: 'user' | 'bot', message: string }> = []) {
+async function generateResponse(
+    userMessage: string,
+    searchTerms: string[],
+    listings: any[],
+    services: any[] = [],
+    conversationHistory: Array<{ role: 'user' | 'bot', message: string }> = []
+) {
     try {
         const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" })
 
@@ -799,8 +976,8 @@ async function generateResponse(userMessage: string, searchTerms: string[], list
             ? conversationHistory.slice(-6).map(msg => `${msg.role === 'user' ? 'User' : 'Bot'}: ${msg.message}`).join('\n')
             : 'No previous conversation'
 
-        // Craft detailed context from search results
-        const context = listings.length > 0
+        // Craft detailed context from business listings
+        const listingsContext = listings.length > 0
             ? listings.map((listing, idx) => {
                 const address = typeof listing.address === 'string'
                     ? listing.address
@@ -813,7 +990,43 @@ async function generateResponse(userMessage: string, searchTerms: string[], list
    Views: ${listing.views || 0}
    ${listing.description ? `Description: ${listing.description.substring(0, 100)}...` : ''}`
             }).join('\n\n')
-            : "No listings found matching your search."
+            : "No business listings found matching your search."
+
+        // Craft detailed context from services
+        const servicesContext = services.length > 0
+            ? services.map((service, idx) => {
+                return `${idx + 1}. **${service.name || 'Unknown'}** (${service.service || service.category || 'Service'})
+   Service: ${service.service || 'N/A'}
+   Location: ${service.address || 'Not provided'}
+   WhatsApp: ${service.whatsapp || 'Not provided'}
+   Phone: ${service.contact || 'Not provided'}
+   Charges: ₹${service.chargesPerHour || 'N/A'}/hr ${service.negotiable ? '(Negotiable)' : ''}
+   Quality Rating: ${'⭐'.repeat(Math.min(service.qualityRating || 0, 5))} (${service.qualityRating || 0}/5)
+   Working Hours: ${service.workingHours || 'Not specified'}
+   Experience: ${service.experienceYears ? `${service.experienceYears} years` : 'Not specified'}`
+            }).join('\n\n')
+            : ""
+
+        // Determine response type based on what was found
+        const hasListings = listings.length > 0
+        const hasServices = services.length > 0
+
+        let resultsSection = ''
+        if (hasListings && hasServices) {
+            resultsSection = `**Businesses Found:**
+${listingsContext}
+
+**Service Providers Found:**
+${servicesContext}`
+        } else if (hasServices) {
+            resultsSection = `**Service Providers Found:**
+${servicesContext}`
+        } else if (hasListings) {
+            resultsSection = `**Businesses Found:**
+${listingsContext}`
+        } else {
+            resultsSection = "No listings or service providers found matching your search."
+        }
 
         // Engineer the prompt for detailed responses
         const prompt = `You are the Directory AI Chatbot for ${CITY_NAME} district, ${STATE_NAME}, India.
@@ -824,17 +1037,18 @@ ${historyContext}
 Current User Query: "${userMessage}"
 Search Terms Used: ${searchTerms.join(', ')}
 
-Top Businesses Found (sorted by popularity/views):
-${context}
+${resultsSection}
 
 Instructions:
 - Use previous conversation context to provide better, contextual responses
-- Provide a friendly, helpful response based ONLY on the listings above
-- If listings found, mention the top 2-3 with their NAME, LOCATION, and CONTACT details
+- Provide a friendly, helpful response based ONLY on the results above
+- For BUSINESSES: mention NAME, LOCATION, and CONTACT (phone)
+- For SERVICE PROVIDERS (gig workers like electricians, plumbers, etc.): mention NAME, SERVICE TYPE, LOCATION, WHATSAPP/PHONE, CHARGES, and QUALITY RATING
 - Format properly with line breaks and bullet points for readability
 - Use proper formatting like **bold** for names, line breaks for clarity
 - Be conversational and warm in tone
-- If no listings found, suggest trying different keywords or browsing categories
+- If both businesses and services found, present them clearly in separate sections
+- If no results found, suggest trying different keywords or browsing categories
 - Keep response 3-5 sentences maximum
 - Do NOT use external knowledge or web search
 - Reference previous conversation if user asked follow-up question
@@ -965,35 +1179,56 @@ export async function POST(request: NextRequest) {
             })
         }
 
-        // **Priority 4: Business search query**
+        // **Priority 4: Business and/or Service search query**
 
         // Detect if requesting multiple results (plural)
         const requestingMultiple = isRequestingMultipleResults(message)
         const resultLimit = requestingMultiple ? 3 : 1
 
-        console.log(`[Chatbot] Business search query - Requesting ${requestingMultiple ? 'MULTIPLE' : 'SINGLE'} result(s) (limit: ${resultLimit})`)
+        // Check if this is a service-related query
+        const searchingForService = isServiceQuery(message)
+
+        console.log(`[Chatbot] Search query - Type: ${searchingForService ? 'SERVICE' : 'BUSINESS'}, Requesting ${requestingMultiple ? 'MULTIPLE' : 'SINGLE'} result(s) (limit: ${resultLimit})`)
 
         // **Stage 1: Query Breakdown (with typo correction)**
         const searchTerms = extractSearchTerms(message)
         console.log(`[Chatbot] Extracted search terms:`, searchTerms)
 
         // **Stage 2: Comprehensive Multi-Field Search with dynamic limit**
-        const listings = await searchListingsComprehensive(searchTerms, resultLimit)
-        console.log(`[Chatbot] Found ${listings.length} listings (limit: ${resultLimit})`)
+        let listings: any[] = []
+        let services: any[] = []
+
+        if (searchingForService) {
+            // For service queries, search services primarily
+            services = await searchServicesComprehensive(searchTerms, resultLimit)
+            console.log(`[Chatbot] Found ${services.length} services (limit: ${resultLimit})`)
+
+            // Also search listings as fallback if no services found
+            if (services.length === 0) {
+                listings = await searchListingsComprehensive(searchTerms, resultLimit)
+                console.log(`[Chatbot] No services found, found ${listings.length} listings as fallback`)
+            }
+        } else {
+            // For business queries, search listings primarily
+            listings = await searchListingsComprehensive(searchTerms, resultLimit)
+            console.log(`[Chatbot] Found ${listings.length} listings (limit: ${resultLimit})`)
+        }
 
         // **Stage 3: AI Response Generation with conversation history**
-        const reply = await generateResponse(message, searchTerms, listings, conversationHistory)
+        const reply = await generateResponse(message, searchTerms, listings, services, conversationHistory)
         console.log(`[Chatbot] Generated response: ${reply.substring(0, 100)}...`)
 
         // Return comprehensive response
         return NextResponse.json({
             reply,
             results: listings,
+            services: services,
             searchTerms,
-            totalFound: listings.length,
+            totalFound: listings.length + services.length,
             isContactQuery: false,
             isListingGuideQuery: false,
             conversational: false,
+            isServiceQuery: searchingForService,
             requestingMultiple,
             resultLimit,
             success: true

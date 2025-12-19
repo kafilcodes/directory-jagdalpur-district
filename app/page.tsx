@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from "react"
 import dynamic from "next/dynamic"
-import { ArrowRight, MapPin, TrendingUp, Star, Users, Shield, Award, Building2, UtensilsCrossed, Stethoscope, GraduationCap, Dumbbell } from "lucide-react"
+import { ArrowRight, MapPin, TrendingUp, Star, Users, Building2, UtensilsCrossed, Stethoscope, GraduationCap, Dumbbell, Wrench } from "lucide-react"
 import DynamicSearchBar from "@/components/search/DynamicSearchBar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -26,17 +26,26 @@ const ListingDetailSheet = dynamic(() => import("@/components/listings/ListingDe
   loading: () => null,
   ssr: false
 })
+const AddServiceDialog = dynamic(() => import("@/components/services/AddServiceDialog").then(mod => mod.AddServiceDialog), {
+  loading: () => null,
+  ssr: false
+})
+const LottieAnimation = dynamic(() => import("@/components/common/LottieAnimation"), {
+  loading: () => <div className="w-full h-full bg-gray-100 animate-pulse rounded-full" />,
+  ssr: false
+})
 
 // Dynamic configuration from environment variables
 const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || "Dial Dhamtari";
 const CITY_NAME = process.env.NEXT_PUBLIC_CITY_NAME || "Dhamtari";
 
 // Stats data - Updated values per requirements
+// size: Tailwind classes for individual Lottie sizing control
 const stats = [
-  { label: "Active Listings", value: "500+", icon: <TrendingUp className="h-5 w-5" /> },
-  { label: "Verified Businesses", value: "500+", icon: <Shield className="h-5 w-5" /> },
-  { label: "5-Star Reviews", value: "300+", icon: <Star className="h-5 w-5" /> },
-  { label: "Happy Customers", value: "10,000+", icon: <Users className="h-5 w-5" /> },
+  { label: "Active Listings", value: "500+", lottie: "/lottie/active_listings.json", size: "w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28" },
+  { label: "Verified Businesses", value: "500+", lottie: "/lottie/verified_business.json", size: "w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28" },
+  { label: "5-Star Reviews", value: "300+", lottie: "/lottie/five_star_reviews.json", size: "w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28" },
+  { label: "Happy Customers", value: "10,000+", lottie: "/lottie/happy_customers.json", size: "w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28" },
 ]
 
 // Categories data
@@ -53,6 +62,7 @@ const categories = [
 
 export default function HomePage() {
   const router = useRouter()
+  const [isAddServiceOpen, setIsAddServiceOpen] = useState(false)
 
   const handleSelectListing = (listing: any) => {
     // Open listing detail sheet by setting URL param
@@ -190,8 +200,15 @@ export default function HomePage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-5 lg:gap-6">
               {stats.map((stat, index) => (
                 <div key={index} className="text-center" role="group" aria-label={`${stat.value} ${stat.label}`}>
-                  <div className="inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-tranparent text-[#EF4444] hover:text-red-600 rounded-full mb-2 sm:mb-2.5 md:mb-3 outline outline-1 outline-red-600 shadow-sm hover:scale-110 transition-transform duration-300 cursor-pointer" aria-hidden="true">
-                    {stat.icon}
+                  <div className={`inline-flex items-center justify-center ${stat.size} rounded-full mb-2 sm:mb-2.5 md:mb-3 hover:scale-110 transition-transform duration-300 cursor-pointer`} aria-hidden="true">
+                    <LottieAnimation
+                      src={stat.lottie}
+                      loop={true}
+                      autoplay={true}
+                      className="w-full h-full"
+                      ariaLabel={stat.label}
+                      lazyLoad={true}
+                    />
                   </div>
                   <div className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-900">{stat.value}</div>
                   <div className="text-[10px] xs:text-xs sm:text-sm text-gray-600 mt-0.5 sm:mt-1">{stat.label}</div>
@@ -214,11 +231,11 @@ export default function HomePage() {
       </section>
 
       {/* Categories Grid - Smaller Container */}
-      <section className="py-12 sm:py-14 md:py-16 lg:py-18" aria-labelledby="categories-heading">
+      <section className="py-12 sm:py-14 md:py-16 lg:py-18 bg-gradient-to-r from-red-500 to-red-600 " aria-labelledby="categories-heading">
         <div className="mx-auto max-w-6xl px-3 sm:px-4 md:px-6 lg:px-8">
           <div className="text-center mb-6 sm:mb-7 md:mb-8">
-            <h2 id="categories-heading" className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1.5 sm:mb-2">Browse by Category</h2>
-            <p className="text-gray-600 text-xs sm:text-sm md:text-base">Find exactly what you're looking for</p>
+            <h2 id="categories-heading" className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-50 mb-1.5 sm:mb-2">Browse by Category</h2>
+            <p className="text-gray-100 text-xs sm:text-sm md:text-base">Find exactly what you're looking for</p>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3 md:gap-4" role="list">
@@ -228,16 +245,16 @@ export default function HomePage() {
                 role="listitem"
                 aria-label={`Browse ${category.count} ${category.name} listings`}
                 tabIndex={0}
-                className="group cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 border-0"
+                className="group bg-red-500  border rounded-lg cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 border-0"
                 onClick={() => { const slug = normalizeCategoryToSlug(category.name) || category.name.toLowerCase().replace(/\s+/g, "-"); router.push(`/search?category=${encodeURIComponent(slug)}`) }}
                 onKeyDown={(e) => handleCategoryKeyPress(e, category.name)}
               >
                 <CardContent className="p-3 sm:p-4 md:p-5 text-center">
-                  <div className={`mx-auto inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 md:w-18 md:h-18 lg:w-20 lg:h-20 ${category.color} rounded-xl sm:rounded-2xl mb-2 sm:mb-2.5 md:mb-3 group-hover:scale-110 transition-transform hover:bg-red-300`} aria-hidden="true">
+                  <div className={`mx-auto inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 md:w-18 md:h-18 lg:w-20 lg:h-20 ${category.color} rounded-xl sm:rounded-2xl mb-2 sm:mb-2.5 md:mb-3 group-hover:scale-110 transition-transform hover:bg-gray-300`} aria-hidden="true">
                     <span className="text-xl sm:text-2xl md:text-2xl lg:text-3xl ">{category.icon}</span>
                   </div>
-                  <h3 className="font-semibold text-xs sm:text-sm md:text-base text-gray-900 mb-0.5 sm:mb-1">{category.name}</h3>
-                  <p className="text-[10px] sm:text-xs text-gray-500">{category.count} listings</p>
+                  <h3 className="font-semibold text-xs sm:text-sm md:text-base text-gray-100 mb-0.5 sm:mb-1">{category.name}</h3>
+                  <p className="text-[10px] sm:text-xs text-gray-300">{category.count} listings</p>
                 </CardContent>
               </Card>
             ))}
@@ -245,32 +262,61 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Service Providers Section - For Gig Workers */}
+      <section className="py-10 sm:py-12 md:py-14 bg-gradient-to-r from-red-50 to-orange-50" aria-labelledby="services-heading">
+        <div className="mx-auto max-w-4xl px-3 sm:px-4 md:px-6 lg:px-8">
+          <div className="text-center">
+            {/* Lottie Animation - Bigger size for section graphic */}
+            <div className="inline-flex items-center justify-center w-80 h-80 sm:w-25 sm:h-25 md:w-58 md:h-58 lg:w-106 lg:h-86 rounded-full mb-4 sm:mb-6" aria-hidden="true">
+              <LottieAnimation
+                src="/lottie/add_services_animation.json"
+                loop={true}
+                autoplay={true}
+                className="w-full h-full"
+                ariaLabel="Add your service illustration"
+                lazyLoad={true}
+              />
+            </div>
+            <h2 id="services-heading" className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2 sm:mb-3">
+              Are You a Service Provider?
+            </h2>
+            <p className="text-gray-600 text-sm sm:text-base md:text-lg mb-4 sm:mb-6 max-w-2xl mx-auto">
+              Electrician, Plumber, Carpenter, Painter, Driver, Tutor, or any skilled worker?
+              List your service for <span className="font-semibold text-red-600">FREE</span> and connect with customers in your area!
+            </p>
 
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-6">
+              {['⚡ Electrician', '🔧 Plumber', '🪚 Carpenter', '🎨 Painter', '🚗 Driver', '📚 Tutor', '💇 Beautician', '📷 Photographer'].map((service) => (
+                <Badge
+                  key={service}
+                  variant="secondary"
+                  className="px-2.5 py-1 sm:px-3 sm:py-1.5 text-xs sm:text-sm bg-white border border-gray-200 hover:border-red-300 hover:bg-red-50 transition-colors"
+                >
+                  {service}
+                </Badge>
+              ))}
+            </div>
 
+            <Button
+              size="lg"
+              className="bg-red-600 hover:bg-red-700 text-white px-6 sm:px-8 py-3 text-sm sm:text-base font-semibold shadow-lg hover:shadow-xl transition-all"
+              onClick={() => setIsAddServiceOpen(true)}
+            >
+              <Wrench className="h-4 w-4 sm:h-5 sm:w-5 mr-2" aria-hidden="true" />
+              Add Your Service - It's Free!
+            </Button>
+
+            <p className="mt-3 sm:mt-4 text-xs sm:text-sm text-gray-500">
+              No sign up required • Quick 2-minute form • Get discovered by local customers
+            </p>
+          </div>
+        </div>
+      </section>
 
 
 
       {/* Sponsored Carousel */}
       <SponsoredCarousel onSelectListing={handleSelectListing} />
-
-      {/* Option B (commented): integrate stats into features section for a tighter merge */}
-      {false && (
-        <section className="py-12 bg-white">
-          <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-              {stats.map((stat, index) => (
-                <div key={index} className="text-center">
-                  <div className="inline-flex items-center justify-center w-12 h-12 bg-red-100 text-red-500 rounded-full mb-3">
-                    {stat.icon}
-                  </div>
-                  <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
-                  <div className="text-sm text-gray-600">{stat.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* Features Section */}
       <section className="py-12 sm:py-16 md:py-18 lg:py-20 bg-gradient-to-b from-gray-50 to-white" aria-labelledby="features-heading">
@@ -352,6 +398,12 @@ export default function HomePage() {
         const { FloatingChatButton } = require("@/components/chatbot/FloatingChatButton")
         return require("react").createElement(FloatingChatButton)
       })()}
+
+      {/* Add Service Dialog */}
+      <AddServiceDialog
+        open={isAddServiceOpen}
+        onClose={() => setIsAddServiceOpen(false)}
+      />
     </div>
   )
 }

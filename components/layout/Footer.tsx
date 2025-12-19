@@ -1,11 +1,19 @@
 "use client"
 import * as React from "react"
+import { useState } from "react"
 import Link from "next/link"
+import dynamic from "next/dynamic"
 import { Search, PlusCircle, Info, FileText, Compass, Building2, UtensilsCrossed, ShoppingBag, Car, Stethoscope, GraduationCap, Wrench, Store, Star, TrendingUp, Mail } from "lucide-react"
 import { Facebook as FacebookSvg, X as XSvg, Instagram as InstagramSvg } from "@/components/icons/SocialSvgr"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { CATEGORIES } from "@/lib/categories"
+
+// Dynamically import AddServiceDialog
+const AddServiceDialog = dynamic(() =>
+  import("@/components/services/AddServiceDialog").then(mod => mod.AddServiceDialog),
+  { ssr: false }
+)
 
 // Dynamic configuration
 const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || "Dial Dhamtari";
@@ -40,6 +48,28 @@ const getCategoryIcon = (slug: string) => {
     services: <Wrench className="h-5 w-5" />,
   }
   return iconMap[slug] || <Store className="h-5 w-5" />
+}
+
+// Add Service Button Component
+function AddServiceButton() {
+  const [serviceDialogOpen, setServiceDialogOpen] = useState(false)
+
+  return (
+    <>
+      <button
+        onClick={() => setServiceDialogOpen(true)}
+        className="text-sm text-gray-600 hover:text-red-500 transition-colors inline-flex items-center gap-2 text-left"
+      >
+        <Wrench className="h-4 w-4" />
+        Add Service
+      </button>
+      <AddServiceDialog
+        open={serviceDialogOpen}
+        onClose={() => setServiceDialogOpen(false)}
+        onSuccess={() => setServiceDialogOpen(false)}
+      />
+    </>
+  )
 }
 
 export default function Footer() {
@@ -122,7 +152,7 @@ export default function Footer() {
                 <PlusCircle className="h-4 w-4" />
                 Add Listing
               </Link>
-
+              <AddServiceButton />
               <Link href="/search?filter=sponsored" className="text-sm text-gray-600 hover:text-red-500 transition-colors inline-flex items-center gap-2">
                 <Star className="h-4 w-4" />
                 Sponsored Listings

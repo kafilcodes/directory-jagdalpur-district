@@ -47,7 +47,7 @@ export default function SponsoredCarousel({ onSelectListing }: SponsoredCarousel
             <p className="text-gray-600 mt-2 text-base">Premium businesses and services in {CITY_NAME}.</p>
           </div>
           <Link href="/search?filter=sponsored">
-            <Button variant="outline" className="hidden sm:flex items-center gap-2 h-11 px-6">
+            <Button variant="outline" className="hidden sm:flex items-center gap-2 h-11 px-6 hover:bg-red-500 hover:text-gray-100 text-base border-gray-200 rounded-lg">
               View All
               <ChevronRight className="h-4 w-4" />
             </Button>

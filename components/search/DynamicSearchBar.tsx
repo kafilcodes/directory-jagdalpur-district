@@ -54,32 +54,46 @@ export default function DynamicSearchBar({ placeholder = "Search listings...", s
   const [q, setQ] = useState("")
   const [loading, setLoading] = useState(false)
   const [items, setItems] = useState<any[]>([])
+  const [serviceItems, setServiceItems] = useState<any[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
   const debounced = useDebounce(q, 1000)
   const router = useRouter()
   const commandRef = useRef<HTMLDivElement>(null)
 
-  // Handle API search
+  // Handle API search - fetch both listings and services
   useEffect(() => {
     let alive = true
     const run = async () => {
       if (!debounced || debounced.trim().length < 2) {
         setItems([])
+        setServiceItems([])
         setIsOpen(false)
         return
       }
       setLoading(true)
       setIsOpen(true)
       try {
-        // Call API route instead of server function directly
-        const response = await fetch(`/api/search?q=${encodeURIComponent(debounced)}&limit=10&sort=relevance`)
-        if (!response.ok) {
-          throw new Error(`API responded with status: ${response.status}`)
+        // Fetch listings and services in parallel
+        const [listingsRes, servicesRes] = await Promise.all([
+          fetch(`/api/search?q=${encodeURIComponent(debounced)}&limit=6&sort=relevance`),
+          fetch(`/api/search?q=${encodeURIComponent(debounced)}&type=service&limit=4`)
+        ])
+
+        if (!listingsRes.ok) {
+          throw new Error(`API responded with status: ${listingsRes.status}`)
         }
-        const json = await response.json()
-        if (alive && json.ok) {
-          setItems(json.data || [])
+
+        const listingsJson = await listingsRes.json()
+        const servicesJson = servicesRes.ok ? await servicesRes.json() : { ok: false, data: [] }
+
+        if (alive) {
+          if (listingsJson.ok) {
+            setItems(listingsJson.data || [])
+          }
+          if (servicesJson.ok) {
+            setServiceItems(servicesJson.data || [])
+          }
           // Keep dropdown open even if no results (to show no-results message)
           setIsOpen(true)
         }
@@ -87,6 +101,7 @@ export default function DynamicSearchBar({ placeholder = "Search listings...", s
         console.error('Search error:', error)
         if (alive) {
           setItems([])
+          setServiceItems([])
           // Keep dropdown open to show error message
           setIsOpen(true)
         }
@@ -221,7 +236,7 @@ export default function DynamicSearchBar({ placeholder = "Search listings...", s
                 </div>
               </>
             )}
-            {!loading && q.trim().length >= 2 && items.length === 0 && (
+            {!loading && q.trim().length >= 2 && items.length === 0 && serviceItems.length === 0 && (
               <div className="p-8 text-center animate-fade-in">
                 <div className="mx-auto w-24 h-20 mb-4 flex items-center justify-center">
                   {require("react").createElement(require("@/components/icons/EmptySearch").default, {
@@ -229,136 +244,224 @@ export default function DynamicSearchBar({ placeholder = "Search listings...", s
                     height: 80
                   })}
                 </div>
-                <p className="text-sm font-medium text-gray-900 mb-1">No listings found for &quot;{q}&quot;</p>
+                <p className="text-sm font-medium text-gray-900 mb-1">No results found for &quot;{q}&quot;</p>
                 <p className="text-xs text-gray-500">Try different keywords or browse categories</p>
               </div>
             )}
-            {!loading && items.length > 0 && (
+            {!loading && (items.length > 0 || serviceItems.length > 0) && (
               <div className="space-y-2">
-                {items.slice(0, 10).map((it, index) => {
-                  // Extract image URL from various possible fields
-                  const imageUrl = it.thumbnail ||
-                    (it.images && Array.isArray(it.images) && it.images.length > 0
-                      ? (typeof it.images[0] === 'string' ? it.images[0] : it.images[0]?.url)
-                      : null) ||
-                    (it.photos && Array.isArray(it.photos) && it.photos.length > 0 ? it.photos[0] : null) ||
-                    (it.googlePhotos && Array.isArray(it.googlePhotos) && it.googlePhotos.length > 0 ? it.googlePhotos[0] : null) ||
-                    it.photoUrl
+                {/* Businesses Section */}
+                {items.length > 0 && (
+                  <>
+                    <div className="flex items-center gap-2 px-1 pb-1">
+                      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Businesses</span>
+                      <div className="flex-1 h-px bg-gray-200" />
+                    </div>
+                    {items.slice(0, 6).map((it, index) => {
+                      // Extract image URL from various possible fields
+                      const imageUrl = it.thumbnail ||
+                        (it.images && Array.isArray(it.images) && it.images.length > 0
+                          ? (typeof it.images[0] === 'string' ? it.images[0] : it.images[0]?.url)
+                          : null) ||
+                        (it.photos && Array.isArray(it.photos) && it.photos.length > 0 ? it.photos[0] : null) ||
+                        (it.googlePhotos && Array.isArray(it.googlePhotos) && it.googlePhotos.length > 0 ? it.googlePhotos[0] : null) ||
+                        it.photoUrl
 
-                  // Clean address - remove city, state, pincode, India
-                  const rawAddress = it.address || it.formattedAddress || (it.address?.formattedAddress) || ""
-                  const cleanAddress = (typeof rawAddress === 'string' ? rawAddress : JSON.stringify(rawAddress))
-                    ?.replace(new RegExp(`,?\\s*${CITY_NAME},?\\s*`, 'gi'), '')
-                    ?.replace(new RegExp(`,?\\s*${STATE_NAME},?\\s*`, 'gi'), '')
-                    ?.replace(/,?\s*India,?\s*/gi, '')
-                    ?.replace(/,?\s*\d{6},?\s*/g, '') // Remove 6-digit pincodes
-                    ?.trim()
-                    ?.replace(/^,|,$/g, '') // Remove leading/trailing commas
-                    ?.trim()
+                      // Clean address - remove city, state, pincode, India
+                      const rawAddress = it.address || it.formattedAddress || (it.address?.formattedAddress) || ""
+                      const cleanAddress = (typeof rawAddress === 'string' ? rawAddress : JSON.stringify(rawAddress))
+                        ?.replace(new RegExp(`,?\\s*${CITY_NAME},?\\s*`, 'gi'), '')
+                        ?.replace(new RegExp(`,?\\s*${STATE_NAME},?\\s*`, 'gi'), '')
+                        ?.replace(/,?\s*India,?\s*/gi, '')
+                        ?.replace(/,?\s*\d{6},?\s*/g, '') // Remove 6-digit pincodes
+                        ?.trim()
+                        ?.replace(/^,|,$/g, '') // Remove leading/trailing commas
+                        ?.trim()
 
-                  // Determine plan type
-                  const planType = it.planType || (it.activePlan?.type) || (it.monetization?.type)
+                      // Determine plan type
+                      const planType = it.planType || (it.activePlan?.type) || (it.monetization?.type)
 
-                  return (
-                    <div
-                      key={it.id}
-                      onClick={async () => {
-                        setIsOpen(false)
-                        if (onSelect) {
-                          onSelect(it)
-                        } else {
-                          // Track click via API endpoint (fire-and-forget)
-                          try {
-                            fetch("/api/search-click", {
-                              method: "POST",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({ listingId: it.id, q }),
-                              keepalive: true,
-                            })
-                          } catch { }
-                          router.push(`/search?q=${encodeURIComponent(q)}`)
-                        }
-                      }}
-                      className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 cursor-pointer bg-white hover:bg-gray-50 rounded-xl border border-gray-200 hover:border-red-500 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 group"
-                      style={{
-                        animationDelay: `${index * 50}ms`,
-                        animation: 'fade-in 0.4s ease-out forwards'
-                      }}
-                    >
-                      {/* Thumbnail with Plan Badge */}
-                      <div className="relative h-16 w-16 sm:h-20 sm:w-20 rounded-xl bg-gray-100 flex items-center justify-center shrink-0 overflow-hidden">
-                        {imageUrl ? (
-                          <Image
-                            src={imageUrl}
-                            alt={it.name || it.businessName || "Listing"}
-                            fill
-                            sizes="(max-width: 640px) 64px, 80px"
-                            className="object-cover transition-transform duration-300 group-hover:scale-110"
-                            unoptimized
-                          />
-                        ) : (
-                          <span className="text-gray-400 text-xl sm:text-2xl font-bold">
-                            {(it.name || it.businessName || "?").charAt(0).toUpperCase()}
-                          </span>
-                        )}
-                        {/* Plan badge on image - only for paid plans */}
-                        {planType === 'featured' && (
-                          <div className="absolute top-1 right-1 h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-yellow-500 flex items-center justify-center text-white text-xs font-bold shadow-lg">
-                            ★
+                      return (
+                        <div
+                          key={it.id}
+                          onClick={async () => {
+                            setIsOpen(false)
+                            if (onSelect) {
+                              onSelect(it)
+                            } else {
+                              // Track click via API endpoint (fire-and-forget)
+                              try {
+                                fetch("/api/search-click", {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ listingId: it.id, q }),
+                                  keepalive: true,
+                                })
+                              } catch { }
+                              router.push(`/search?q=${encodeURIComponent(q)}`)
+                            }
+                          }}
+                          className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 cursor-pointer bg-white hover:bg-gray-50 rounded-xl border border-gray-200 hover:border-red-500 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 group"
+                          style={{
+                            animationDelay: `${index * 50}ms`,
+                            animation: 'fade-in 0.4s ease-out forwards'
+                          }}
+                        >
+                          {/* Thumbnail with Plan Badge */}
+                          <div className="relative h-16 w-16 sm:h-20 sm:w-20 rounded-xl bg-gray-100 flex items-center justify-center shrink-0 overflow-hidden">
+                            {imageUrl ? (
+                              <Image
+                                src={imageUrl}
+                                alt={it.name || it.businessName || "Listing"}
+                                fill
+                                sizes="(max-width: 640px) 64px, 80px"
+                                className="object-cover transition-transform duration-300 group-hover:scale-110"
+                                unoptimized
+                              />
+                            ) : (
+                              <span className="text-gray-400 text-xl sm:text-2xl font-bold">
+                                {(it.name || it.businessName || "?").charAt(0).toUpperCase()}
+                              </span>
+                            )}
+                            {/* Plan badge on image - only for paid plans */}
+                            {planType === 'featured' && (
+                              <div className="absolute top-1 right-1 h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-yellow-500 flex items-center justify-center text-white text-xs font-bold shadow-lg">
+                                ★
+                              </div>
+                            )}
+                            {planType === 'sponsored' && (
+                              <div className="absolute top-1 right-1 h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold shadow-lg">
+                                S
+                              </div>
+                            )}
                           </div>
-                        )}
-                        {planType === 'sponsored' && (
-                          <div className="absolute top-1 right-1 h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold shadow-lg">
-                            S
+
+                          {/* Content */}
+                          <div className="flex-1 min-w-0 space-y-1.5 sm:space-y-2">
+                            {/* Name - left aligned */}
+                            <h3 className="font-semibold text-sm sm:text-base text-gray-900 truncate text-left group-hover:text-red-600 transition-colors leading-tight">
+                              {it.name || it.businessName || "Unnamed Listing"}
+                            </h3>
+
+                            {/* Category with icon */}
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {(it.cat || it.category || it.categorySlug) && (
+                                <CategoryBadge
+                                  category={it.cat || it.category || it.categorySlug}
+                                  variant="secondary"
+                                  showText={true}
+                                  showIcon={true}
+                                  iconSize="h-3 w-3 "
+                                  className="text-xs"
+                                />
+                              )}
+                            </div>
+
+                            {/* Address - cleaned */}
+                            {cleanAddress && (
+                              <div className="flex items-center gap-1 text-xs text-gray-500">
+                                <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
+                                <span className="truncate">{cleanAddress}</span>
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      )
+                    })}
+                  </>
+                )}
 
-                      {/* Content */}
-                      <div className="flex-1 min-w-0 space-y-1.5 sm:space-y-2">
-                        {/* Name - left aligned */}
-                        <h3 className="font-semibold text-sm sm:text-base text-gray-900 truncate text-left group-hover:text-red-600 transition-colors leading-tight">
-                          {it.name || it.businessName || "Unnamed Listing"}
-                        </h3>
-
-                        {/* Category with icon */}
-                        <div className="flex items-center gap-2 flex-wrap">
-                          {(it.cat || it.category || it.categorySlug) && (
-                            <CategoryBadge
-                              category={it.cat || it.category || it.categorySlug}
-                              variant="secondary"
-                              showText={true}
-                              showIcon={true}
-                              iconSize="h-3 w-3 "
-                              className="text-xs"
+                {/* Services Section */}
+                {serviceItems.length > 0 && (
+                  <>
+                    <div className="flex items-center gap-2 px-1 pb-1 pt-3">
+                      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Service Providers</span>
+                      <div className="flex-1 h-px bg-gray-200" />
+                    </div>
+                    {serviceItems.slice(0, 4).map((service, index) => (
+                      <div
+                        key={service.id}
+                        onClick={async () => {
+                          setIsOpen(false)
+                          router.push(`/search?q=${encodeURIComponent(q)}&type=service&service_id=${service.id}`)
+                        }}
+                        className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 cursor-pointer bg-gradient-to-r from-orange-50 to-yellow-50 hover:from-red-50 hover:to-orange-50 rounded-xl border border-orange-200 hover:border-red-300 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 group"
+                        style={{
+                          animationDelay: `${(items.length + index) * 50}ms`,
+                          animation: 'fade-in 0.4s ease-out forwards'
+                        }}
+                      >
+                        {/* Profile Photo */}
+                        <div className="relative h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-gray-100 flex items-center justify-center shrink-0 overflow-hidden border-2 border-white shadow-md">
+                          {service.profilePhoto ? (
+                            <Image
+                              src={service.profilePhoto}
+                              alt={service.name || "Service Provider"}
+                              fill
+                              sizes="64px"
+                              className="object-cover"
+                              unoptimized
                             />
+                          ) : (
+                            <span className="text-gray-400 text-xl sm:text-2xl font-bold">
+                              {(service.name || "?").charAt(0).toUpperCase()}
+                            </span>
                           )}
                         </div>
 
-                        {/* Address - cleaned */}
-                        {cleanAddress && (
-                          <div className="flex items-center gap-1 text-xs text-gray-500">
-                            <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
-                            <span className="truncate">{cleanAddress}</span>
+                        {/* Content */}
+                        <div className="flex-1 min-w-0 space-y-1">
+                          <h3 className="font-semibold text-sm sm:text-base text-gray-900 truncate text-left group-hover:text-red-600 transition-colors">
+                            {service.name || "Service Provider"}
+                          </h3>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary" className="text-xs gap-1 py-0.5 bg-white/70">
+                              <span>🔧</span>
+                              {service.serviceLabel || service.service}
+                            </Badge>
                           </div>
-                        )}
+                          <div className="flex items-center gap-3 text-xs text-gray-500">
+                            <span className="font-medium text-emerald-600">₹{service.chargesPerHour}/hr</span>
+                            <div className="flex items-center gap-0.5">
+                              {[...Array(5)].map((_, i) => (
+                                <Star
+                                  key={i}
+                                  className={`h-3 w-3 ${i < service.qualityRating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  )
-                })}
+                    ))}
+                  </>
+                )}
 
                 {/* View all results */}
-                {items.length > 0 && (
-                  <div className=" border-gray-200 pt-2 mt-2">
-                    <button
-                      onClick={() => {
-                        setIsOpen(false)
-                        router.push(`/search?q=${encodeURIComponent(q)}`)
-                      }}
-                      className="w-full text-center text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 py-2 px-4 rounded-lg transition-colors"
-                    >
-                      View all results →
-                    </button>
+                {(items.length > 0 || serviceItems.length > 0) && (
+                  <div className="border-gray-200 pt-2 mt-2 space-y-2">
+                    {items.length > 0 && (
+                      <button
+                        onClick={() => {
+                          setIsOpen(false)
+                          router.push(`/search?q=${encodeURIComponent(q)}`)
+                        }}
+                        className="w-full text-center text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 py-2 px-4 rounded-lg transition-colors"
+                      >
+                        View all business results →
+                      </button>
+                    )}
+                    {serviceItems.length > 0 && (
+                      <button
+                        onClick={() => {
+                          setIsOpen(false)
+                          router.push(`/search?q=${encodeURIComponent(q)}&type=service`)
+                        }}
+                        className="w-full text-center text-sm font-medium text-orange-600 hover:text-orange-700 hover:bg-orange-50 py-2 px-4 rounded-lg transition-colors"
+                      >
+                        View all service providers →
+                      </button>
+                    )}
                   </div>
                 )}
               </div>

@@ -156,10 +156,12 @@ class ActionProvider {
             // Extract data
             const aiResponse = data.reply || "I received your message but couldn't generate a response."
             const listings = data.results || []
+            const services = data.services || []
             const isContactQuery = data.isContactQuery || false
             const isListingGuideQuery = data.isListingGuideQuery || false
+            const isServiceQuery = data.isServiceQuery || false
 
-            console.log(`[Chatbot] Received ${listings.length} results, contact=${isContactQuery}, guide=${isListingGuideQuery}`)
+            console.log(`[Chatbot] Received ${listings.length} listings, ${services.length} services, contact=${isContactQuery}, guide=${isListingGuideQuery}, serviceQuery=${isServiceQuery}`)
 
             // Add bot response to history
             this.conversationHistory.push({
@@ -186,7 +188,7 @@ class ActionProvider {
                 })
                 messages.push(textMessage)
 
-                // Add listing cards ONLY if listings found (and not contact/guide query)
+                // Add listing cards if listings found (and not contact/guide query)
                 if (listings.length > 0 && !isContactQuery && !isListingGuideQuery) {
                     const listingsMessage = this.createChatBotMessage("", {
                         widget: "listingCards",
@@ -195,6 +197,17 @@ class ActionProvider {
                         delay: 0
                     })
                     messages.push(listingsMessage)
+                }
+
+                // Add service cards if services found (and not contact/guide query)
+                if (services.length > 0 && !isContactQuery && !isListingGuideQuery) {
+                    const servicesMessage = this.createChatBotMessage("", {
+                        widget: "serviceCards",
+                        payload: { services },
+                        loading: false,
+                        delay: 0
+                    })
+                    messages.push(servicesMessage)
                 }
 
                 return {
