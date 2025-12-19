@@ -161,9 +161,9 @@ export function ServiceCard({
                 )}
 
                 {/* Address - at bottom */}
-                <div className="flex items-start gap-1 sm:gap-1.5 text-[11px] sm:text-xs text-gray-500 mt-auto pt-1.5 sm:pt-2">
-                    <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 mt-0.5 shrink-0 text-red-500" />
-                    <p className="line-clamp-2 leading-tight">{cleanAddress}</p>
+                <div className="flex items-start gap-1 sm:gap-1.5 text-[10px] sm:text-[11px] text-gray-500 mt-auto pt-1.5 sm:pt-2">
+                    <MapPin className="h-2.5 w-2.5 sm:h-3 sm:w-3 mt-0.5 shrink-0 text-red-500" />
+                    <p className="line-clamp-2 leading-tight lowercase first-letter:uppercase">{cleanAddress}</p>
                 </div>
             </CardContent>
         </Card>
