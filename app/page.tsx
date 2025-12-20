@@ -44,8 +44,8 @@ const CITY_NAME = process.env.NEXT_PUBLIC_CITY_NAME || "Dhamtari";
 const stats = [
   { label: "Active Listings", value: "500+", lottie: "/lottie/active_listings.json", size: "w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28" },
   { label: "Verified Businesses", value: "500+", lottie: "/lottie/verified_business.json", size: "w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28" },
-  { label: "5-Star Reviews", value: "300+", lottie: "/lottie/five_star_reviews.json", size: "w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28" },
-  { label: "Happy Customers", value: "10,000+", lottie: "/lottie/happy_customers.json", size: "w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28" },
+  { label: "5-Star Reviews", value: "300+", lottie: "/lottie/five_star_reviews.json", size: "w-16 h-16 sm:w-30 sm:h-30 md:w-24 md:h-24 lg:w-28 lg:h-28" },
+  { label: "Happy Customers", value: "10,000+", lottie: "/lottie/happy_customers.json", size: "w-16 h-16 sm:w-30 sm:h-30 md:w-24 md:h-24 lg:w-28 lg:h-28" },
 ]
 
 // Categories data
@@ -129,8 +129,8 @@ export default function HomePage() {
         </div>
         <div className="container mx-auto max-w-7xl px-3 sm:px-4 md:px-6 lg:px-8 relative">
           <div className="text-center max-w-4xl mx-auto">
-            <Badge className="mb-3 sm:mb-4 md:mb-5 text-xs sm:text-sm bg-red-100 text-red-700 border-red-200 px-2.5 py-1 sm:px-3 sm:py-1.5" aria-label={`${CITY_NAME}'s number 1 business directory`}>
-              <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 sm:mr-1.5" aria-hidden="true" />
+            <Badge className="h-auto w-auto mb-2 sm:mb-3 md:mb-4 lg:mb-5 text-[10px] xs:text-xs sm:text-sm bg-red-500/10 text-red-500 border-red-500 px-2 py-0.5 xs:px-2.5 xs:py-1 sm:px-3 sm:py-1.5" aria-label={`${CITY_NAME}'s number 1 business directory`}>
+              <MapPin className="h-2.5 w-2.5 xs:h-3 xs:w-3 sm:h-3.5 sm:w-3.5 mr-0.5 xs:mr-1 sm:mr-1.5" aria-hidden="true" />
               {CITY_NAME}'s #1 Directory
             </Badge>
 
@@ -151,7 +151,7 @@ export default function HomePage() {
             </p>
 
             {/* Hero Search Bar - Reduced default size */}
-            <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl max-w-full sm:max-w-xl mx-auto px-2 sm:px-0" role="search" aria-label="Search local businesses">
+            <div className="bg-transparent rounded-xl sm:rounded-2xl  sm:shadow-xl max-w-full sm:max-w-xl mx-auto px-2 sm:px-0" role="search" aria-label="Search local businesses">
               <div className="flex flex-col gap-2">
                 <DynamicSearchBar placeholder="What are you looking for?" size="md" onSelect={handleSelectListing} />
                 {/* JSON-LD for WebSite + potential searchAction - Removed duplicate, handled at top */}
@@ -197,7 +197,7 @@ export default function HomePage() {
 
         <section className="py-6 sm:py-8 md:py-10 lg:py-12 bg-tranparent mt-8 sm:mt-10 md:mt-12 lg:mt-14" aria-label="Statistics">
           <div className="container mx-auto max-w-7xl px-3 sm:px-4 md:px-6 lg:px-8">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-5 lg:gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-1   md:gap-5 lg:gap-6">
               {stats.map((stat, index) => (
                 <div key={index} className="text-center" role="group" aria-label={`${stat.value} ${stat.label}`}>
                   <div className={`inline-flex items-center justify-center ${stat.size} rounded-full mb-2 sm:mb-2.5 md:mb-3 hover:scale-110 transition-transform duration-300 cursor-pointer`} aria-hidden="true">

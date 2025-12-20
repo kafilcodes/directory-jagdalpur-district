@@ -695,13 +695,19 @@ function SearchPageContent() {
       {/* Tabs for Businesses and Services */}
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="grid w-full max-w-md grid-cols-2 mb-4">
-          <TabsTrigger value="business" className="gap-2">
-            <Building2 className="h-4 w-4" />
-            Businesses
+          <TabsTrigger 
+        value="business" 
+        className="gap-2 data-[state=active]:bg-red-600 data-[state=active]:text-white"
+          >
+        <Building2 className="h-4 w-4" />
+        Businesses
           </TabsTrigger>
-          <TabsTrigger value="service" className="gap-2">
-            <Briefcase className="h-4 w-4" />
-            Services
+          <TabsTrigger 
+        value="service" 
+        className="gap-2 data-[state=active]:bg-red-500 data-[state=active]:text-white"
+          >
+        <Briefcase className="h-4 w-4" />
+        Services
           </TabsTrigger>
         </TabsList>
       </Tabs>

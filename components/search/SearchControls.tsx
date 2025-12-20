@@ -84,9 +84,9 @@ export default function SearchControls() {
   }))
 
   return (
-    <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide hover:text-red-600">
+    <div className="flex items-center gap-3  overflow-x-auto pb-2 scrollbar-hide group-hover:text-red-600">
       {/* Category Combobox Filter */}
-      <div className="min-w-[200px] max-w-[280px]">
+      <div className="min-w-[200px] max-w-[280px ]">
         <Combobox
           options={categoryOptions}
           value={selectedCategories}
@@ -95,14 +95,14 @@ export default function SearchControls() {
           searchPlaceholder="Search categories..."
           emptyText="No category found."
           multiple={true}
-          className="h-8 text-xs"
+          className="h-8 text-xs border-0.5 shadow-sm hover:shadow-md hover:border-red-500 transition-all duration-300  "
         />
       </div>
 
       {/* Sort dropdown - white background like filter */}
       <Popover>
         <PopoverTrigger asChild>
-          <Button variant="outline" size="sm" className="gap-1.5 h-8 text-xs whitespace-nowrap hover:text-red-600">
+          <Button variant="outline" size="sm" className="gap-1.5 h-8 text-xs whitespace-nowrap hover:text-red-600 border-0.5 shadow-sm hover:shadow-md hover:border-red-500 transition-all duration-300">
             <Filter className="h-3 w-3" />
             {SORT_OPTIONS.find(o => o.value === selectedSort)?.label ?? "Relevance"}
           </Button>
@@ -134,8 +134,8 @@ export default function SearchControls() {
             variant="outline"
             size="sm"
             className={cn(
-              "gap-1.5 h-8 text-xs whitespace-nowrap hover:text-red-600",
-              selectedPlanFilter && "bg-red-50 text-red-600 border-red-200"
+              "gap-1.5 h-8 text-xs whitespace-nowrap hover:text-red-600 border-0.5 shadow-sm hover:shadow-md hover:border-red-500 transition-all duration-300",
+              selectedPlanFilter && "bg-red-50 text-red-600 "
             )}
           >
             {selectedPlanFilter ? (

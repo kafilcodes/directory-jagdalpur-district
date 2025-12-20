@@ -80,7 +80,7 @@ export default function SponsoredCarousel({ onSelectListing }: SponsoredCarousel
               {items.map((listing) => (
                 <CarouselItem key={listing.id} className="pl-6 basis-full sm:basis-1/2 lg:basis-1/3">
                   <Card
-                    className="group cursor-pointer border-0 shadow-lg hover:shadow-2xl   transition-all duration-300 overflow-hidden h-full "
+                    className="group cursor-pointer border-0.5 shadow-lg hover:shadow-2xl hover:border-red-500 hover:shadow-red-500/50   transition-all duration-300 overflow-hidden h-full "
                     onClick={() => onSelectListing?.(listing)}
                   >
                     {/* Image Section - Bigger */}
@@ -132,7 +132,7 @@ export default function SponsoredCarousel({ onSelectListing }: SponsoredCarousel
                           showText={true}
                           showIcon={true}
                           iconSize="h-4 w-4"
-                          className="text-white border-white/60 bg-white/20 backdrop-blur-sm text-sm"
+                          className="text-white border-white/60 bg-white/20  backdrop-blur-sm text-sm"
                         />
                       </div>
                     </div>

@@ -46,14 +46,14 @@ export default function CTASection() {
     return (
         <section className="py-16 sm:py-20 bg-gradient-to-r from-red-500 to-red-600 relative overflow-hidden">
             <div className="absolute inset-0 bg-black/10"></div>
-            <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center relative">
+            <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center relative align-center">
                 {/* Lottie Animation above title - Bigger size for section graphic */}
                 <div className="mb-6 sm:mb-8">
                     <LottieAnimation
                         src="/lottie/list_your_business_today_CTA_section.json"
                         loop={true}
                         autoplay={true}
-                        className="w-100 h-100 sm:w-50 sm:h-50 md:w-58 md:h-58 lg:w-96 lg:h-86 mx-auto"
+                        className="w-100 h-100 sm:w-50 sm:h-50 md:w-58 md:h-58 lg:w-96 lg:h-86 mx-auto align-center text-center"
                         ariaLabel="List your business illustration"
                         lazyLoad={true}
                     />

@@ -263,7 +263,7 @@ export default function Header({ canShowProfileIcon: _canShowProfileIcon = false
                 <span className="sr-only">Toggle menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[400px] overflow-y-auto bg-white">
+            <SheetContent side="right" className="w-[300px] sm:w-[400px] overflow-y-auto bg-white rounded-l-lg shadow-lg">
               <SheetHeader>
                 <SheetTitle>Navigation</SheetTitle>
               </SheetHeader>

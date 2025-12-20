@@ -81,7 +81,7 @@ export function ListingCard({
   }
 
   return (
-    <Card className="group bg-white border-0 shadow-md rounded-lg overflow-hidden transition-all duration-200 hover:shadow-xl cursor-pointer">
+    <Card className="group bg-white border-0 shadow-md rounded-lg overflow-hidden transition-all duration-200 hover:shadow-xl hover:shadow-red-500/10 cursor-pointer">
       {/* Image - reduced size */}
       {displayImage ? (
         <div className="relative h-40 w-full bg-gray-100 overflow-hidden">
@@ -122,7 +122,7 @@ export function ListingCard({
       )}
 
       <CardHeader className="p-4 pb-2">
-        <CardTitle className="text-base font-semibold line-clamp-1">{name}</CardTitle>
+        <CardTitle className="text-base font-semibold line-clamp-1 transition-colors duration-200 group-hover:text-red-500">{name}</CardTitle>
       </CardHeader>
 
       <CardContent className="px-4 pb-4 pt-0 space-y-2">

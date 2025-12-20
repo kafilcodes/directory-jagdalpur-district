@@ -88,7 +88,7 @@ export function ServiceCard({
     }
 
     return (
-        <Card className="group bg-white border border-gray-100 shadow-sm hover:shadow-lg rounded-xl overflow-hidden transition-all duration-200 cursor-pointer h-full flex flex-col">
+        <Card className="group bg-white border border-gray-100 shadow-sm hover:shadow-lg hover:shadow-red-500/10 rounded-xl overflow-hidden transition-all duration-200 cursor-pointer h-full flex flex-col">
             {/* Header with Avatar and Service Icon */}
             <div className="relative bg-gradient-to-br from-orange-50/50 to-yellow-50/50 p-3 sm:p-4">
                 <div className="flex items-start gap-2 sm:gap-3">
@@ -105,7 +105,7 @@ export function ServiceCard({
 
                     {/* Name and Service */}
                     <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate leading-tight">{name}</h3>
+                        <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate leading-tight transition-colors duration-200 group-hover:text-red-500">{name}</h3>
                         <div className={cn(
                             "inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs sm:text-sm mt-1",
                             serviceBgColor,

@@ -170,13 +170,13 @@ export default function FeaturedCarousel({ onSelectListing }: { onSelectListing?
 
         {/* Dots */}
         {!loading && items.length > 0 && (
-          <div className="mt-4 flex items-center justify-center gap-2">
+          <div className="mt-4 flex items-center justify-center gap-2 ">
             {items.map((_, i) => (
               <button
                 key={i}
                 aria-label={`Go to slide ${i + 1}`}
                 onClick={() => api?.scrollTo(i)}
-                className={`h-2.5 w-2.5 rounded-full transition-colors ${i === selectedIndex ? "bg-red-500" : "bg-red-200"}`}
+                className={`h-1.5 w-1.5 rounded-full transition-colors ${i === selectedIndex ? "bg-red-500 w-2.5 h-2.5" : "bg-red-200/70"}`}
               />
             ))}
           </div>

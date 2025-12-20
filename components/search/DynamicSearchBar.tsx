@@ -152,7 +152,7 @@ export default function DynamicSearchBar({ placeholder = "Search listings...", s
           group rounded-2xl border-2 bg-white relative overflow-visible
           transition-all duration-300 ease-out
           ${isFocused
-            ? 'border-red-500 shadow-2xl shadow-red-500/10 scale-105'
+            ? 'border-red-500 shadow-2xl shadow-red-500/20 scale-105'
             : 'border-gray-200 shadow-lg hover:shadow-xl hover:border-gray-300'
           }
         `}
@@ -212,7 +212,7 @@ export default function DynamicSearchBar({ placeholder = "Search listings...", s
         {/* Enhanced Results Dropdown - Anchored to search container, scrolls with page */}
         <div
           className={`
-            absolute left-0 right-0 top-full z-50 mt-3 overflow-hidden rounded-2xl border-2 border-gray-200 bg-white shadow-2xl
+            absolute left-0 right-0 top-full z-50 mt-3 overflow-hidden rounded-2xl border-2 border-red-300 bg-white shadow-2xl shadow-red-500/10
             transition-all duration-300 ease-out
             ${q.trim().length >= 2 && isOpen
               ? 'max-h-[600px] opacity-100 translate-y-0'
