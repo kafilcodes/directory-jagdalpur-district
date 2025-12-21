@@ -260,8 +260,8 @@ export default function ListingDetailSheet() {
 
                 {/* Action Buttons - Close only (bookmark/share removed per product requirements) */}
                 <div className="absolute top-4 right-4">
-                  <Button size="icon" variant="secondary" className="bg-white/90 backdrop-blur" onClick={() => handleClose(false)} aria-label="Close details">
-                    <X className="h-4 w-4" />
+                  <Button size="icon" variant="secondary" className="bg-white/90 backdrop-blur hover:bg-red-500 hover:text-white" onClick={() => handleClose(false)} aria-label="Close details">
+                    <X className="h-4 w-4 " />
                   </Button>
                 </div>
 
@@ -307,7 +307,7 @@ export default function ListingDetailSheet() {
                 {/* Quick Actions - Call and Directions buttons */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {listing.phone && (
-                    <Button asChild className="gap-2 w-full" variant="outline">
+                    <Button asChild className="gap-2 w-full hover:bg-red-500 hover:text-white" variant="outline">
                       <a href={`tel:${listing.phone}`}>
                         <Phone className="h-4 w-4" />
                         Call Now
@@ -315,7 +315,7 @@ export default function ListingDetailSheet() {
                     </Button>
                   )}
                   {(displayName || displayAddress) && (
-                    <Button asChild className="gap-2 w-full" variant="outline">
+                    <Button asChild className="gap-2 w-full hover:bg-red-500 hover:text-white" variant="outline">
                       <a
                         href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(displayName + ' ' + CITY_NAME)}`}
                         target="_blank"
