@@ -29,7 +29,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
           <SheetContent side="left" className="w-72">
             <nav className="mt-6 grid gap-2">
               <Link href="/dashboard" className="rounded-md px-3 py-2 hover:bg-gray-100">Dashboard</Link>
-              <Link href="/dashboard/my-listings" className="rounded-md px-3 py-2 hover:bg-gray-100">My Listing</Link>
+              <Link href="/dashboard/my-listings" className="rounded-md px-3 py-2 hover:bg-gray-100">My Listings</Link>
               <Link href="/create-listing" className="rounded-md px-3 py-2 hover:bg-gray-100">Create Listing</Link>
               <Link href="/profile" className="rounded-md px-3 py-2 hover:bg-gray-100">Profile</Link>
             </nav>

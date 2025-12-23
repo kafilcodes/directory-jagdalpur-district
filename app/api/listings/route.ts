@@ -71,11 +71,11 @@ export async function POST(req: NextRequest) {
 
     const db = getAdminDb()
 
-    // Enforce single-listing-per-user (using safe query)
+    // Check current listing count for user (max 100 per user)
     const existingResult = await safeQueryCollection(
       "listings",
       [{ field: "ownerUid", op: "==", value: user.uid }],
-      1
+      100 // Fetch up to 100 to check count
     )
 
     if (!existingResult.success) {
@@ -87,8 +87,16 @@ export async function POST(req: NextRequest) {
       }, { status: 500 })
     }
 
-    if (existingResult.docs.length > 0) {
-      return NextResponse.json({ ok: false, error: "already_has_listing" }, { status: 400 })
+    // Maximum 100 listings per user
+    const MAX_LISTINGS_PER_USER = 100
+    if (existingResult.docs.length >= MAX_LISTINGS_PER_USER) {
+      return NextResponse.json({
+        ok: false,
+        error: "max_listings_reached",
+        message: `You have reached the maximum limit of ${MAX_LISTINGS_PER_USER} listings per account.`,
+        currentCount: existingResult.docs.length,
+        maxAllowed: MAX_LISTINGS_PER_USER
+      }, { status: 400 })
     }
 
     const now = Date.now()

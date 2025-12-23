@@ -10,9 +10,15 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Card, CardContent } from "@/components/ui/card"
 import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip"
+import {
     MapPin, Phone, Mail, Globe, Star, X, Clock, User,
     IndianRupee, Briefcase, MessageCircle, Navigation,
-    Calendar, BadgeCheck, Share2
+    Calendar, BadgeCheck, Share2, Check, Info, AlertCircle
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { getServiceCategoryBySlug, SERVICE_QUALITY_LEVELS, SERVICE_EXPERIENCE_LEVELS, type QualityLevel, type ExperienceLevel } from "@/config/services"
@@ -276,14 +282,23 @@ export default function ServiceDetailSheet() {
                                                 <IndianRupee className="h-5 w-5 text-red-600" />
                                                 <span className="text-gray-700 font-medium">Charges per Hour</span>
                                             </div>
-                                            <div className="text-right">
+                                            <div className="flex items-center gap-2">
                                                 <span className="text-2xl font-bold text-red-700">
                                                     ₹{data.chargesPerHour}
                                                 </span>
                                                 {data.isNegotiable && (
-                                                    <Badge variant="outline" className="ml-2 text-red-600 border-red-300 bg-white/50">
-                                                        Negotiable
-                                                    </Badge>
+                                                    <TooltipProvider>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <div className="h-5 w-5 rounded-full bg-emerald-100 flex items-center justify-center cursor-help">
+                                                                    <Check className="h-3 w-3 text-emerald-600" />
+                                                                </div>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent side="left" className="bg-gray-900 text-white text-xs">
+                                                                <p>Prices are negotiable</p>
+                                                            </TooltipContent>
+                                                        </Tooltip>
+                                                    </TooltipProvider>
                                                 )}
                                             </div>
                                         </div>
@@ -292,13 +307,76 @@ export default function ServiceDetailSheet() {
 
                                 {/* Info Cards */}
                                 <div className="space-y-4">
-                                    {/* Working Hours */}
+                                    {/* Working Hours - Enhanced */}
                                     {data.workingHours && (
-                                        <div className="flex items-start gap-3 p-4 bg-gray-50/80 rounded-xl shadow-sm">
-                                            <Clock className="h-5 w-5 text-red-500 mt-0.5" />
-                                            <div>
-                                                <p className="text-sm font-medium text-gray-700">Working Hours</p>
-                                                <p className="text-gray-900">{data.workingHours}</p>
+                                        <div className="p-4 bg-gray-50/80 rounded-xl shadow-sm">
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <Clock className="h-5 w-5 text-red-500" />
+                                                <p className="text-sm font-medium text-gray-700">Availability</p>
+                                                {/* Show if available today */}
+                                                {(() => {
+                                                    const today = new Date().toLocaleDateString('en-US', { weekday: 'short' }).toLowerCase()
+                                                    const workingDaysText = (data.workingDays || data.workingHours || '').toLowerCase()
+                                                    const isAvailableToday = workingDaysText.includes(today) ||
+                                                        workingDaysText.includes('daily') ||
+                                                        workingDaysText.includes('everyday') ||
+                                                        workingDaysText.includes('all days') ||
+                                                        workingDaysText.includes('mon-sun') ||
+                                                        workingDaysText.includes('mon - sun')
+                                                    return (
+                                                        <Badge
+                                                            variant="outline"
+                                                            className={cn(
+                                                                "text-xs ml-auto",
+                                                                isAvailableToday
+                                                                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                                                    : "bg-gray-100 text-gray-500 border-gray-200"
+                                                            )}
+                                                        >
+                                                            {isAvailableToday ? "Available Today" : "Check Availability"}
+                                                        </Badge>
+                                                    )
+                                                })()}
+                                            </div>
+
+                                            {/* Working Hours Time */}
+                                            <p className="text-gray-900 font-medium mb-3">{data.workingHours}</p>
+
+                                            {/* Day Indicators */}
+                                            <div className="flex items-center gap-1.5 flex-wrap">
+                                                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => {
+                                                    const workingDaysText = (data.workingDays || data.workingHours || '').toLowerCase()
+                                                    const isWorkingDay = workingDaysText.includes(day.toLowerCase()) ||
+                                                        workingDaysText.includes('daily') ||
+                                                        workingDaysText.includes('everyday') ||
+                                                        workingDaysText.includes('all days') ||
+                                                        workingDaysText.includes('mon-sun') ||
+                                                        workingDaysText.includes('mon - sun')
+                                                    const isToday = new Date().toLocaleDateString('en-US', { weekday: 'short' }) === day
+
+                                                    return (
+                                                        <TooltipProvider key={day}>
+                                                            <Tooltip>
+                                                                <TooltipTrigger asChild>
+                                                                    <div
+                                                                        className={cn(
+                                                                            "w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium transition-all cursor-help",
+                                                                            isWorkingDay
+                                                                                ? "bg-red-100 text-red-700 border-2 border-red-200"
+                                                                                : "bg-gray-100 text-gray-400 border border-gray-200",
+                                                                            isToday && "ring-2 ring-offset-1 ring-red-400"
+                                                                        )}
+                                                                    >
+                                                                        {day.charAt(0)}
+                                                                    </div>
+                                                                </TooltipTrigger>
+                                                                <TooltipContent side="top" className="bg-gray-900 text-white text-xs">
+                                                                    <p>{day} - {isWorkingDay ? "Available" : "Off Day"}</p>
+                                                                </TooltipContent>
+                                                            </Tooltip>
+                                                        </TooltipProvider>
+                                                    )
+                                                })}
                                             </div>
                                         </div>
                                     )}
@@ -439,6 +517,15 @@ export default function ServiceDetailSheet() {
                                         </Badge>
                                     </div>
                                 )}
+
+                                {/* Disclaimer */}
+                                <div className="flex items-start gap-2 px-3 py-2 bg-gray-50/50 rounded-lg border border-gray-100">
+                                    <Info className="h-3.5 w-3.5 text-gray-400 mt-0.5 shrink-0" />
+                                    <p className="text-[11px] text-gray-400 leading-relaxed">
+                                        The details of services and providers may not be exactly accurate.
+                                        Please contact the service provider directly to confirm details and negotiate terms.
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     )}

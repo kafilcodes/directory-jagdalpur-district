@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { User, Mail, Calendar, Shield, Briefcase } from "lucide-react"
 import { PaymentReceipts } from "@/components/user/PaymentReceipts"
+import { PageLottie } from "@/components/user/PageLottie"
 import Image from "next/image"
 
 export const dynamic = "force-dynamic"
@@ -44,6 +45,9 @@ export default async function UserProfilePage() {
                     <p className="text-gray-600 mt-1">Manage your account and settings</p>
                 </div>
             </div>
+
+            {/* Lottie Animation */}
+            <PageLottie src="/lottie/user_profile.json" />
 
             {/* Profile Card */}
             <Card className="border-gray-200 shadow-sm">

@@ -39,10 +39,11 @@ export async function uploadAndCreateListing(formData: FormData) {
   }
 
   const db = getAdminDb()
-  // Enforce one listing per account on server side as well
-  const existing = await db.collection("listings").where("ownerId", "==", user.uid).limit(1).get()
-  if (!existing.empty) {
-    return { ok: false, error: "ALREADY_HAS_LISTING" }
+  // Check listing count (max 100 per account)
+  const MAX_LISTINGS_PER_USER = 100
+  const existingSnap = await db.collection("listings").where("ownerId", "==", user.uid).get()
+  if (existingSnap.size >= MAX_LISTINGS_PER_USER) {
+    return { ok: false, error: "MAX_LISTINGS_REACHED" }
   }
 
   const id = nanoid()

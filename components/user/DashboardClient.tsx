@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo, useCallback, memo } from "react"
+import dynamic from "next/dynamic"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -14,6 +15,12 @@ import { Sparkline } from "@/components/owner/Sparkline"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { format, startOfWeek, endOfWeek, subWeeks } from "date-fns"
+
+// Lazy load Lottie for performance
+const LottieAnimation = dynamic(() => import("@/components/common/LottieAnimation").then(mod => ({ default: mod.LottieAnimation })), {
+    ssr: false,
+    loading: () => <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-100 rounded-lg animate-pulse" />
+})
 
 interface DashboardStats {
     myListing: any
@@ -93,6 +100,18 @@ export const DashboardClient = memo(function DashboardClient({ stats }: Dashboar
                 <p className="text-gray-600 mt-1">
                     Track your listing performance and analytics
                 </p>
+            </div>
+
+            {/* Lottie Animation */}
+            <div className="flex justify-center">
+                <div className="w-full h-full sm:w-[12px] sm:h-[12px] md:h-70 md:w-100">
+                    <LottieAnimation
+                        src="/lottie/user_dashboard.json"
+                        loop={true}
+                        autoplay={true}
+                        className="w-full h-full"
+                    />
+                </div>
             </div>
 
             {/* Quick Stats Grid */}
@@ -216,7 +235,7 @@ export const DashboardClient = memo(function DashboardClient({ stats }: Dashboar
             {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Views Chart */}
-                <Card>
+                <Card >
                     <CardHeader>
                         <div className="flex items-center justify-between">
                             <div>

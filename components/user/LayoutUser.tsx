@@ -266,7 +266,7 @@ function AppSidebar() {
             <SidebarContent className="bg-gray-100">
                 {/* Main Navigation Group */}
                 <SidebarGroup>
-                    <SidebarGroupLabel className="text-gray-700 font-semibold">Main</SidebarGroupLabel>
+                    <SidebarGroupLabel className="text-black font-semibold">Main</SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
                             {mainMenuItems.map((item) => {
@@ -280,7 +280,8 @@ function AppSidebar() {
                                             isActive={isActive}
                                             tooltip={item.label}
                                             size="lg"
-                                            className="group-data-[collapsible=icon]:justify-center"
+                                            className="group-data-[collapsible=icon]:justify-center bg-transparent  hover:text-red-500 transition-colors"
+
                                         >
                                             <Link href={item.href}>
                                                 <Icon className="h-6 w-6 group-data-[collapsible=icon]:h-7 group-data-[collapsible=icon]:w-7" />
@@ -298,7 +299,7 @@ function AppSidebar() {
 
                 {/* Actions Group */}
                 <SidebarGroup>
-                    <SidebarGroupLabel className="text-gray-700 font-semibold">My Business</SidebarGroupLabel>
+                    <SidebarGroupLabel className="text-black font-semibold">My Business</SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
                             {actionsMenuItems.map((item) => {
@@ -312,7 +313,7 @@ function AppSidebar() {
                                             isActive={isActive}
                                             tooltip={item.label}
                                             size="lg"
-                                            className="group-data-[collapsible=icon]:justify-center"
+                                            className="group-data-[collapsible=icon]:justify-center bg-transparent  hover:text-red-500 transition-colors"
                                         >
                                             <Link href={item.href}>
                                                 <Icon className="h-6 w-6 group-data-[collapsible=icon]:h-7 group-data-[collapsible=icon]:w-7" />
@@ -334,8 +335,8 @@ function AppSidebar() {
                             asChild
                             tooltip="Back to Site"
                             size="lg"
-                            className="group-data-[collapsible=icon]:justify-center"
-                        >
+                            className="group-data-[collapsible=icon]:justify-center bg-transparent  hover:text-red-500 transition-colors">
+                        
                             <Link href="/">
                                 <Home className="h-6 w-6 group-data-[collapsible=icon]:h-7 group-data-[collapsible=icon]:w-7" />
                                 <span className="font-medium">Back to Site</span>

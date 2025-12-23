@@ -1,12 +1,13 @@
 "use client"
 
-import { useEffect, useState, useMemo } from "react"
+import { useEffect, useState, useMemo, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
     Select,
     SelectContent,
@@ -14,6 +15,14 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
 import {
     AlertDialog,
     AlertDialogAction,
@@ -56,7 +65,13 @@ import {
     Briefcase,
     Loader2,
     TrendingUp,
-    BarChart3
+    BarChart3,
+    CheckSquare,
+    Square,
+    AlertTriangle,
+    ArrowUpDown,
+    ArrowDownWideNarrow,
+    ArrowUpWideNarrow
 } from "lucide-react"
 import { toast } from "sonner"
 import { SERVICE_CATEGORIES, getServiceCategoryBySlug } from "@/config/services"
@@ -92,6 +107,7 @@ export default function ServicesPage() {
     const [searchQuery, setSearchQuery] = useState("")
     const [statusFilter, setStatusFilter] = useState("all")
     const [serviceTypeFilter, setServiceTypeFilter] = useState("all")
+    const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest')
     const [currentPage, setCurrentPage] = useState(1)
     const itemsPerPage = 10
 
@@ -104,16 +120,27 @@ export default function ServicesPage() {
     const [selectedService, setSelectedService] = useState<Service | null>(null)
     const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false)
 
+    // Bulk selection states
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+    const [bulkActionLoading, setBulkActionLoading] = useState(false)
+    const [bulkStatusDialogOpen, setBulkStatusDialogOpen] = useState(false)
+    const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false)
+    const [bulkTargetStatus, setBulkTargetStatus] = useState<'pending' | 'live' | 'rejected'>('live')
+    const [deleteConfirmText, setDeleteConfirmText] = useState("")
+
     // Fetch services
     const fetchServices = async (showToast = false) => {
         try {
             setRefreshing(true)
             const params = new URLSearchParams()
             if (statusFilter !== 'all') params.set('status', statusFilter)
-            if (serviceTypeFilter !== 'all') params.set('service', serviceTypeFilter)
+            // Don't send 'other' to API - will be filtered client-side
+            if (serviceTypeFilter !== 'all' && serviceTypeFilter !== 'other') {
+                params.set('service', serviceTypeFilter)
+            }
             params.set('limit', '100')
 
-            const response = await fetch(`/api/admin/services?\${params.toString()}`)
+            const response = await fetch(`/api/admin/services?${params.toString()}`)
             const result = await response.json()
 
             if (result.success) {
@@ -132,22 +159,53 @@ export default function ServicesPage() {
         }
     }
 
+    // Get all predefined category slugs for "other" filter
+    const predefinedSlugs = useMemo(() =>
+        SERVICE_CATEGORIES.map(cat => cat.slug),
+        []
+    )
+
     useEffect(() => {
         fetchServices()
     }, [statusFilter, serviceTypeFilter])
 
-    // Filtered services (client-side search)
+    // Filtered services (client-side search and "other" category filter)
     const filteredServices = useMemo(() => {
-        if (!searchQuery) return services
+        let result = services
 
-        const query = searchQuery.toLowerCase()
-        return services.filter(service =>
-            service.name?.toLowerCase().includes(query) ||
-            service.service?.toLowerCase().includes(query) ||
-            service.address?.toLowerCase().includes(query) ||
-            service.contactNumber?.includes(query)
-        )
-    }, [services, searchQuery])
+        // Handle "other" category filter (services not in predefined categories)
+        if (serviceTypeFilter === 'other') {
+            result = result.filter(service => {
+                const slug = service.serviceSlug || service.service?.toLowerCase()
+                return !predefinedSlugs.includes(slug)
+            })
+        }
+
+        // Apply search filter
+        if (searchQuery) {
+            const query = searchQuery.toLowerCase()
+            result = result.filter(service =>
+                service.name?.toLowerCase().includes(query) ||
+                service.service?.toLowerCase().includes(query) ||
+                service.address?.toLowerCase().includes(query) ||
+                service.contactNumber?.includes(query)
+            )
+        }
+
+        // Apply sorting
+        result = [...result].sort((a, b) => {
+            const getTime = (timestamp: any): number => {
+                if (!timestamp) return 0
+                if (timestamp.seconds) return timestamp.seconds * 1000
+                return new Date(timestamp).getTime()
+            }
+            const timeA = getTime(a.createdAt)
+            const timeB = getTime(b.createdAt)
+            return sortOrder === 'newest' ? timeB - timeA : timeA - timeB
+        })
+
+        return result
+    }, [services, searchQuery, serviceTypeFilter, predefinedSlugs, sortOrder])
 
     // Reset to first page when filters change
     useEffect(() => {
@@ -158,7 +216,7 @@ export default function ServicesPage() {
     const handleStatusUpdate = async (serviceId: string, newStatus: 'pending' | 'live' | 'rejected') => {
         setUpdatingId(serviceId)
         try {
-            const response = await fetch(`/api/services/\${serviceId}`, {
+            const response = await fetch(`/api/services/${serviceId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status: newStatus })
@@ -167,7 +225,7 @@ export default function ServicesPage() {
             const result = await response.json()
 
             if (result.success) {
-                toast.success(`Service \${newStatus === 'live' ? 'approved' : newStatus === 'rejected' ? 'rejected' : 'updated'}`)
+                toast.success(`Service ${newStatus === 'live' ? 'approved' : newStatus === 'rejected' ? 'rejected' : 'updated'}`)
                 fetchServices()
                 // Update selected service if it's open
                 if (selectedService?.id === serviceId) {
@@ -194,7 +252,7 @@ export default function ServicesPage() {
         if (!serviceToDelete) return
 
         try {
-            const response = await fetch(`/api/services/\${serviceToDelete}`, {
+            const response = await fetch(`/api/services/${serviceToDelete}`, {
                 method: 'DELETE'
             })
 
@@ -221,6 +279,90 @@ export default function ServicesPage() {
         setIsDetailDialogOpen(true)
     }
 
+    // Bulk selection helpers
+    const toggleSelectService = useCallback((id: string) => {
+        setSelectedIds(prev => {
+            const newSet = new Set(prev)
+            if (newSet.has(id)) {
+                newSet.delete(id)
+            } else {
+                newSet.add(id)
+            }
+            return newSet
+        })
+    }, [])
+
+    const deselectAll = useCallback(() => {
+        setSelectedIds(new Set())
+    }, [])
+
+    // Bulk status update handler
+    const handleBulkStatusUpdate = async () => {
+        if (selectedIds.size === 0) return
+
+        setBulkActionLoading(true)
+        try {
+            const updatePromises = Array.from(selectedIds).map(id =>
+                fetch(`/api/services/${id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: bulkTargetStatus })
+                })
+            )
+
+            const results = await Promise.allSettled(updatePromises)
+            const successCount = results.filter(r => r.status === 'fulfilled').length
+
+            if (successCount > 0) {
+                toast.success(`${successCount} service(s) updated to ${bulkTargetStatus}`)
+                fetchServices()
+                setSelectedIds(new Set())
+            }
+            if (successCount < selectedIds.size) {
+                toast.error(`${selectedIds.size - successCount} service(s) failed to update`)
+            }
+        } catch (error) {
+            console.error("Bulk status update error:", error)
+            toast.error("Failed to update services")
+        } finally {
+            setBulkActionLoading(false)
+            setBulkStatusDialogOpen(false)
+        }
+    }
+
+    // Bulk delete handler
+    const handleBulkDelete = async () => {
+        if (selectedIds.size === 0 || deleteConfirmText !== 'delete') return
+
+        setBulkActionLoading(true)
+        try {
+            const deletePromises = Array.from(selectedIds).map(id =>
+                fetch(`/api/services/${id}`, {
+                    method: 'DELETE'
+                })
+            )
+
+            const results = await Promise.allSettled(deletePromises)
+            const successCount = results.filter(r => r.status === 'fulfilled').length
+
+            if (successCount > 0) {
+                toast.success(`${successCount} service(s) deleted`)
+                fetchServices()
+                setSelectedIds(new Set())
+            }
+            if (successCount < selectedIds.size) {
+                toast.error(`${selectedIds.size - successCount} service(s) failed to delete`)
+            }
+        } catch (error) {
+            console.error("Bulk delete error:", error)
+            toast.error("Failed to delete services")
+        } finally {
+            setBulkActionLoading(false)
+            setBulkDeleteDialogOpen(false)
+            setDeleteConfirmText("")
+        }
+    }
+
     // Get status badge
     const getStatusBadge = (status: string) => {
         switch (status) {
@@ -242,7 +384,7 @@ export default function ServicesPage() {
                 {[...Array(5)].map((_, i) => (
                     <Star
                         key={i}
-                        className={`h-3 w-3 \${i < rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
+                        className={`h-3 w-3 ${i < rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
                     />
                 ))}
                 <span className="text-xs ml-1 text-gray-600">{rating.toFixed(1)}</span>
@@ -282,6 +424,21 @@ export default function ServicesPage() {
     const totalPages = Math.ceil(filteredServices.length / itemsPerPage)
     const startIndex = (currentPage - 1) * itemsPerPage
     const currentServices = filteredServices.slice(startIndex, startIndex + itemsPerPage)
+
+    // Bulk selection helpers that depend on currentServices
+    const selectAllOnPage = useCallback(() => {
+        const pageIds = currentServices.map(s => s.id)
+        setSelectedIds(prev => {
+            const newSet = new Set(prev)
+            pageIds.forEach(id => newSet.add(id))
+            return newSet
+        })
+    }, [currentServices])
+
+    const isAllOnPageSelected = useMemo(() => {
+        if (currentServices.length === 0) return false
+        return currentServices.every(s => selectedIds.has(s.id))
+    }, [currentServices, selectedIds])
 
     if (loading) {
         return (
@@ -338,7 +495,7 @@ export default function ServicesPage() {
                     disabled={refreshing}
                     className="shadow-sm hover:shadow-md transition-shadow self-start sm:self-auto"
                 >
-                    <RefreshCw className={`h-4 w-4 mr-2 \${refreshing ? 'animate-spin' : ''}`} />
+                    <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
                     Refresh
                 </Button>
             </div>
@@ -425,7 +582,7 @@ export default function ServicesPage() {
                                         paddingAngle={2}
                                     >
                                         {statusChartData.map((entry, index) => (
-                                            <Cell key={`cell-\${index}`} fill={entry.fill} />
+                                            <Cell key={`cell-${index}`} fill={entry.fill} />
                                         ))}
                                     </Pie>
                                     <ChartLegend content={<ChartLegendContent />} />
@@ -474,7 +631,7 @@ export default function ServicesPage() {
             {/* Filters */}
             <Card className="border-0 shadow-md bg-white">
                 <CardContent className="p-4">
-                    <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
                         {/* Search */}
                         <div className="sm:col-span-2">
                             <div className="relative">
@@ -531,11 +688,103 @@ export default function ServicesPage() {
                                         </span>
                                     </SelectItem>
                                 ))}
+                                <SelectItem value="other">
+                                    <span className="flex items-center gap-2">
+                                        <span>📦</span>
+                                        Others / Custom
+                                    </span>
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+
+                        {/* Sort Order */}
+                        <Select value={sortOrder} onValueChange={(v) => setSortOrder(v as 'newest' | 'oldest')}>
+                            <SelectTrigger className="bg-gray-50 border-0 shadow-sm">
+                                <SelectValue placeholder="Sort By" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white/95 backdrop-blur shadow-xl border-0">
+                                <SelectItem value="newest">
+                                    <span className="flex items-center gap-2">
+                                        <ArrowDownWideNarrow className="h-3.5 w-3.5 text-gray-500" />
+                                        Newest First
+                                    </span>
+                                </SelectItem>
+                                <SelectItem value="oldest">
+                                    <span className="flex items-center gap-2">
+                                        <ArrowUpWideNarrow className="h-3.5 w-3.5 text-gray-500" />
+                                        Oldest First
+                                    </span>
+                                </SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
                 </CardContent>
             </Card>
+
+            {/* Bulk Action Bar - Show when items selected */}
+            {selectedIds.size > 0 && (
+                <Card className="border-0 shadow-lg bg-white sticky top-0 z-20">
+                    <CardContent className="p-3 sm:p-4">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                                <Badge variant="secondary" className="text-sm px-3 py-1">
+                                    {selectedIds.size} selected
+                                </Badge>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={deselectAll}
+                                    className="text-gray-600"
+                                >
+                                    Clear selection
+                                </Button>
+                            </div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="outline" size="sm" className="shadow-sm">
+                                            <CheckCircle className="h-4 w-4 mr-2" />
+                                            Set Status
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent className="bg-white/95 backdrop-blur shadow-xl border-0">
+                                        <DropdownMenuItem onClick={() => {
+                                            setBulkTargetStatus('live')
+                                            setBulkStatusDialogOpen(true)
+                                        }}>
+                                            <CheckCircle className="h-4 w-4 mr-2 text-emerald-500" />
+                                            <span className="text-emerald-600">Approve (Live)</span>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => {
+                                            setBulkTargetStatus('pending')
+                                            setBulkStatusDialogOpen(true)
+                                        }}>
+                                            <Clock className="h-4 w-4 mr-2 text-yellow-500" />
+                                            <span className="text-yellow-600">Set Pending</span>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => {
+                                            setBulkTargetStatus('rejected')
+                                            setBulkStatusDialogOpen(true)
+                                        }}>
+                                            <XCircle className="h-4 w-4 mr-2 text-red-500" />
+                                            <span className="text-red-600">Reject</span>
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                                <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    onClick={() => setBulkDeleteDialogOpen(true)}
+                                    className="shadow-sm"
+                                >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete Selected
+                                </Button>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
 
             {/* Services List */}
             {filteredServices.length === 0 ? (
@@ -552,18 +801,50 @@ export default function ServicesPage() {
                 </Card>
             ) : (
                 <div className="space-y-3">
+                    {/* Select all on page */}
+                    {currentServices.length > 0 && (
+                        <div className="flex items-center gap-3 px-1">
+                            <Checkbox
+                                checked={isAllOnPageSelected}
+                                onCheckedChange={(checked) => {
+                                    if (checked) selectAllOnPage()
+                                    else deselectAll()
+                                }}
+                                className="h-5 w-5"
+                            />
+                            <span className="text-sm text-gray-600">
+                                {isAllOnPageSelected ? 'Deselect all' : 'Select all on page'}
+                            </span>
+                        </div>
+                    )}
+
                     {currentServices.map((service) => {
                         const category = getServiceCategoryBySlug(service.serviceSlug || service.service)
                         const isUpdating = updatingId === service.id
+                        const isSelected = selectedIds.has(service.id)
 
                         return (
                             <Card
                                 key={service.id}
-                                className="border-0 shadow-md hover:shadow-lg transition-all duration-200 bg-white cursor-pointer"
+                                className={`border-0 shadow-md hover:shadow-lg transition-all duration-200 bg-white cursor-pointer ${isSelected ? 'ring-2 ring-red-500 ring-offset-2' : ''}`}
                                 onClick={() => handleViewService(service)}
                             >
                                 <CardContent className="p-3 sm:p-4">
                                     <div className="flex gap-3 sm:gap-4">
+                                        {/* Checkbox */}
+                                        <div
+                                            className="flex items-center justify-center"
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                toggleSelectService(service.id)
+                                            }}
+                                        >
+                                            <Checkbox
+                                                checked={isSelected}
+                                                className="h-5 w-5"
+                                            />
+                                        </div>
+
                                         {/* Avatar */}
                                         <Avatar className="h-12 w-12 sm:h-14 sm:w-14 shadow-sm flex-shrink-0">
                                             {service.profilePhoto ? (
@@ -739,6 +1020,115 @@ export default function ServicesPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            {/* Bulk Status Change Confirmation Dialog */}
+            <Dialog open={bulkStatusDialogOpen} onOpenChange={setBulkStatusDialogOpen}>
+                <DialogContent className="sm:max-w-md bg-white/95 backdrop-blur shadow-2xl border-0">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <AlertTriangle className="h-5 w-5 text-yellow-500" />
+                            Confirm Status Change
+                        </DialogTitle>
+                        <DialogDescription asChild>
+                            <div className="text-sm text-muted-foreground">
+                                Are you sure you want to change the status of <strong>{selectedIds.size}</strong> selected service(s) to{' '}
+                                <Badge className={
+                                    bulkTargetStatus === 'live' ? 'bg-emerald-500' :
+                                        bulkTargetStatus === 'pending' ? 'bg-yellow-500' : 'bg-red-500'
+                                }>
+                                    {bulkTargetStatus === 'live' ? 'Live' : bulkTargetStatus === 'pending' ? 'Pending' : 'Rejected'}
+                                </Badge>
+                                ?
+                            </div>
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="gap-2 sm:gap-0">
+                        <Button
+                            variant="outline"
+                            onClick={() => setBulkStatusDialogOpen(false)}
+                            disabled={bulkActionLoading}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleBulkStatusUpdate}
+                            disabled={bulkActionLoading}
+                            className={
+                                bulkTargetStatus === 'live' ? 'bg-emerald-600 hover:bg-emerald-700' :
+                                    bulkTargetStatus === 'pending' ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-red-600 hover:bg-red-700'
+                            }
+                        >
+                            {bulkActionLoading ? (
+                                <>
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    Updating...
+                                </>
+                            ) : (
+                                'Confirm'
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Bulk Delete Confirmation Dialog with Type to Confirm */}
+            <Dialog open={bulkDeleteDialogOpen} onOpenChange={(open) => {
+                setBulkDeleteDialogOpen(open)
+                if (!open) setDeleteConfirmText("")
+            }}>
+                <DialogContent className="sm:max-w-md bg-white/95 backdrop-blur shadow-2xl border-0">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-red-600">
+                            <Trash2 className="h-5 w-5" />
+                            Delete {selectedIds.size} Service(s)
+                        </DialogTitle>
+                        <DialogDescription>
+                            This action cannot be undone. This will permanently delete the selected services.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4">
+                        <p className="text-sm text-gray-700 mb-3">
+                            Type <strong className="text-red-600 font-mono bg-red-50 px-1.5 py-0.5 rounded">delete</strong> to confirm:
+                        </p>
+                        <Input
+                            value={deleteConfirmText}
+                            onChange={(e) => setDeleteConfirmText(e.target.value)}
+                            placeholder="Type 'delete' to confirm"
+                            className="font-mono"
+                            autoComplete="off"
+                        />
+                    </div>
+                    <DialogFooter className="gap-2 sm:gap-0">
+                        <Button
+                            variant="outline"
+                            onClick={() => {
+                                setBulkDeleteDialogOpen(false)
+                                setDeleteConfirmText("")
+                            }}
+                            disabled={bulkActionLoading}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={handleBulkDelete}
+                            disabled={deleteConfirmText !== 'delete' || bulkActionLoading}
+                        >
+                            {bulkActionLoading ? (
+                                <>
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    Deleting...
+                                </>
+                            ) : (
+                                <>
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete {selectedIds.size} Service(s)
+                                </>
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

@@ -501,8 +501,11 @@ export function CreateListingFormNew4Step() {
         } catch (err: any) {
             let errorMessage = "Failed to create listing. Please try again."
 
-            if (err.message.includes('already_has_listing')) {
-                errorMessage = "You already have a listing. Each user can only create one listing."
+            if (err.message.includes('max_listings_reached') || err.message.includes('MAX_LISTINGS_REACHED')) {
+                errorMessage = "You have reached the maximum limit of 100 listings per account."
+            } else if (err.message.includes('already_has_listing')) {
+                // Legacy error - keep for backwards compatibility
+                errorMessage = "You have reached the maximum limit of 100 listings per account."
             } else if (err.message.includes('Validation error')) {
                 errorMessage = "Some required information is missing or invalid."
             } else if (err.message.includes('unauthorized')) {
