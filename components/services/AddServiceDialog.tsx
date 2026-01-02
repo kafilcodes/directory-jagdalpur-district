@@ -413,13 +413,13 @@ export function AddServiceDialog({ open, onClose, onSuccess }: AddServiceDialogP
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="w-[90vw] max-w-3xl max-h-[85vh] sm:max-h-[90vh] p-0 rounded-lg overflow-hidden">
-                <DialogHeader className="px-5 sm:px-8 pt-5 sm:pt-6 pb-3 sm:pb-4">
-                    <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
-                        <Briefcase className="h-5 w-5 sm:h-5 sm:w-5 text-red-600" />
+            <DialogContent className="w-[95vw] sm:w-[90vw] max-w-3xl max-h-[80vh] sm:max-h-[85vh] lg:max-h-[88vh] p-0 rounded-lg overflow-hidden my-2 sm:my-4">
+                <DialogHeader className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-5 lg:pt-6 pb-2 sm:pb-3 lg:pb-4">
+                    <DialogTitle className="flex items-center gap-2 text-base sm:text-lg lg:text-xl">
+                        <Briefcase className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
                         Add Your Service
                     </DialogTitle>
-                    <DialogDescription className="text-xs sm:text-sm">
+                    <DialogDescription className="text-[11px] sm:text-xs lg:text-sm">
                         List your service for free! Fill in your details below.
                         No sign-up required.
                     </DialogDescription>
@@ -459,9 +459,9 @@ export function AddServiceDialog({ open, onClose, onSuccess }: AddServiceDialogP
                                 </TabsList>
                             </div>
 
-                            <ScrollArea className="h-[45vh] sm:h-[50vh] px-5 sm:px-8 py-3 sm:py-4">
+                            <ScrollArea className="h-[40vh] sm:h-[45vh] lg:h-[50vh] px-4 sm:px-6 lg:px-8 py-2 sm:py-3 lg:py-4">
                                 {/* REQUIRED TAB */}
-                                <TabsContent value="required" className="mt-0 space-y-4 sm:space-y-5">
+                                <TabsContent value="required" className="mt-0 space-y-3 sm:space-y-4 lg:space-y-5">
                                     {/* Profile Photo */}
                                     <div className="space-y-2">
                                         <Label className="text-xs sm:text-sm">Profile Photo</Label>

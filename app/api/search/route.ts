@@ -65,6 +65,7 @@ async function searchServices(query: string, options: {
     services = services.filter(s =>
       s.name.toLowerCase().includes(queryLower) ||
       s.service.toLowerCase().includes(queryLower) ||
+      s.serviceSlug?.toLowerCase().includes(queryLower) ||
       s.serviceLabel?.toLowerCase().includes(queryLower) ||
       s.address.toLowerCase().includes(queryLower) ||
       s.tags?.some((tag: string) => tag.toLowerCase().includes(queryLower))

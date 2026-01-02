@@ -165,12 +165,66 @@ function isListingGuideQuery(message: string): boolean {
 }
 
 /**
- * Detect if query is asking for multiple results (plural)
+ * Detect if query is asking for a SPECIFIC business/person
+ * Returns true if user is looking for a specific entity (name, phone number)
+ */
+function isSpecificQuery(message: string): boolean {
+    const messageLower = message.toLowerCase().trim()
+
+    // Check for phone number patterns (Indian format)
+    const phonePattern = /\d{10}|\+91\s?\d{10}|\d{5}\s?\d{5}/
+    if (phonePattern.test(message)) {
+        console.log('[Chatbot] Detected phone number in query - specific search')
+        return true
+    }
+
+    // Check if query starts with specific name patterns
+    // Examples: "Ravi Kumar", "Deepak Electronics", "Sharma Medical"
+    const words = messageLower.split(/\s+/).filter(w => w.length > 0)
+
+    // If 2-4 capitalized words and no generic search terms, likely a specific name
+    const hasCapitalizedName = /[A-Z][a-z]+\s+[A-Z]?[a-z]*/.test(message)
+
+    // Generic search keywords that indicate NOT a specific search
+    const genericSearchTerms = [
+        'find', 'search', 'show', 'give', 'need', 'want', 'looking',
+        'best', 'top', 'good', 'near', 'nearby', 'around', 'closest',
+        'any', 'some', 'all', 'list', 'recommend', 'suggest'
+    ]
+
+    const hasGenericTerm = genericSearchTerms.some(term => messageLower.includes(term))
+
+    // If it looks like a proper name (capitalized) and no generic terms, it's specific
+    if (hasCapitalizedName && !hasGenericTerm && words.length >= 2 && words.length <= 5) {
+        console.log('[Chatbot] Detected proper name pattern - specific search')
+        return true
+    }
+
+    return false
+}
+
+/**
+ * Detect if query is asking for multiple results (plural/general)
  * Returns true if user wants multiple options (e.g., "restaurants", "best hotels")
+ * Returns false for single-word service queries (should show 3 by default for discovery)
  */
 function isRequestingMultipleResults(message: string): boolean {
     const messageLower = message.toLowerCase().trim()
     const doc = nlp(messageLower)
+
+    // FIRST: Check if it's a specific query (should return 1)
+    if (isSpecificQuery(message)) {
+        console.log('[Chatbot] Specific query detected - returning single result')
+        return false
+    }
+
+    // Single-word service queries should return MULTIPLE (3) for discovery
+    const words = messageLower.split(/\s+/).filter(w => w.length > 0)
+    if (words.length === 1) {
+        // Single word like "plumber", "electrician" - show 3 results for discovery
+        console.log('[Chatbot] Single-word query - showing multiple results for discovery')
+        return true
+    }
 
     // Check for plural nouns
     const pluralNouns = doc.nouns().isPlural().out('array') as string[]
@@ -182,7 +236,9 @@ function isRequestingMultipleResults(message: string): boolean {
     // Check for quantity/comparison keywords
     const multipleKeywords = [
         'best', 'top', 'some', 'all', 'multiple', 'several', 'few',
-        'many', 'list', 'options', 'choices', 'compare', 'which'
+        'many', 'list', 'options', 'choices', 'compare', 'which',
+        'show me', 'give me', 'find me', 'any', 'nearby', 'around',
+        'near', 'in area', 'close to'
     ]
 
     const hasMultipleKeyword = multipleKeywords.some(keyword =>
@@ -194,6 +250,25 @@ function isRequestingMultipleResults(message: string): boolean {
         return true
     }
 
+    // Default: For general queries (2-3 words without specific names), show multiple
+    // This ensures better discovery experience
+    if (words.length >= 2 && words.length <= 4) {
+        // Check if contains a service/business type word
+        const serviceWords = [
+            'electrician', 'plumber', 'carpenter', 'painter', 'mechanic', 'driver',
+            'photographer', 'beautician', 'cook', 'chef', 'babysitter', 'gardener',
+            'tailor', 'cleaner', 'guard', 'tutor', 'nurse', 'lawyer', 'accountant',
+            'potter', 'barber', 'mason', 'welder', 'milkman', 'priest',
+            'restaurant', 'hotel', 'shop', 'store', 'pharmacy', 'hospital', 'clinic'
+        ]
+
+        const hasServiceWord = words.some(w => serviceWords.includes(w))
+        if (hasServiceWord) {
+            console.log('[Chatbot] Query contains service/business type - showing multiple')
+            return true
+        }
+    }
+
     return false
 }
 
@@ -203,6 +278,42 @@ function isRequestingMultipleResults(message: string): boolean {
  */
 function isConversationalMessage(message: string, conversationHistory: Array<{ role: 'user' | 'bot', message: string }> = []): boolean {
     const messageLower = message.toLowerCase().trim()
+
+    // PRIORITY CHECK: Single-word or short service keywords should ALWAYS trigger search
+    // This handles cases like "plumber", "electrician", "barber" etc.
+    const singleWordServiceTerms = [
+        // Direct service names (singular)
+        'electrician', 'plumber', 'carpenter', 'painter', 'mechanic', 'driver',
+        'photographer', 'beautician', 'cook', 'chef', 'babysitter', 'gardener',
+        'tailor', 'cleaner', 'security', 'guard', 'caregiver', 'tutor', 'teacher',
+        'musician', 'dj', 'trainer', 'nurse', 'lawyer', 'advocate', 'accountant',
+        // New categories
+        'potter', 'barber', 'mason', 'welder', 'milkman', 'priest', 'pandit',
+        // Hindi/local terms
+        'mistri', 'karigar', 'rajmistri', 'nai', 'gwala', 'lohar', 'kumhar', 'pujari',
+        // Business types
+        'restaurant', 'hotel', 'shop', 'store', 'pharmacy', 'hospital', 'clinic',
+        'cafe', 'bakery', 'salon', 'gym', 'school', 'college', 'bank',
+        // Plural forms
+        'electricians', 'plumbers', 'carpenters', 'painters', 'mechanics', 'drivers',
+        'photographers', 'beauticians', 'cooks', 'chefs', 'babysitters', 'gardeners',
+        'tailors', 'cleaners', 'guards', 'tutors', 'teachers', 'nurses', 'lawyers',
+        'potters', 'barbers', 'masons', 'welders', 'restaurants', 'hotels', 'shops',
+        'stores', 'pharmacies', 'hospitals', 'clinics', 'cafes', 'bakeries', 'salons'
+    ]
+
+    // If the message is EXACTLY a service keyword (single word), treat as search query
+    if (singleWordServiceTerms.includes(messageLower)) {
+        console.log(`[Chatbot] Single-word service keyword detected: "${messageLower}" - treating as search query`)
+        return false // NOT conversational - it's a search
+    }
+
+    // If the message contains only 1-3 words and includes a service keyword, treat as search
+    const words = messageLower.split(/\s+/).filter(w => w.length > 0)
+    if (words.length <= 3 && words.some(word => singleWordServiceTerms.includes(word))) {
+        console.log(`[Chatbot] Short message with service keyword detected: "${messageLower}" - treating as search query`)
+        return false // NOT conversational - it's a search
+    }
 
     // Check conversation context - if user previously searched, this might be a follow-up
     const hasRecentSearchContext = conversationHistory.slice(-4).some(msg =>
@@ -667,6 +778,9 @@ const serviceKeywords = [
     'photographer', 'beautician', 'cook', 'chef', 'babysitter', 'gardener',
     'tailor', 'cleaner', 'security', 'guard', 'caregiver', 'tutor', 'teacher',
     'musician', 'dj', 'trainer', 'nurse', 'lawyer', 'advocate', 'accountant',
+    // NEW service categories
+    'potter', 'barber', 'basket maker', 'mason', 'water supply', 'data entry',
+    'welder', 'rickshaw', 'auto driver', 'milkman', 'priest', 'pandit',
     // Service keywords
     'ac technician', 'ac repair', 'computer technician', 'mobile repair',
     'pet care', 'pet sitter', 'fitness trainer', 'home tutor', 'house cleaner',
@@ -674,7 +788,8 @@ const serviceKeywords = [
     'gig', 'worker', 'service provider', 'freelancer', 'handyman', 'helper',
     'repair', 'fix', 'install', 'maintenance', 'home service', 'local worker',
     // Hindi/local terms
-    'mistri', 'karigar', 'beldaar', 'rajmistri', 'electrician wala', 'plumber wala'
+    'mistri', 'karigar', 'beldaar', 'rajmistri', 'electrician wala', 'plumber wala',
+    'nai', 'doodh wala', 'gwala', 'lohar', 'kumhar', 'pujari'
 ]
 
 /**
@@ -745,7 +860,18 @@ async function searchServicesComprehensive(searchTerms: string[], limit: number 
             'fitness-trainer': ['gym', 'fitness', 'trainer', 'yoga', 'exercise', 'workout'],
             'nurse': ['nurse', 'medical', 'injection', 'dressing', 'patient', 'healthcare'],
             'lawyer': ['lawyer', 'advocate', 'legal', 'court', 'case', 'documentation'],
-            'accountant': ['account', 'tax', 'gst', 'itr', 'ca', 'finance', 'audit']
+            'accountant': ['account', 'tax', 'gst', 'itr', 'ca', 'finance', 'audit'],
+            // NEW categories
+            'potter': ['potter', 'pottery', 'clay', 'mitti', 'matka', 'earthenware', 'ceramic', 'kulhad', 'kumhar'],
+            'barber': ['barber', 'haircut', 'shave', 'shaving', 'grooming', 'nai', 'beard', 'trim'],
+            'basket-maker': ['basket', 'bamboo', 'weaving', 'tokri', 'dalia', 'handicraft', 'cane'],
+            'mason': ['mason', 'rajmistri', 'brick', 'cement', 'construction', 'building', 'wall', 'plastering', 'tiles'],
+            'water-supply': ['water', 'jal', 'vitaran', 'tanker', 'supply', 'paani', 'pipeline', 'pump', 'boring'],
+            'data-entry': ['data', 'entry', 'typing', 'operator', 'digitization', 'document', 'excel', 'form'],
+            'welder': ['welder', 'welding', 'metal', 'iron', 'gate', 'grill', 'fabrication', 'steel', 'lohar'],
+            'rickshaw-driver': ['rickshaw', 'auto', 'tempo', 'e-rickshaw', 'toto', 'local transport'],
+            'milkman': ['milk', 'milkman', 'dairy', 'doodh', 'gwala', 'paneer', 'curd'],
+            'priest': ['priest', 'pandit', 'pujari', 'puja', 'ceremony', 'religious', 'brahmin', 'pooja', 'astrology']
         }
 
         // Get all live services

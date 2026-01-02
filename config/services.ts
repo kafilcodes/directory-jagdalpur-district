@@ -32,6 +32,14 @@ import {
     Scale,
     FileText,
     Phone,
+    // New icons for additional categories
+    Palette,
+    Droplets,
+    BrickWall,
+    ScrollText,
+    Wheat,
+    Keyboard,
+    Construction,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
@@ -273,6 +281,97 @@ export const SERVICE_CATEGORIES: ServiceCategoryConfig[] = [
         color: "bg-blue-100",
         description: "Accounting, tax filing, financial services",
         keywords: ["account", "tax", "gst", "itr", "ca", "finance", "audit", "bookkeeping"]
+    },
+    // ==================== NEW CATEGORIES ====================
+    {
+        slug: "potter",
+        label: "Potter",
+        icon: "🏺",
+        lucideIcon: Palette,
+        color: "bg-orange-100",
+        description: "Pottery, clay work, traditional crafts",
+        keywords: ["potter", "pottery", "clay", "mitti", "matka", "pot", "earthenware", "ceramic", "kulhad", "craftsman"]
+    },
+    {
+        slug: "barber",
+        label: "Barber",
+        icon: "💈",
+        lucideIcon: Scissors,
+        color: "bg-red-100",
+        description: "Haircut, shaving, grooming services",
+        keywords: ["barber", "haircut", "shave", "shaving", "grooming", "nai", "salon", "hair", "beard", "trim"]
+    },
+    {
+        slug: "basket-maker",
+        label: "Basket Maker",
+        icon: "🧺",
+        lucideIcon: Wheat,
+        color: "bg-amber-100",
+        description: "Traditional basket weaving, bamboo crafts",
+        keywords: ["basket", "bamboo", "weaving", "tokri", "dalia", "handicraft", "traditional", "craftsman", "cane"]
+    },
+    {
+        slug: "mason",
+        label: "Mason",
+        icon: "🧱",
+        lucideIcon: BrickWall,
+        color: "bg-stone-100",
+        description: "Bricklaying, construction, cement work",
+        keywords: ["mason", "rajmistri", "mistri", "brick", "cement", "construction", "building", "wall", "plastering", "tiles"]
+    },
+    {
+        slug: "water-supply",
+        label: "Jal Vitaran Sanchaalak",
+        icon: "💧",
+        lucideIcon: Droplets,
+        color: "bg-sky-100",
+        description: "Water supply management, tanker services",
+        keywords: ["water", "jal", "vitaran", "sanchaalak", "tanker", "supply", "paani", "pipeline", "pump", "boring"]
+    },
+    {
+        slug: "data-entry",
+        label: "Data Entry Operator",
+        icon: "⌨️",
+        lucideIcon: Keyboard,
+        color: "bg-indigo-100",
+        description: "Data entry, typing, document digitization",
+        keywords: ["data", "entry", "typing", "computer", "operator", "digitization", "document", "excel", "form", "domestic"]
+    },
+    {
+        slug: "welder",
+        label: "Welder",
+        icon: "🔥",
+        lucideIcon: Wrench,
+        color: "bg-gray-100",
+        description: "Welding, metal fabrication, iron work",
+        keywords: ["welder", "welding", "metal", "iron", "gate", "grill", "fabrication", "steel", "lohar"]
+    },
+    {
+        slug: "rickshaw-driver",
+        label: "Rickshaw / Auto Driver",
+        icon: "🛺",
+        lucideIcon: Truck,
+        color: "bg-yellow-100",
+        description: "Auto rickshaw, local transport services",
+        keywords: ["rickshaw", "auto", "transport", "driver", "local", "tempo", "e-rickshaw", "toto"]
+    },
+    {
+        slug: "milkman",
+        label: "Milkman / Dairy",
+        icon: "🥛",
+        lucideIcon: Droplets,
+        color: "bg-white",
+        description: "Milk delivery, dairy products supply",
+        keywords: ["milk", "milkman", "dairy", "doodh", "gwala", "paneer", "curd", "delivery"]
+    },
+    {
+        slug: "priest",
+        label: "Priest / Pandit",
+        icon: "🙏",
+        lucideIcon: ScrollText,
+        color: "bg-orange-100",
+        description: "Religious ceremonies, puja services",
+        keywords: ["priest", "pandit", "pujari", "puja", "ceremony", "wedding", "religious", "brahmin", "pooja", "astrology"]
     }
 ]
 
