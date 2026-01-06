@@ -52,11 +52,29 @@ const typoCorrections: { [key: string]: string } = {
     'restaurent': 'restaurant',
     'resteraunt': 'restaurant',
     'resaurant': 'restaurant',
+    'restrant': 'restaurant',
+    'restruant': 'restaurant',
 
     // Hotel variations
     'hotl': 'hotel',
     'hotell': 'hotel',
     'hotle': 'hotel',
+    'hottel': 'hotel',
+
+    // Lodge variations
+    'logde': 'lodge',
+    'logdes': 'lodge',
+    'logge': 'lodge',
+    'logges': 'lodge',
+    'loge': 'lodge',
+    'loges': 'lodge',
+    'lodges': 'lodge',
+    'lodg': 'lodge',
+
+    // Motel variations
+    'motl': 'motel',
+    'motell': 'motel',
+    'motle': 'motel',
 
     // Shop variations
     'shoop': 'shop',
@@ -93,11 +111,185 @@ const typoCorrections: { [key: string]: string } = {
     'elektronics': 'electronics',
     'elektronic': 'electronic',
 
+    // SERVICE CATEGORIES - Common typos
+    // Carpenter variations
+    'carpanter': 'carpenter',
+    'carpeter': 'carpenter',
+    'carpnter': 'carpenter',
+    'carpinter': 'carpenter',
+    'carpentar': 'carpenter',
+    'carpantar': 'carpenter',
+    'carpentor': 'carpenter',
+    'carpenetr': 'carpenter',
+    'carpneter': 'carpenter',
+    'carperter': 'carpenter',
+    'carpenteer': 'carpenter',
+    'carptner': 'carpenter',
+
+    // Electrician variations
+    'electrican': 'electrician',
+    'electritian': 'electrician',
+    'electician': 'electrician',
+    'electricain': 'electrician',
+    'electrisan': 'electrician',
+    'electrishan': 'electrician',
+    'eletrician': 'electrician',
+    'electricin': 'electrician',
+
+    // Plumber variations
+    'plumer': 'plumber',
+    'plomber': 'plumber',
+    'plumbar': 'plumber',
+    'plamber': 'plumber',
+    'plumeber': 'plumber',
+
+    // Painter variations
+    'paintar': 'painter',
+    'panter': 'painter',
+    'paiter': 'painter',
+    'paniter': 'painter',
+
+    // Mechanic variations
+    'mechnic': 'mechanic',
+    'mechenik': 'mechanic',
+    'mecanic': 'mechanic',
+    'mechanik': 'mechanic',
+    'mekanic': 'mechanic',
+
+    // Beautician variations
+    'beauticion': 'beautician',
+    'beautisan': 'beautician',
+    'bewtician': 'beautician',
+    'beauticain': 'beautician',
+
+    // Tailor variations
+    'talor': 'tailor',
+    'tailer': 'tailor',
+    'taylor': 'tailor',
+    'tailar': 'tailor',
+
+    // Barber variations
+    'barbar': 'barber',
+    'barbor': 'barber',
+    'berber': 'barber',
+    'barbaar': 'barber',
+
+    // Mason variations
+    'masan': 'mason',
+    'masson': 'mason',
+    'masen': 'mason',
+
+    // Driver variations
+    'drivar': 'driver',
+    'drever': 'driver',
+    'diver': 'driver',
+
+    // Tutor variations
+    'tutar': 'tutor',
+    'tuter': 'tutor',
+    'tutir': 'tutor',
+
+    // Guard/Security variations
+    'gaurd': 'guard',
+    'gard': 'guard',
+    'secuirty': 'security',
+    'securty': 'security',
+
     // General typos
     'servic': 'service',
     'servies': 'services',
     'shoping': 'shopping',
     'shoppng': 'shopping',
+}
+
+/**
+ * All known category keywords for fuzzy matching
+ */
+const allKnownCategories = [
+    // Business categories
+    'restaurant', 'hotel', 'lodge', 'motel', 'inn', 'dhaba', 'shop', 'store',
+    'electronics', 'grocery', 'medical', 'pharmacy', 'clinic', 'hospital',
+    'school', 'cafe', 'bakery', 'salon', 'gym', 'fitness', 'bank', 'atm',
+    'supermarket', 'mall', 'market', 'college', 'university', 'petrol',
+    'clothing', 'jewellery', 'furniture', 'hardware', 'stationery', 'books',
+    // Service categories
+    'electrician', 'plumber', 'carpenter', 'painter', 'mechanic', 'driver',
+    'photographer', 'beautician', 'cook', 'chef', 'babysitter', 'gardener',
+    'tailor', 'cleaner', 'security', 'guard', 'caregiver', 'tutor', 'teacher',
+    'musician', 'dj', 'trainer', 'nurse', 'lawyer', 'advocate', 'accountant',
+    'potter', 'barber', 'mason', 'welder', 'milkman', 'priest', 'pandit',
+    'rickshaw', 'auto', 'mistri', 'karigar', 'rajmistri', 'nai', 'gwala'
+]
+
+/**
+ * Calculate Levenshtein distance between two strings
+ * Used for fuzzy matching typos
+ */
+function levenshteinDistance(str1: string, str2: string): number {
+    const m = str1.length
+    const n = str2.length
+    const dp: number[][] = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0))
+
+    for (let i = 0; i <= m; i++) dp[i][0] = i
+    for (let j = 0; j <= n; j++) dp[0][j] = j
+
+    for (let i = 1; i <= m; i++) {
+        for (let j = 1; j <= n; j++) {
+            if (str1[i - 1] === str2[j - 1]) {
+                dp[i][j] = dp[i - 1][j - 1]
+            } else {
+                dp[i][j] = 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1])
+            }
+        }
+    }
+    return dp[m][n]
+}
+
+/**
+ * Find closest matching category for a potentially misspelled word
+ * Returns the suggested category if within acceptable distance, null otherwise
+ */
+function findClosestCategory(word: string): { suggested: string, distance: number } | null {
+    const wordLower = word.toLowerCase().trim()
+
+    // Skip very short words (less than 3 chars)
+    if (wordLower.length < 3) return null
+
+    // Skip common words that are not categories
+    const commonWords = ['the', 'and', 'for', 'any', 'some', 'find', 'show', 'get', 'need', 'want',
+        'best', 'good', 'near', 'nearby', 'around', 'please', 'help', 'looking']
+    if (commonWords.includes(wordLower)) return null
+
+    // Check if it's already a known category
+    if (allKnownCategories.includes(wordLower)) return null
+
+    // Check if it's already in typo corrections
+    if (typoCorrections[wordLower]) return null
+
+    let bestMatch: { suggested: string, distance: number } | null = null
+
+    for (const category of allKnownCategories) {
+        const distance = levenshteinDistance(wordLower, category)
+        // Allow max 2 character differences for words > 4 chars, 1 for shorter
+        const maxDistance = category.length > 4 ? 2 : 1
+
+        if (distance <= maxDistance && distance > 0) {
+            if (!bestMatch || distance < bestMatch.distance) {
+                bestMatch = { suggested: category, distance }
+            }
+        }
+    }
+
+    return bestMatch
+}
+
+/**
+ * Detect if user is confirming a previous suggestion
+ */
+function isConfirmationResponse(message: string): boolean {
+    const confirmWords = ['yes', 'yeah', 'yep', 'yup', 'correct', 'right', 'okay', 'ok', 'sure', 'y']
+    const messageLower = message.toLowerCase().trim()
+    return confirmWords.includes(messageLower)
 }
 
 /**
@@ -280,7 +472,7 @@ function isConversationalMessage(message: string, conversationHistory: Array<{ r
     const messageLower = message.toLowerCase().trim()
 
     // PRIORITY CHECK: Single-word or short service keywords should ALWAYS trigger search
-    // This handles cases like "plumber", "electrician", "barber" etc.
+    // This handles cases like "plumber", "electrician", "barber", "lodge" etc.
     const singleWordServiceTerms = [
         // Direct service names (singular)
         'electrician', 'plumber', 'carpenter', 'painter', 'mechanic', 'driver',
@@ -291,15 +483,19 @@ function isConversationalMessage(message: string, conversationHistory: Array<{ r
         'potter', 'barber', 'mason', 'welder', 'milkman', 'priest', 'pandit',
         // Hindi/local terms
         'mistri', 'karigar', 'rajmistri', 'nai', 'gwala', 'lohar', 'kumhar', 'pujari',
-        // Business types
-        'restaurant', 'hotel', 'shop', 'store', 'pharmacy', 'hospital', 'clinic',
-        'cafe', 'bakery', 'salon', 'gym', 'school', 'college', 'bank',
+        // Business types (singular)
+        'restaurant', 'hotel', 'lodge', 'motel', 'inn', 'dhaba', 'shop', 'store',
+        'pharmacy', 'hospital', 'clinic', 'cafe', 'bakery', 'salon', 'gym',
+        'school', 'college', 'bank', 'atm', 'petrol', 'gas', 'grocery', 'market',
+        'electronics', 'mobile', 'computer', 'laptop', 'clothing', 'jewellery',
+        'furniture', 'hardware', 'stationery', 'books', 'toys', 'sports',
         // Plural forms
         'electricians', 'plumbers', 'carpenters', 'painters', 'mechanics', 'drivers',
         'photographers', 'beauticians', 'cooks', 'chefs', 'babysitters', 'gardeners',
         'tailors', 'cleaners', 'guards', 'tutors', 'teachers', 'nurses', 'lawyers',
-        'potters', 'barbers', 'masons', 'welders', 'restaurants', 'hotels', 'shops',
-        'stores', 'pharmacies', 'hospitals', 'clinics', 'cafes', 'bakeries', 'salons'
+        'potters', 'barbers', 'masons', 'welders', 'restaurants', 'hotels', 'lodges',
+        'motels', 'inns', 'dhabas', 'shops', 'stores', 'pharmacies', 'hospitals',
+        'clinics', 'cafes', 'bakeries', 'salons', 'gyms', 'schools', 'colleges', 'banks'
     ]
 
     // If the message is EXACTLY a service keyword (single word), treat as search query
@@ -316,13 +512,22 @@ function isConversationalMessage(message: string, conversationHistory: Array<{ r
     }
 
     // Check conversation context - if user previously searched, this might be a follow-up
-    const hasRecentSearchContext = conversationHistory.slice(-4).some(msg =>
+    // More comprehensive check for search context
+    const hasRecentSearchContext = conversationHistory.slice(-6).some(msg =>
         msg.role === 'bot' && (
             msg.message.includes('found') ||
             msg.message.includes('located at') ||
-            msg.message.includes('restaurant') ||
-            msg.message.includes('hotel') ||
-            msg.message.includes('shop')
+            msg.message.includes('couldn\'t find') ||
+            msg.message.includes('no results') ||
+            msg.message.includes('help you find') ||
+            // Check for category names in bot messages (indicates search happened)
+            msg.message.toLowerCase().includes('restaurant') ||
+            msg.message.toLowerCase().includes('hotel') ||
+            msg.message.toLowerCase().includes('lodge') ||
+            msg.message.toLowerCase().includes('shop') ||
+            msg.message.toLowerCase().includes('electrician') ||
+            msg.message.toLowerCase().includes('plumber') ||
+            msg.message.toLowerCase().includes('service')
         )
     )
 
@@ -388,7 +593,11 @@ function isConversationalMessage(message: string, conversationHistory: Array<{ r
     }
 
     // If user has recent search context and asks follow-up, treat as search
-    if (hasRecentSearchContext && (messageLower.includes('more') || messageLower.includes('other') || messageLower.includes('another'))) {
+    // Words like "any", "all", "yes", "show", "list" etc. are follow-ups
+    const followUpWords = ['more', 'other', 'another', 'any', 'all', 'yes', 'yep', 'yeah',
+        'show', 'list', 'ok', 'okay', 'sure', 'please', 'now', 'these', 'those']
+    if (hasRecentSearchContext && followUpWords.some(w => messageLower === w || messageLower.includes(w))) {
+        console.log(`[Chatbot] Follow-up detected after search context: "${messageLower}"`)
         return false
     }
 
@@ -401,6 +610,29 @@ function isConversationalMessage(message: string, conversationHistory: Array<{ r
     if (hasCapitalizedWords && wordCount >= 2 && wordCount <= 4) {
         // Not a greeting, likely a business name search
         return false
+    }
+
+    // IMPORTANT: Check if any word in the message could be a typo of a known category
+    // If so, don't treat as conversational - let the fuzzy matching handle it
+    const messageWords = messageLower.split(/\s+/).filter(w => w.length >= 3)
+    for (const word of messageWords) {
+        // Check if word is a known typo
+        if (typoCorrections[word]) {
+            console.log(`[Chatbot] Known typo detected: "${word}" → "${typoCorrections[word]}" - treating as search`)
+            return false
+        }
+
+        // Check if word is close to a known category (fuzzy match)
+        const fuzzyMatch = findClosestCategory(word)
+        if (fuzzyMatch) {
+            console.log(`[Chatbot] Potential typo detected: "${word}" ≈ "${fuzzyMatch.suggested}" - treating as search`)
+            return false
+        }
+
+        // Check if word is a known category
+        if (allKnownCategories.includes(word)) {
+            return false
+        }
     }
 
     // Default: treat short messages without business context as conversational
@@ -435,119 +667,58 @@ function extractSearchTerms(message: string): string[] {
     const doc = nlp(correctedMessage)
     const terms: Set<string> = new Set()
 
-    // Detect if user is being specific (e.g., "electronics shops" = specific category)
-    const specificCategories = ['electronics', 'electronic', 'grocery', 'medical', 'pharmacy', 'clinic', 'hospital', 'school', 'hotel', 'restaurant', 'salon', 'gym', 'fitness', 'bakery', 'cafe', 'coffee']
-    const hasSpecificCategory = specificCategories.some(cat => correctedMessage.includes(cat))
+    // STRICT MODE: Only add exact category/service terms, NO synonyms
+    // This prevents showing unrelated categories like "food" when searching for "restaurant"
 
-    // Category synonym mapping for better search
-    const categoryMap: { [key: string]: string[] } = {
-        // Electronics - SPECIFIC CATEGORY (only electronics terms)
-        'electronics': ['electronics', 'electronic'],
-        'electronic': ['electronic', 'electronics'],
+    // All known categories (business + service)
+    const knownCategories = [
+        // Business categories
+        'restaurant', 'restaurants', 'hotel', 'hotels', 'lodge', 'lodges', 'motel', 'motels',
+        'inn', 'inns', 'dhaba', 'dhabas', 'shop', 'shops', 'store', 'stores',
+        'electronics', 'electronic', 'grocery', 'groceries', 'medical', 'pharmacy', 'clinic',
+        'hospital', 'school', 'cafe', 'bakery', 'salon', 'gym', 'fitness', 'bank',
+        'supermarket', 'mall', 'market', 'college', 'university', 'petrol', 'atm',
+        'clothing', 'jewellery', 'furniture', 'hardware', 'stationery', 'books', 'toys',
+        // Service categories
+        'electrician', 'plumber', 'carpenter', 'painter', 'mechanic', 'driver',
+        'photographer', 'beautician', 'cook', 'chef', 'babysitter', 'gardener',
+        'tailor', 'cleaner', 'security', 'guard', 'caregiver', 'tutor', 'teacher',
+        'musician', 'dj', 'trainer', 'nurse', 'lawyer', 'advocate', 'accountant',
+        'potter', 'barber', 'mason', 'welder', 'milkman', 'priest', 'pandit',
+        'rickshaw', 'auto', 'mistri', 'karigar', 'rajmistri', 'nai', 'gwala', 'lohar', 'kumhar', 'pujari'
+    ]
 
-        // Grocery - SPECIFIC CATEGORY
-        'grocery': ['grocery', 'groceries', 'supermarket'],
-        'groceries': ['grocery', 'groceries', 'supermarket'],
-
-        // Medical - SPECIFIC CATEGORY
-        'medical': ['medical', 'clinic', 'hospital', 'pharmacy', 'health'],
-        'pharmacy': ['pharmacy', 'medical', 'chemist', 'drugstore'],
-        'clinic': ['clinic', 'medical', 'health', 'doctor'],
-        'hospital': ['hospital', 'medical', 'health', 'clinic'],
-
-        // Restaurant - SPECIFIC CATEGORY
-        'restaurant': ['restaurant', 'dining', 'food', 'eatery'],
-        'restaurants': ['restaurant', 'dining', 'food', 'eatery'],
-
-        // Hotel - SPECIFIC CATEGORY
-        'hotel': ['hotel', 'lodging', 'accommodation', 'resort'],
-        'hotels': ['hotel', 'lodging', 'accommodation', 'resort'],
-
-        // Generic terms (only used when NO specific category)
-        'shop': ['shop', 'store'],
-        'shops': ['shop', 'store'],
-        'store': ['store', 'shop'],
-        'stores': ['store', 'shop'],
+    // First, check for known category keywords in the message
+    for (const category of knownCategories) {
+        if (correctedMessage.includes(category)) {
+            terms.add(category)
+        }
     }
 
-    // Extract nouns (from corrected message)
+    // Extract nouns using NLP (for proper names like "Sharma Restaurant")
     const nouns = doc.nouns().out('array') as string[]
     nouns.forEach((noun: string) => {
         const nounLower = noun.toLowerCase().trim()
-
-        // Check if noun has category synonyms
-        if (categoryMap[nounLower]) {
-            // If user specified a specific category, SKIP all generic terms
-            if (hasSpecificCategory && ['shop', 'shops', 'store', 'stores', 'shopping', 'market', 'retail'].includes(nounLower)) {
-                // Skip completely - don't add generic terms when specific category present
-                return
-            }
-            categoryMap[nounLower].forEach(synonym => terms.add(synonym))
-        } else {
-            // Only add meaningful nouns (not too short)
-            if (nounLower.length > 2) {
-                terms.add(nounLower)
-            }
-        }
-    })
-
-    // Extract adjectives + nouns (e.g., "italian restaurant")
-    const phrases = doc.match('#Adjective? #Noun').out('array') as string[]
-    phrases.forEach((phrase: string) => {
-        const phraseLower = phrase.toLowerCase().trim()
-        terms.add(phraseLower)
-
-        // Also add individual words from phrase
-        phraseLower.split(' ').forEach(word => {
-            if (categoryMap[word]) {
-                // If user specified a specific category, SKIP all generic terms
-                if (hasSpecificCategory && ['shop', 'shops', 'store', 'stores', 'shopping', 'market', 'retail'].includes(word)) {
-                    // Skip completely
-                    return
-                }
-                categoryMap[word].forEach(synonym => terms.add(synonym))
-            }
-        })
-    })
-
-    // Extract verbs related to actions - ONLY if no specific category
-    if (!hasSpecificCategory) {
-        const verbs = doc.verbs().out('array') as string[]
-        verbs.forEach((verb: string) => {
-            const v = verb.toLowerCase()
-            if (v.includes('eat') || v.includes('dine')) {
-                terms.add('restaurant')
-                terms.add('food')
-            }
-            if (v.includes('stay') || v.includes('sleep')) {
-                terms.add('hotel')
-            }
-            if (v.includes('shop') || v.includes('buy')) {
-                terms.add('shop')
-                terms.add('store')
-            }
-        })
-    }
-
-    // Check full message for category keywords
-    const messageLower = message.toLowerCase()
-    Object.keys(categoryMap).forEach(keyword => {
-        if (messageLower.includes(keyword)) {
-            // If user specified a specific category, SKIP all generic terms
-            if (hasSpecificCategory && ['shop', 'shops', 'store', 'stores', 'shopping', 'market', 'retail'].includes(keyword)) {
-                // Skip completely
-                return
-            }
-            categoryMap[keyword].forEach(synonym => terms.add(synonym))
+        // Only add meaningful nouns (not too short, not generic words)
+        if (nounLower.length > 2 && !['the', 'for', 'and', 'any', 'some'].includes(nounLower)) {
+            terms.add(nounLower)
         }
     })
 
     // Add full message as fallback if no terms found
     if (terms.size === 0) {
-        terms.add(messageLower.trim())
+        // Add individual words from the corrected message
+        const words = correctedMessage.split(/\s+/).filter(w => w.length > 2)
+        words.forEach(word => terms.add(word))
+
+        // If still empty, add the whole message
+        if (terms.size === 0) {
+            terms.add(correctedMessage.trim())
+        }
     }
 
-    return Array.from(terms).slice(0, 10) // Increased to 10 terms for better matching
+    console.log(`[Chatbot] Extracted terms (STRICT mode):`, Array.from(terms))
+    return Array.from(terms).slice(0, 5) // Limit to 5 terms for focused search
 }
 
 /**
@@ -569,10 +740,13 @@ async function searchListingsComprehensive(searchTerms: string[], limit: number 
 
         // Known category keywords - these should NEVER be treated as business names
         const knownCategories = [
-            'restaurant', 'restaurants', 'hotel', 'hotels', 'shop', 'shops', 'store', 'stores',
+            'restaurant', 'restaurants', 'hotel', 'hotels', 'lodge', 'lodges', 'motel', 'motels',
+            'inn', 'inns', 'dhaba', 'dhabas', 'shop', 'shops', 'store', 'stores',
             'electronics', 'electronic', 'grocery', 'groceries', 'medical', 'pharmacy', 'clinic',
             'hospital', 'school', 'cafe', 'coffee', 'bakery', 'salon', 'gym', 'fitness',
-            'service', 'services', 'food', 'dining', 'eatery', 'retail', 'market'
+            'service', 'services', 'food', 'dining', 'eatery', 'retail', 'market',
+            'electrician', 'plumber', 'carpenter', 'painter', 'mechanic', 'driver',
+            'barber', 'tailor', 'mason', 'welder', 'tutor', 'nurse', 'guard'
         ]
 
         // First, check for exact category matches (high priority for single-word category queries)
@@ -654,8 +828,8 @@ async function searchListingsComprehensive(searchTerms: string[], limit: number 
             return results
         }
 
-        // Otherwise, do broader search across all fields with smart scoring
-        // Search in listings collection
+        // Otherwise, do STRICT search - only match category, name, or tags (NO description fallback)
+        // This prevents showing unrelated categories
         for (const term of searchTerms) {
             const termLower = term.toLowerCase()
 
@@ -670,12 +844,11 @@ async function searchListingsComprehensive(searchTerms: string[], limit: number 
                 const data = doc.data()
                 const listing: any = { id: doc.id, ...data }
 
-                // Prioritized matching with scores
+                // STRICT matching - only category, name, or exact tag match
                 let matchScore = 0
                 const listingName = (listing.name || '').toLowerCase()
                 const listingCategory = (listing.category || '').toLowerCase()
                 const listingCategorySlug = (listing.categorySlug || '').toLowerCase()
-                const listingDescription = (listing.description || '').toLowerCase()
                 const listingTags = Array.isArray(listing.tags) ? listing.tags.map((t: string) => t.toLowerCase()) : []
 
                 // Exact category match = highest priority (score: 100)
@@ -686,18 +859,19 @@ async function searchListingsComprehensive(searchTerms: string[], limit: number 
                 else if (listingCategory.includes(termLower) || listingCategorySlug.includes(termLower)) {
                     matchScore = 80
                 }
+                // Category contains term (e.g., "Restaurants" contains "restaurant")
+                else if (termLower.includes(listingCategorySlug) || termLower.includes(listingCategory.split(' ')[0])) {
+                    matchScore = 75
+                }
                 // Name match = medium-high priority (score: 70)
                 else if (listingName.includes(termLower)) {
                     matchScore = 70
                 }
-                // Tags match = medium priority (score: 50)
-                else if (listingTags.some((tag: string) => tag.includes(termLower))) {
+                // STRICT: Only exact tag match (not partial) (score: 50)
+                else if (listingTags.some((tag: string) => tag === termLower)) {
                     matchScore = 50
                 }
-                // Description match = low priority (score: 20)
-                else if (listingDescription.includes(termLower)) {
-                    matchScore = 20
-                }
+                // NO DESCRIPTION MATCHING - this was causing unrelated results
 
                 if (matchScore > 0) {
                     // Store with match score, update if higher score or higher views
@@ -884,44 +1058,55 @@ async function searchServicesComprehensive(searchTerms: string[], limit: number 
             const data = doc.data()
             const service: any = { id: doc.id, ...data }
 
-            // Match against search terms
+            // STRICT matching - only match category and name, no address/description fallback
             let matchScore = 0
             const serviceCategory = (service.service || service.category || '').toLowerCase()
+            const serviceCategorySlug = serviceCategory.replace(/\s+/g, '-')
             const serviceName = (service.name || '').toLowerCase()
             const serviceTags = Array.isArray(service.tags) ? service.tags.map((t: string) => t.toLowerCase()) : []
-            const serviceAddress = (service.address || '').toLowerCase()
 
             for (const term of searchTerms) {
                 const termLower = term.toLowerCase()
+                const termSlug = termLower.replace(/\s+/g, '-')
 
-                // Check for category match (highest priority)
-                if (serviceCategory.includes(termLower) || termLower.includes(serviceCategory)) {
+                // Check for EXACT category match (highest priority)
+                if (serviceCategory === termLower || serviceCategorySlug === termSlug) {
                     matchScore = Math.max(matchScore, 100)
                 }
-
-                // Check category keywords
-                for (const [category, keywords] of Object.entries(serviceCategoryKeywords)) {
-                    if (keywords.some(kw => termLower.includes(kw) || kw.includes(termLower))) {
-                        if (serviceCategory.includes(category) || category.includes(serviceCategory.replace(' ', '-'))) {
-                            matchScore = Math.max(matchScore, 90)
+                // Partial category match (service category contains search term)
+                else if (serviceCategory.includes(termLower) || serviceCategorySlug.includes(termSlug)) {
+                    matchScore = Math.max(matchScore, 90)
+                }
+                // Reverse partial (search term contains category - e.g., "electrician" contains "electric")
+                else if (termLower.includes(serviceCategory) || termSlug.includes(serviceCategorySlug)) {
+                    matchScore = Math.max(matchScore, 85)
+                }
+                // Check category keywords ONLY for the matching category
+                else {
+                    for (const [category, keywords] of Object.entries(serviceCategoryKeywords)) {
+                        const categorySlug = category.toLowerCase()
+                        // Only match if BOTH: (1) term matches a keyword AND (2) service is that category
+                        if (keywords.some(kw => termLower === kw || termLower.includes(kw))) {
+                            if (serviceCategory === categorySlug || serviceCategorySlug === categorySlug ||
+                                serviceCategory.includes(categorySlug.replace('-', ' ')) ||
+                                serviceCategorySlug.includes(categorySlug)) {
+                                matchScore = Math.max(matchScore, 80)
+                            }
                         }
                     }
                 }
 
-                // Check name match
-                if (serviceName.includes(termLower)) {
-                    matchScore = Math.max(matchScore, 70)
+                // Check name match (provider name)
+                if (serviceName.includes(termLower) && matchScore < 70) {
+                    matchScore = Math.max(matchScore, 60)
                 }
 
-                // Check tags match
-                if (serviceTags.some((tag: string) => tag.includes(termLower))) {
+                // STRICT: Only EXACT tag match (not partial)
+                if (serviceTags.some((tag: string) => tag === termLower)) {
                     matchScore = Math.max(matchScore, 50)
                 }
 
-                // Check address match (for location-based search)
-                if (serviceAddress.includes(termLower)) {
-                    matchScore = Math.max(matchScore, 30)
-                }
+                // NO ADDRESS MATCHING - this was causing unrelated results
             }
 
             if (matchScore > 0) {
@@ -1165,19 +1350,17 @@ Search Terms Used: ${searchTerms.join(', ')}
 
 ${resultsSection}
 
-Instructions:
-- Use previous conversation context to provide better, contextual responses
-- Provide a friendly, helpful response based ONLY on the results above
-- For BUSINESSES: mention NAME, LOCATION, and CONTACT (phone)
-- For SERVICE PROVIDERS (gig workers like electricians, plumbers, etc.): mention NAME, SERVICE TYPE, LOCATION, WHATSAPP/PHONE, CHARGES, and QUALITY RATING
-- Format properly with line breaks and bullet points for readability
-- Use proper formatting like **bold** for names, line breaks for clarity
-- Be conversational and warm in tone
-- If both businesses and services found, present them clearly in separate sections
-- If no results found, suggest trying different keywords or browsing categories
-- Keep response 3-5 sentences maximum
-- Do NOT use external knowledge or web search
-- Reference previous conversation if user asked follow-up question
+CRITICAL Instructions:
+1. NEVER ask follow-up questions like "What area?" or "Any specific requirements?" - just show the results directly
+2. If results are found: List them immediately with details (name, location, phone/charges)
+3. If NO results found: Say "Sorry, I couldn't find any [category] in ${CITY_NAME} right now. Try browsing our categories or check back later."
+4. For BUSINESSES: mention NAME, LOCATION, and CONTACT (phone)
+5. For SERVICE PROVIDERS: mention NAME, SERVICE TYPE, LOCATION, WHATSAPP/PHONE, CHARGES, and QUALITY RATING
+6. Format with line breaks and bullet points for readability
+7. Use **bold** for names
+8. Keep response 2-4 sentences maximum - be concise
+9. Do NOT use external knowledge
+10. NEVER reset or forget context - use previous conversation history
 
 Your Response:`
 
@@ -1286,6 +1469,93 @@ export async function POST(request: NextRequest) {
             })
         }
 
+        // **Priority 2.5: Check if user is confirming a previous suggestion**
+        // Look for patterns like bot asking "Are you searching for 'X'?" and user responding with confirmation
+        const lastBotMessage = conversationHistory.slice(-2).find((msg: { role: string, message: string }) => msg.role === 'bot')
+        if (lastBotMessage && lastBotMessage.message.includes('Are you searching for')) {
+            // Extract the suggested category from the previous bot message
+            const suggestionMatch = lastBotMessage.message.match(/Are you searching for ['"]([^'"]+)['"]/)
+            if (suggestionMatch && isConfirmationResponse(message)) {
+                const suggestedCategory = suggestionMatch[1]
+                console.log(`[Chatbot] User confirmed suggestion: "${suggestedCategory}"`)
+
+                // Use the suggested category for search
+                const searchTerms = [suggestedCategory]
+                const searchingForService = isServiceQuery(suggestedCategory)
+
+                let listings: any[] = []
+                let services: any[] = []
+
+                if (searchingForService) {
+                    services = await searchServicesComprehensive(searchTerms, 3)
+                } else {
+                    listings = await searchListingsComprehensive(searchTerms, 3)
+                }
+
+                const reply = await generateResponse(suggestedCategory, searchTerms, listings, services, conversationHistory)
+
+                return NextResponse.json({
+                    reply,
+                    results: listings,
+                    services: services,
+                    searchTerms,
+                    totalFound: listings.length + services.length,
+                    isContactQuery: false,
+                    isListingGuideQuery: false,
+                    conversational: false,
+                    isServiceQuery: searchingForService,
+                    confirmedSuggestion: true,
+                    success: true
+                })
+            }
+        }
+
+        // **Priority 2.6: Check for fuzzy match / typo detection for unrecognized words**
+        // If the word doesn't match any known category, check for close matches
+        const words = message.toLowerCase().split(/\s+/).filter(w => w.length > 2)
+        let fuzzyMatchFound: { word: string, suggested: string } | null = null
+
+        for (const word of words) {
+            // First check if word is already corrected via typoCorrections
+            if (typoCorrections[word]) {
+                // Typo correction will handle this automatically, continue to search
+                break
+            }
+
+            // Check if word is a known category
+            if (allKnownCategories.includes(word)) {
+                break // It's a valid category, proceed to search
+            }
+
+            // Try fuzzy matching for unknown words
+            const match = findClosestCategory(word)
+            if (match) {
+                fuzzyMatchFound = { word, suggested: match.suggested }
+                break
+            }
+        }
+
+        // If fuzzy match found and word isn't already being corrected, ask for confirmation
+        if (fuzzyMatchFound && !typoCorrections[fuzzyMatchFound.word]) {
+            console.log(`[Chatbot] Fuzzy match detected: "${fuzzyMatchFound.word}" → "${fuzzyMatchFound.suggested}"`)
+
+            const reply = `I noticed you searched for "${fuzzyMatchFound.word}". Are you searching for "${fuzzyMatchFound.suggested}"? Please confirm by typing "yes" or enter the correct keyword.`
+
+            return NextResponse.json({
+                reply,
+                results: [],
+                services: [],
+                searchTerms: [fuzzyMatchFound.word],
+                totalFound: 0,
+                isContactQuery: false,
+                isListingGuideQuery: false,
+                conversational: false,
+                fuzzyMatch: true,
+                suggestedCategory: fuzzyMatchFound.suggested,
+                success: true
+            })
+        }
+
         // **Priority 3: Check if conversational message (greeting/casual chat)**
         if (isConversationalMessage(message, conversationHistory)) {
             console.log(`[Chatbot] Detected conversational message (no search needed)`)
@@ -1329,15 +1599,14 @@ export async function POST(request: NextRequest) {
             services = await searchServicesComprehensive(searchTerms, resultLimit)
             console.log(`[Chatbot] Found ${services.length} services (limit: ${resultLimit})`)
 
-            // Also search listings as fallback if no services found
-            if (services.length === 0) {
-                listings = await searchListingsComprehensive(searchTerms, resultLimit)
-                console.log(`[Chatbot] No services found, found ${listings.length} listings as fallback`)
-            }
+            // NO FALLBACK TO LISTINGS - strict category matching only
+            // If no services found for the category, that's okay - AI will explain
         } else {
             // For business queries, search listings primarily
             listings = await searchListingsComprehensive(searchTerms, resultLimit)
             console.log(`[Chatbot] Found ${listings.length} listings (limit: ${resultLimit})`)
+
+            // NO FALLBACK TO OTHER CATEGORIES - strict category matching only
         }
 
         // **Stage 3: AI Response Generation with conversation history**
