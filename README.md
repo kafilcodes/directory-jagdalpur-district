@@ -12,7 +12,8 @@
 
 [![Next.js](https://img.shields.io/badge/Next.js-15.5.4-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Firebase](https://img.shields.io/badge/Firebase-12.3.0-orange?style=for-the-badge&logo=firebase&logoColor=white)](https://firebase.google.com/)
+[![RAG Architecture](https://img.shields.io/badge/Architecture-RAG%20Enabled-EF4444?style=for-the-badge&logo=probot&logoColor=white)](#-ai-chatbot--rag-architecture)
+[![Multi-City](https://img.shields.io/badge/Multi--City-Env--Driven-EF4444?style=for-the-badge&logo=google-cloud&logoColor=white)](#-multi-city-deployment)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.1.9-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![License](https://img.shields.io/badge/License-Private-red?style=for-the-badge&logo=shield&logoColor=white)](LICENSE)
 
@@ -35,7 +36,7 @@
 - [🌍 Multi-City Deployment](#-multi-city-deployment)
 - [📁 Project Structure](#-project-structure)
 - [🔍 Search & Ranking System](#-search--ranking-system)
-- [🤖 AI Chatbot](#-ai-chatbot)
+- [🤖 AI Chatbot & RAG Architecture](#-ai-chatbot--rag-architecture)
 - [📊 Analytics & Insights](#-analytics--insights)
 - [💳 Payment Integration](#-payment-integration)
 - [🔐 Security & Auth](#-security--auth)
@@ -52,7 +53,7 @@
 
 ## 🌟 Overview
 
-**District Business Directory** is a cutting-edge digital platform designed to bridge the gap between local businesses and residents in District, Chhattisgarh. Built with modern web technologies and best practices, this platform serves as the **official business directory** for the district administration.
+**District Business Directory** is an enterprise-grade digital directory and local commerce engine engineered to connect local businesses with residents across Indian districts. Built with Next.js, TypeScript, and Firebase, the platform is designed with a **100% reusable, single codebase multi-city architecture** and a deterministic **Retrieval-Augmented Generation (RAG)** assistant powered by Google Gemini 2.0.  ### 🏛️ Multi-City Single Codebase Design The entire system operates on a single unified codebase capable of serving multiple independent districts or cities. Deploying to a new city requires **zero code modifications**—simply configuring city environment variables in `.env` routes all data to an isolated, named Firestore database within the same Firebase BaaS project.
 
 ### 🎯 Mission
 
@@ -702,11 +703,46 @@ User Query: "electronics shop"
 
 ---
 
-## 🤖 AI Chatbot
+## 🤖 AI Chatbot & RAG Architecture
 
 ### **🎯 Overview**
 
-The platform features a state-of-the-art AI chatbot powered by **Google Gemini 2.0 Flash Exp**, providing instant, conversational assistance to users.
+The platform features a state-of-the-art **Retrieval-Augmented Generation (RAG)** assistant powered by **Google Gemini 2.0 Flash Exp**. To ensure absolute **hallucination resistance**, the AI is explicitly grounded to only serve answers derived from the live directory records.
+
+### **✨ RAG Pipeline & Data Flow**
+
+```text
+ User Query: "Find me the best vegetarian cafe near Station Road"
+                           │
+                           ▼
+ ┌──────────────────────────────────────────────────────────────────┐
+ │ 1. INTENT & ENTITY EXTRACTION                                    │
+ │    • Detects query intent: "Search" vs "Chit-chat"               │
+ │    • Extracts category: "Cafe", modifier: "Vegetarian"           │
+ └─────────────────────────┬────────────────────────────────────────┘
+                           │
+                           ▼
+ ┌──────────────────────────────────────────────────────────────────┐
+ │ 2. SHARDED INDEX RETRIEVAL (<50ms)                               │
+ │    • Queries Firestore `search/index_c` for keyword "cafe"       │
+ │    • Blends matching listing documents with popularity rank      │
+ │    • Fetches Top 5 verified business records                     │
+ └─────────────────────────┬────────────────────────────────────────┘
+                           │
+                           ▼
+ ┌──────────────────────────────────────────────────────────────────┐
+ │ 3. PROMPT INJECTION & STRICT GROUNDING                           │
+ │    • Injects fetched records as structured context JSON into     │
+ │      the Gemini 2.0 system prompt.                               │
+ │    • Guardrail: Answers must strictly rely on injected listings. │
+ └─────────────────────────┬────────────────────────────────────────┘
+                           │
+                           ▼
+ ┌──────────────────────────────────────────────────────────────────┐
+ │ 4. STREAMED HALLUCINATION-RESISTANT RESPONSE                     │
+ │    • Streams conversational response to client                   │
+ │    • Returns formatted UI markdown parsed into <ListingCard/>    │
+ └──────────────────────────────────────────────────────────────────┘
 
 ### **✨ Capabilities**
 
