@@ -36,7 +36,7 @@
 - [🌍 Multi-City Deployment](#-multi-city-deployment)
 - [📁 Project Structure](#-project-structure)
 - [🔍 Search & Ranking System](#-search--ranking-system)
-- [🤖 AI Chatbot & RAG Architecture](#-ai-chatbot--rag-architecture)
+- [🤖 AI Chatbot & RAG Architecture,RGG (Retrieval Grounded Generation) ](#-ai-chatbot--rag-architecture)
 - [📊 Analytics & Insights](#-analytics--insights)
 - [💳 Payment Integration](#-payment-integration)
 - [🔐 Security & Auth](#-security--auth)
@@ -707,7 +707,7 @@ User Query: "electronics shop"
 
 ### **🎯 Overview**
 
-The platform features a state-of-the-art **Retrieval-Augmented Generation (RAG)** assistant powered by **Google Gemini 2.0 Flash Exp**. To ensure absolute **hallucination resistance**, the AI is explicitly grounded to only serve answers derived from the live directory records.
+The platform features a state-of-the-art **Retrieval-Augmented Generation (RAG) or more specifically its RGG (Retrieval Grounded Generation) Without a Vector DB or Embeddings ** assistant powered by **Google Gemini 2.0 Flash Exp**. To ensure absolute **hallucination resistance**, the AI is explicitly grounded to only serve answers derived from the live directory records.
 
 ### **✨ RAG Pipeline & Data Flow**
 
